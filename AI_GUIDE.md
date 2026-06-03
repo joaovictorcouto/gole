@@ -56,11 +56,9 @@ gole/
 │       ├── Achievements.tsx     ← Conquistas
 │       ├── Settings.tsx         ← Configurações
 │       └── onboarding/
-│           ├── Welcome.tsx      ← Tela 1: boas-vindas
-│           ├── Weight.tsx       ← Tela 2: peso (slider)
-│           ├── Activity.tsx     ← Tela 3: nível de atividade
-│           ├── Climate.tsx      ← Tela 4: clima
-│           └── Result.tsx       ← Tela 5: meta calculada
+│           └── Onboarding.tsx   ← TODAS as telas de onboarding em UM componente
+│                                  (welcome → weight → activity → climate → result)
+│                                  Estado interno via useState, sem rotas separadas.
 │
 └── src-tauri/               ← BACKEND (Rust)
     ├── Cargo.toml           ← Dependências Rust
@@ -114,14 +112,24 @@ gole/
 → **`src-tauri/src/lib.rs`** — bloco `TrayIconBuilder` dentro do `.setup()`
 - Itens: `show`, `pause`, `resume`, `quit`
 
+### Comportamento ao fechar a janela
+→ **`src-tauri/src/lib.rs`** — `.on_window_event()` com `WindowEvent::CloseRequested`
+- O botão [X] esconde a janela em vez de encerrar o app
+- App continua rodando em segundo plano via system tray (baixo consumo de RAM)
+- Para realmente encerrar: usar item "Sair" do tray menu
+
 ### Scheduler de lembretes
 → **`src/App.tsx`** — useEffect que chama `api.sendReminder()` a cada `reminder_interval_min`
 - Lembrete é disparado pelo frontend; o Rust apenas registra e emite evento
 
 ### Tela de Onboarding
-→ **`src/pages/onboarding/*.tsx`** + roteamento em **`src/App.tsx`** (`<OnboardingFlow />`)
-- Estado compartilhado entre etapas vive no `OnboardingFlow` (useState local)
-- No final, `Result.tsx` chama `completeOnboarding()` do store
+→ **`src/pages/onboarding/Onboarding.tsx`** (arquivo único)
+- Fluxo de **3 passos**: Peso → Atividade Física → Clima → Resultado
+- Estado interno via `useState<Step>` (welcome → weight → activity → climate → result)
+- Shell unificado (`<OnboardingShell>`) com logo GOLE + step indicator (3 dots)
+- Footer reutilizável (`<StepFooter>`) com botão "Voltar" e "Próximo"
+- Peso é clampeado entre 40-150kg (função `clampWeight`)
+- Ao clicar "Começar" no Result, chama `completeOnboarding()` do store e navega para `/dashboard`
 
 ### Dashboard (cards, copo, estatísticas)
 → **`src/pages/Dashboard.tsx`**

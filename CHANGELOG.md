@@ -14,8 +14,58 @@ e o projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Não publicado]
 
+---
+
+## [0.2.0] — 2026-06-03
+
+### Alterado — Onboarding redesenhado para identidade visual unificada
+
+- **Onboarding consolidado em arquivo único** (`src/pages/onboarding/Onboarding.tsx`)
+  - Removidos os 5 arquivos antigos (`Welcome.tsx`, `Weight.tsx`, `Activity.tsx`, `Climate.tsx`, `Result.tsx`)
+  - Estado gerenciado internamente via `useState`, evitando problemas de propagação entre rotas
+- **Fluxo simplificado para 3 passos** (em vez de 4):
+  1. Peso
+  2. Atividade Física
+  3. Clima
+  - Welcome continua existindo, mas como step 0 (sem indicador), seguido dos 3 passos numerados
+- **Identidade visual unificada em todas as telas:**
+  - Mesmo header (logo "GOLE" + step indicator)
+  - Mesmas blobs ambientais de fundo
+  - Mesmo padrão de tipografia (display-lg + body-lg)
+  - Mesmo footer com botão "Voltar" + "Próximo"
+- **Removido botão "Pular"** da tela de peso (forçava pular onboarding sem responder)
+- **Step indicator unificado:** pill mostrando "Passo X de 3" + 3 dots no topo direito (o dot ativo é mais largo)
+
 ### Adicionado
-- (próximas mudanças aqui)
+
+- **Clamp de peso (40–150kg)** tanto no slider de onboarding quanto no input das Configurações
+  - Função utilitária `clampWeight()` garante que valores fora do intervalo sejam ajustados
+  - Texto de orientação abaixo do slider
+- **Botão "Ajustar respostas"** na tela de resultado, para voltar ao último passo antes de finalizar
+- **Estado de loading** no botão "Começar" (evita double-click e mostra "Salvando...")
+
+### Corrigido
+
+- **Botão "Começar" no Result agora funciona corretamente:**
+  - Estado de onboarding (`weight`, `activity`, `climate`) agora vive em um único componente, eliminando o bug onde os valores se perdiam entre rotas
+  - Meta diária recalculada via `useEffect` sempre que peso/atividade/clima mudam
+  - Navegação usa `replace: true` para evitar voltar ao onboarding via histórico
+
+### Comportamento do app
+
+- **Janela esconde em vez de fechar:** ao clicar no [X], o app vai para o system tray
+  - Lembretes continuam funcionando em segundo plano com baixo consumo de RAM
+  - Para encerrar de fato: usar item "Sair" do menu do tray
+  - Implementado via `WindowEvent::CloseRequested` no Rust com `api.prevent_close()`
+
+### Arquivos afetados
+
+- `src/pages/onboarding/Onboarding.tsx` *(novo)*
+- `src/pages/onboarding/{Welcome,Weight,Activity,Climate,Result}.tsx` *(removidos)*
+- `src/App.tsx` *(roteamento simplificado)*
+- `src/pages/Settings.tsx` *(clamp no input de peso)*
+- `src-tauri/src/lib.rs` *(handler `on_window_event` para esconder janela)*
+- `AI_GUIDE.md` *(estrutura e cheat sheet atualizados)*
 
 ---
 

@@ -5,7 +5,7 @@ mod phrases;
 use std::sync::Mutex;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
-use tauri::{Manager, State, AppHandle, Emitter};
+use tauri::{Manager, State, AppHandle, Emitter, WindowEvent};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use chrono::Local;
@@ -251,6 +251,16 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--hidden"]),
         ))
+        .on_window_event(|window, event| {
+            // When user clicks the [X], hide the window instead of quitting.
+            // App keeps running in the system tray with minimal RAM footprint.
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "main" {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+            }
+        })
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir().expect("failed to get app data dir");
             std::fs::create_dir_all(&app_data_dir).ok();

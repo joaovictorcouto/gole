@@ -85,7 +85,9 @@ export function Settings() {
     );
   }
 
-  const handleWeightChange = async (weight: number) => {
+  const handleWeightChange = async (raw: number) => {
+    if (isNaN(raw)) return;
+    const weight = Math.min(150, Math.max(40, Math.round(raw)));
     await saveSettings({ weight_kg: weight });
     const goal = await api.calculateGoal(weight, settings.activity_level, settings.climate);
     setLocalGoal(goal);

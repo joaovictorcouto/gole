@@ -3,7 +3,14 @@
     "allow": [
       "Bash(gh repo *)",
       "Bash(git push *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(Start-Sleep -Seconds 30)",
+      "Bash(Get-Content \"C:\\\\Users\\\\JZVIAG~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Jz-Viagens-Documents-code-gole\\\\e7a1685b-2657-475f-a90c-ade2550714e6\\\\tasks\\\\ba5n913ln.output\")",
+      "Bash(Select-Object -Last 40)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(cargo check *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

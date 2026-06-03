@@ -4,11 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useAppStore } from "./store/useAppStore";
 import { SideNav } from "./components/ui/SideNav";
 import { ReminderToast } from "./components/ui/ReminderToast";
-import { Welcome } from "./pages/onboarding/Welcome";
-import { Weight } from "./pages/onboarding/Weight";
-import { Activity } from "./pages/onboarding/Activity";
-import { Climate } from "./pages/onboarding/Climate";
-import { Result } from "./pages/onboarding/Result";
+import { Onboarding } from "./pages/onboarding/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
 import { Statistics } from "./pages/Statistics";
 import { Achievements } from "./pages/Achievements";
@@ -25,45 +21,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
       <ReminderToast />
     </div>
-  );
-}
-
-function OnboardingFlow() {
-  const [weight, setWeight] = useState(70);
-  const [activity, setActivity] = useState("sedentary");
-  const [climate, setClimate] = useState("temperate");
-  const [goal, setGoal] = useState(2450);
-
-  const updateGoal = async (w: number, a: string, c: string) => {
-    const g = await api.calculateGoal(w, a, c);
-    setGoal(g);
-  };
-
-  return (
-    <Routes>
-      <Route path="/" element={<Welcome />} />
-      <Route path="/weight" element={
-        <Weight
-          initialWeight={weight}
-          onWeight={(w) => { setWeight(w); updateGoal(w, activity, climate); }}
-        />
-      } />
-      <Route path="/activity" element={
-        <Activity
-          initialActivity={activity}
-          onActivity={(a) => { setActivity(a); updateGoal(weight, a, climate); }}
-        />
-      } />
-      <Route path="/climate" element={
-        <Climate
-          initialClimate={climate}
-          onClimate={(c) => { setClimate(c); updateGoal(weight, activity, c); }}
-        />
-      } />
-      <Route path="/result" element={
-        <Result weight={weight} activity={activity} climate={climate} goal={goal} />
-      } />
-    </Routes>
   );
 }
 
@@ -127,7 +84,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/onboarding/*" element={<OnboardingFlow />} />
+        <Route path="/onboarding" element={<Onboarding />} />
 
         <Route path="/dashboard" element={
           onboardingDone
