@@ -43,21 +43,32 @@ gole/
 │   ├── store/
 │   │   └── useAppStore.ts   ← Zustand store global
 │   │
+│   ├── lib/
+│   │   ├── api.ts           ← Wrappers tipados dos comandos Tauri (Rust)
+│   │   ├── featureFlags.ts  ← Feature flags
+│   │   ├── format.ts        ← Helpers de formatação (volumes, datas)
+│   │   └── sounds.ts        ← Sons de alerta gerados via Web Audio API
+│   │
 │   ├── components/ui/
-│   │   ├── SideNav.tsx          ← Navegação lateral
-│   │   ├── WaterGlass.tsx       ← Copo virtual animado
-│   │   ├── CircularProgress.tsx ← Anel de progresso SVG
-│   │   ├── ReminderToast.tsx    ← Toast de lembrete in-app
-│   │   └── Toggle.tsx           ← Switch on/off
+│   │   ├── SideNav.tsx              ← Navegação lateral + botão Suporte
+│   │   ├── WaterGlass.tsx           ← Copo virtual animado
+│   │   ├── CircularProgress.tsx     ← Anel de progresso SVG
+│   │   ├── UpdateProfileToast.tsx   ← Toast bimestral de revisão de perfil
+│   │   ├── Toggle.tsx               ← Switch on/off
+│   │   ├── Modal.tsx                ← Modal genérico reutilizável
+│   │   ├── DatePicker.tsx           ← Calendário customizado (popover) com pt-BR
+│   │   ├── DrinkHistoryModal.tsx    ← Edição de registros de QUALQUER dia
+│   │   └── SupportModal.tsx         ← Form de bug/sugestão (mailto / GitHub issue)
 │   │
 │   └── pages/
-│       ├── Dashboard.tsx        ← Tela principal
-│       ├── Statistics.tsx       ← Estatísticas (7/30 dias)
-│       ├── Achievements.tsx     ← Conquistas
-│       ├── Settings.tsx         ← Configurações
+│       ├── Dashboard.tsx        ← Tela principal + histórico clicável
+│       ├── Statistics.tsx       ← Gráficos 7/30/90 dias + personalizado, tooltip fixed
+│       ├── Achievements.tsx     ← 20 conquistas com auto-unlock retroativo
+│       ├── Settings.tsx         ← Configurações (Gerais e Frases) + teste de notificação
+│       ├── ReminderWindow.tsx   ← UI da janela customizada de lembrete (frameless/transparent)
 │       └── onboarding/
 │           └── Onboarding.tsx   ← TODAS as telas de onboarding em UM componente
-│                                  (welcome → weight → activity → climate → result)
+│                                  (welcome → weight → activity → climate → recipiente_ask → recipiente_setup → result)
 │                                  Estado interno via useState, sem rotas separadas.
 │
 └── src-tauri/               ← BACKEND (Rust)
@@ -66,10 +77,9 @@ gole/
     ├── capabilities/default.json  ← Permissões da janela
     └── src/
         ├── main.rs          ← Entry point (chama gole_lib::run())
-        ├── lib.rs           ← TODOS os comandos Tauri + setup tray + scheduler
-        ├── db.rs            ← Camada SQLite (settings, logs, reminders, achievements)
-        ├── hydration.rs     ← Fórmula de cálculo de meta diária
-        └── phrases.rs       ← Banco de frases de notificação + anti-repetição
+        ├── lib.rs           ← TODOS os comandos Tauri + setup tray + scheduler + motor anti-repetição
+        ├── db.rs            ← Camada SQLite (settings, logs, reminders, achievements, phrases)
+        └── hydration.rs     ← Fórmula de cálculo de meta diária
 ```
 
 ---
@@ -83,14 +93,15 @@ gole/
 - Bônus de clima: cold=0, temperate=200, hot=500
 
 ### Frases das notificações
-→ **`src-tauri/src/phrases.rs`** — função `get_phrases()`
-- Categorias: `humor`, `geek`, `escritorio`, `motivacional`, `minimalista`
-- Sistema anti-repetição mantém últimas 5 frases na memória
+→ **`src-tauri/src/lib.rs`** — função `pick_phrase()`
+- Tabela: `phrases` no SQLite (gerencia padrões e personalizadas de forma persistente).
+- Categorias: `profissional`, `equilibrado`, `brincalhao`, `tudo`, `favoritas` e `personalizadas`.
+- Sistema anti-repetição: redefinição automática quando todas as frases do pool da categoria selecionada tiverem sido exibidas.
 
 ### Banco de dados (schema, queries)
 → **`src-tauri/src/db.rs`**
-- Tabelas: `settings`, `daily_logs`, `reminders`, `achievements`, `streak_log`
-- Para adicionar coluna/tabela: editar `init_db()` (usar `CREATE TABLE IF NOT EXISTS`)
+- Tabelas: `settings`, `daily_logs`, `reminders`, `achievements`, `streak_log`, `phrases`
+- Para adicionar coluna/tabela: editar `init_db()` (usar `CREATE TABLE IF NOT EXISTS`).
 
 ### Novo comando Tauri (Rust → frontend)
 1. Adicionar função `#[tauri::command]` em **`src-tauri/src/lib.rs`**
@@ -120,31 +131,46 @@ gole/
 
 ### Scheduler de lembretes
 → **`src/App.tsx`** — useEffect que chama `api.sendReminder()` a cada `reminder_interval_min`
-- Lembrete é disparado pelo frontend; o Rust apenas registra e emite evento
+- Lembrete é disparado pelo frontend; o Rust apenas registra e emite evento.
 
 ### Tela de Onboarding
 → **`src/pages/onboarding/Onboarding.tsx`** (arquivo único)
-- Fluxo de **3 passos**: Peso → Atividade Física → Clima → Resultado
-- Estado interno via `useState<Step>` (welcome → weight → activity → climate → result)
-- Shell unificado (`<OnboardingShell>`) com logo GOLE + step indicator (3 dots)
-- Footer reutilizável (`<StepFooter>`) com botão "Voltar" e "Próximo"
-- Peso é clampeado entre 40-150kg (função `clampWeight`)
-- Ao clicar "Começar" no Result, chama `completeOnboarding()` do store e navega para `/dashboard`
+- Fluxo: Peso/Idade → Atividade Física → Clima → Recipiente Principal (Opcional) → Resultado.
+- Estado interno via `useState<Step>`.
+- Possui formulário de edição rápida de todos os dados inline no card de resultado (recalcula a meta de hidratação dinamicamente com 2 casas decimais).
 
 ### Dashboard (cards, copo, estatísticas)
 → **`src/pages/Dashboard.tsx`**
-- Para alterar layout: bento grid `grid-cols-12` com 3 colunas (4+5+3)
-- Cards: "Consumido", "Restante", "Registro Rápido", "Streak", "Dica"
+- Exibe consumo e meta com 2 casas decimais.
+- Se o recipiente estiver configurado, exibe a meta convertida (ex.: `ou 5 garrafas de 700ml`).
 
 ### Conquistas
 1. Adicionar metadata em **`src/pages/Achievements.tsx`** — objeto `ACHIEVEMENT_META`
 2. Adicionar lógica de unlock em **`src-tauri/src/lib.rs`** — função `check_achievements_internal()`
-3. Conquistas atuais: `first_day`, `goal_complete`, `streak_7`, `streak_30`, `streak_100`, `liters_100`
+3. Também atualizar a lista em **`src-tauri/src/db.rs`** — função `get_achievements()` (vec de IDs)
+4. Conquistas atuais (20): `first_day`, `goal_complete`, `streak_3`, `streak_7`, `streak_14`, `streak_30`, `streak_100`, `liters_10`, `liters_50`, `liters_100`, `liters_500`, `active_7`, `active_30`, `goal_10_days`, `goal_50_days`, `big_gulp`, `early_bird`, `night_owl`, `overflow_day`, `weekend_warrior`
+5. `check_achievements_internal` é chamado após cada `log_drink`/`confirm_reminder` E ao listar conquistas (auto-unlock retroativo)
+
+### Janela customizada de lembrete
+→ **`src-tauri/src/lib.rs`** — criação via `WebviewWindowBuilder` em `setup()` com label `"reminder"`
+→ **`src/main.tsx`** — detecta `?window=reminder` na URL e renderiza `<ReminderWindow />` em vez de `<App />`
+→ **`src/pages/ReminderWindow.tsx`** — UI estilizada (frameless, transparent, always-on-top, bottom-right do monitor)
+- A janela substitui completamente a notificação OS nativa
+- `send_reminder` no Rust mostra a janela e emite o evento `reminder` com payload completo
+- Capabilities (`src-tauri/capabilities/default.json`) precisam incluir `"reminder"` em `windows`
+
+### Edição de histórico
+→ **`src/components/ui/DrinkHistoryModal.tsx`** aceita prop `date?: string`
+- Sem `date`: opera em hoje
+- Com `date`: opera no dia indicado (via comando `get_drinks_for_date`)
+- Permite adicionar registro com horário customizado (input `time`) via comando `log_drink_at`
+- Acessível pelo Dashboard (clicar no valor "Consumido") e pelo gráfico de Histórico em Estatísticas (clicar numa barra)
 
 ### Configurações (Settings)
 → **`src/pages/Settings.tsx`**
-- Secções: Perfil/Medidas, Lembretes, Notificações, Sistema
-- Salvamento é automático (debounce não necessário pois SQLite é local)
+- Abas:
+  - **Configurações Gerais**: Perfil/Medidas (peso, idade), Lembretes, Recipiente Principal, Notificações, Sistema.
+  - **Gerenciamento de Frases**: Visualizar por categoria, favoritar/desfavoritar, CRUD de frases personalizadas.
 
 ---
 

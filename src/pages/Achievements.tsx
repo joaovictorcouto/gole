@@ -32,6 +32,76 @@ const ACHIEVEMENT_META: Record<string, { icon: string; title: string; descriptio
     title: "100 Litros",
     description: "Consumiu 100 litros de água com o GOLE",
   },
+  streak_3: {
+    icon: "✨",
+    title: "Trio Hidratado",
+    description: "Cumpriu a meta 3 dias seguidos",
+  },
+  streak_14: {
+    icon: "🌟",
+    title: "14 Dias Seguidos",
+    description: "Duas semanas inteiras batendo a meta",
+  },
+  liters_10: {
+    icon: "💧",
+    title: "10 Litros",
+    description: "Consumiu seus primeiros 10 litros no GOLE",
+  },
+  liters_50: {
+    icon: "🚰",
+    title: "50 Litros",
+    description: "Consumiu 50 litros de água no total",
+  },
+  liters_500: {
+    icon: "🏆",
+    title: "500 Litros",
+    description: "Marco de meio milhão de mililitros",
+  },
+  active_7: {
+    icon: "📅",
+    title: "Semana Ativa",
+    description: "Usou o GOLE em 7 dias diferentes",
+  },
+  active_30: {
+    icon: "🗓️",
+    title: "Mês Ativo",
+    description: "Usou o GOLE em 30 dias diferentes",
+  },
+  goal_10_days: {
+    icon: "🎯",
+    title: "Meta em 10 Dias",
+    description: "Bateu a meta diária em 10 dias (não necessariamente seguidos)",
+  },
+  goal_50_days: {
+    icon: "🥇",
+    title: "Meta em 50 Dias",
+    description: "Bateu a meta diária em 50 dias no total",
+  },
+  big_gulp: {
+    icon: "🥤",
+    title: "Goldão",
+    description: "Registrou 1L ou mais em um único registro",
+  },
+  early_bird: {
+    icon: "🌅",
+    title: "Madrugador",
+    description: "Bebeu água antes das 7h da manhã",
+  },
+  night_owl: {
+    icon: "🌙",
+    title: "Coruja",
+    description: "Bebeu água depois das 22h",
+  },
+  overflow_day: {
+    icon: "🔥",
+    title: "Acima da Meta",
+    description: "Passou de 120% da meta em um único dia",
+  },
+  weekend_warrior: {
+    icon: "🏖️",
+    title: "Guerreiro de Fim de Semana",
+    description: "Cumpriu a meta em um sábado e domingo da mesma semana",
+  },
 };
 
 function formatDate(isoStr: string): string {
@@ -53,8 +123,8 @@ export function Achievements() {
   const locked = achievements.filter((a) => a.unlocked_at === null);
 
   return (
-    <div className="min-h-screen p-10" style={{ marginLeft: "280px" }}>
-      <header className="mb-12">
+    <div className="flex flex-col h-full" style={{ marginLeft: "280px" }}>
+      <header className="px-10 pt-10 pb-6 shrink-0">
         <h1 className="text-5xl font-semibold mb-2" style={{ color: "#3b6377", letterSpacing: "-0.04em" }}>
           Conquistas
         </h1>
@@ -62,6 +132,8 @@ export function Achievements() {
           {unlocked.length} de {achievements.length} conquistas desbloqueadas.
         </p>
       </header>
+
+      <div className="flex-1 overflow-y-auto px-10 pb-10">
 
       {/* Unlocked */}
       {unlocked.length > 0 && (
@@ -142,6 +214,8 @@ export function Achievements() {
           </p>
         </div>
       )}
+
+      </div>{/* end scrollable */}
     </div>
   );
 }

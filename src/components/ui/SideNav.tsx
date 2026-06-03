@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppStore } from "../../store/useAppStore";
 import { featureFlags } from "../../lib/featureFlags";
+import { SupportModal } from "./SupportModal";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
@@ -12,11 +14,18 @@ const navItems = [
 export function SideNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logDrink, todayStats } = useAppStore();
+  const { logDrink, todayStats, settings, loadSettings } = useAppStore();
+  const [supportOpen, setSupportOpen] = useState(false);
+
+  useEffect(() => { if (!settings) loadSettings(); }, []);
+
+  // Always use suggested per-reminder amount (calculated from daily goal)
+  const drinkAmount = todayStats?.suggested_per_reminder ?? 250;
+  // settings is referenced only to keep store hot
+  void settings;
 
   const handleDrink = async () => {
-    const ml = todayStats?.suggested_per_reminder ?? 250;
-    await logDrink(ml);
+    await logDrink(drinkAmount);
   };
 
   return (
@@ -97,10 +106,14 @@ export function SideNav() {
         >
           <span className="material-symbols-outlined text-[18px]">water_drop</span>
           Beber Água
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full ml-1"
+            style={{ backgroundColor: "rgba(255,255,255,0.18)", letterSpacing: "0.04em" }}>
+            +{drinkAmount}ml
+          </span>
         </button>
         <button
-          onClick={() => navigate("/settings")}
-          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:bg-[#e6e8eb]/50"
+          onClick={() => setSupportOpen(true)}
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:bg-[#e6e8eb]/50 cursor-pointer"
           style={{ color: "#5B6572", fontSize: "14px", letterSpacing: "0.02em" }}
         >
           <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform duration-200">
@@ -109,6 +122,8 @@ export function SideNav() {
           Suporte
         </button>
       </div>
+
+      <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
     </nav>
   );
 }

@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Drop shape -->
+  <path
+    d="M256 52C256 52 92 230 92 338C92 428.6 165.4 502 256 502C346.6 502 420 428.6 420 338C420 230 256 52 256 52Z"
+    fill="url(#drop-main)"
+  />
+  <!-- Inner highlight (shine) -->
+  <path
+    d="M210 200C210 200 170 260 170 310C170 342 190 368 215 378"
+    stroke="url(#shine-grad)"
+    stroke-width="18"
+    stroke-linecap="round"
+    opacity="0.55"
+  />
+  <!-- Subtle top highlight ellipse -->
+  <ellipse cx="218" cy="260" rx="28" ry="48" fill="rgba(255,255,255,0.18)" transform="rotate(-15 218 260)" />
+  <defs>
+    <linearGradient id="drop-main" x1="256" y1="52" x2="256" y2="502" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#7DD8F8"/>
+      <stop offset="40%"  stop-color="#2A8EC9"/>
+      <stop offset="100%" stop-color="#0A4A7A"/>
+    </linearGradient>
+    <linearGradient id="shine-grad" x1="170" y1="200" x2="215" y2="378" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+</svg>

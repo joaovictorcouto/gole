@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "GOLE",
-  "version": "0.1.0",
+  "version": "0.0.9",
   "identifier": "com.gole.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -15,19 +15,11 @@
         "title": "GOLE",
         "width": 1280,
         "height": 800,
-        "minWidth": 900,
-        "minHeight": 600,
-        "resizable": true,
+        "resizable": false,
         "decorations": true,
         "center": true
       }
     ],
-    "trayIcon": {
-      "id": "main",
-      "iconPath": "icons/32x32.png",
-      "iconAsTemplate": true,
-      "menuOnLeftClick": false
-    },
     "security": {
       "csp": null
     }

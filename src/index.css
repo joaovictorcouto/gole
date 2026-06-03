@@ -53,6 +53,11 @@
   --radius-full: 9999px;
 }
 
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
 * {
   font-family: 'Geist', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -64,6 +69,10 @@ body {
   color: #191c1e;
   margin: 0;
   padding: 0;
+}
+
+button, [role="button"], a, label[for], input[type="range"] {
+  cursor: pointer;
 }
 
 /* Slider styling */

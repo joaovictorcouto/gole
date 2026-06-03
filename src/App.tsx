@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { useAppStore } from "./store/useAppStore";
 import { SideNav } from "./components/ui/SideNav";
-import { ReminderToast } from "./components/ui/ReminderToast";
+import { UpdateProfileToast } from "./components/ui/UpdateProfileToast";
 import { Onboarding } from "./pages/onboarding/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
 import { Statistics } from "./pages/Statistics";
@@ -11,21 +11,51 @@ import { Achievements } from "./pages/Achievements";
 import { Settings } from "./pages/Settings";
 import { api } from "./lib/api";
 import { featureFlags } from "./lib/featureFlags";
+import { playSound, SoundPreset } from "./lib/sounds";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: "#f7f9fc" }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#f7f9fc" }}>
       <SideNav />
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {children}
       </div>
-      <ReminderToast />
+      <UpdateProfileToast />
     </div>
   );
 }
 
+function NavigationListener() {
+  const navigate = useNavigate();
+  const { loadSettings, loadTodayStats } = useAppStore();
+
+  useEffect(() => {
+    const unlistenNavigate = listen<string>("navigate", (event) => {
+      navigate(event.payload);
+    });
+
+    const unlistenQuickDrink = listen<number>("quick-drink", async () => {
+      await loadTodayStats();
+      useAppStore.setState((s) => ({ drinkTick: s.drinkTick + 1 }));
+    });
+
+    const unlistenResetOnboarding = listen("reset-onboarding", async () => {
+      await loadSettings();
+      navigate("/onboarding", { replace: true });
+    });
+
+    return () => {
+      unlistenNavigate.then((fn) => fn());
+      unlistenQuickDrink.then((fn) => fn());
+      unlistenResetOnboarding.then((fn) => fn());
+    };
+  }, [navigate]);
+
+  return null;
+}
+
 export default function App() {
-  const { settings, loadSettings, setReminderNotif } = useAppStore();
+  const { settings, loadSettings, drinkTick } = useAppStore();
   const [ready, setReady] = useState(false);
   const reminderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -34,8 +64,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const unlisten = listen<{ id: number; phrase: string; suggested_ml: number }>("reminder", (event) => {
-      setReminderNotif(event.payload);
+    const unlisten = listen<{ id: number; phrase: string; suggested_ml: number }>("reminder", () => {
+      const s = useAppStore.getState().settings;
+      if (s) playSound(s.sound_preset as SoundPreset, s.sound_volume);
     });
     return () => { unlisten.then((fn) => fn()); };
   }, []);
@@ -57,7 +88,7 @@ export default function App() {
     return () => {
       if (reminderTimerRef.current) clearTimeout(reminderTimerRef.current);
     };
-  }, [settings?.reminder_interval_min, settings?.reminders_paused]);
+  }, [settings?.reminder_interval_min, settings?.reminders_paused, drinkTick]);
 
   if (!ready) {
     return (
@@ -83,6 +114,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <NavigationListener />
       <Routes>
         <Route path="/onboarding" element={<Onboarding />} />
 

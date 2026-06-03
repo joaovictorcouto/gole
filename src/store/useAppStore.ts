@@ -15,6 +15,7 @@ interface AppStore {
   achievements: Achievement[];
   reminderNotif: ReminderNotif | null;
   loading: boolean;
+  drinkTick: number;
 
   loadSettings: () => Promise<void>;
   loadTodayStats: () => Promise<void>;
@@ -24,8 +25,16 @@ interface AppStore {
   logDrink: (ml: number) => Promise<void>;
   confirmReminder: (id: number, ml: number) => Promise<void>;
   saveSettings: (s: Partial<Settings>) => Promise<void>;
-  completeOnboarding: (weight: number, activity: string, climate: string) => Promise<void>;
+  completeOnboarding: (
+    weight: number,
+    age: number,
+    activity: string,
+    climate: string,
+    recipienteConfigurado: boolean,
+    recipienteCapacidade: number
+  ) => Promise<void>;
   setReminderNotif: (n: ReminderNotif | null) => void;
+  updateLastCheckDate: () => Promise<void>;
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
@@ -36,6 +45,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   achievements: [],
   reminderNotif: null,
   loading: false,
+  drinkTick: 0,
 
   loadSettings: async () => {
     const settings = await api.getSettings();
@@ -64,12 +74,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   logDrink: async (ml: number) => {
     const todayStats = await api.logDrink(ml);
-    set({ todayStats });
+    set((s) => ({ todayStats, drinkTick: s.drinkTick + 1 }));
   },
 
   confirmReminder: async (id: number, ml: number) => {
     const todayStats = await api.confirmReminder(id, ml);
-    set({ todayStats, reminderNotif: null });
+    set((s) => ({ todayStats, reminderNotif: null, drinkTick: s.drinkTick + 1 }));
   },
 
   saveSettings: async (partial: Partial<Settings>) => {
@@ -78,22 +88,46 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const merged = { ...current, ...partial };
     await api.saveSettings({
       weight_kg: merged.weight_kg,
+      age_years: merged.age_years,
       activity_level: merged.activity_level,
       climate: merged.climate,
       reminder_interval_min: merged.reminder_interval_min,
       notification_personality: merged.notification_personality,
       smart_mode: merged.smart_mode,
       autostart: merged.autostart,
+      recipiente_configurado: merged.recipiente_configurado,
+      recipiente_capacidade_ml: merged.recipiente_capacidade_ml,
+      sound_preset: merged.sound_preset,
+      sound_volume: merged.sound_volume,
     });
     await get().loadSettings();
     await get().loadTodayStats();
   },
 
-  completeOnboarding: async (weight: number, activity: string, climate: string) => {
-    await api.completeOnboarding({ weight_kg: weight, activity_level: activity, climate });
+  completeOnboarding: async (
+    weight: number,
+    age: number,
+    activity: string,
+    climate: string,
+    recipienteConfigurado: boolean,
+    recipienteCapacidade: number
+  ) => {
+    await api.completeOnboarding({
+      weight_kg: weight,
+      age_years: age,
+      activity_level: activity,
+      climate,
+      recipiente_configurado: recipienteConfigurado,
+      recipiente_capacidade_ml: recipienteCapacidade,
+    });
     await get().loadSettings();
     await get().loadTodayStats();
   },
 
   setReminderNotif: (reminderNotif) => set({ reminderNotif }),
+
+  updateLastCheckDate: async () => {
+    await api.updateLastCheckDate();
+    await get().loadSettings();
+  },
 }));
