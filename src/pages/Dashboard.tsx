@@ -16,7 +16,7 @@ function formatDate(): string {
 const WEEK_DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 export function Dashboard() {
-  const { todayStats, loadTodayStats, logDrink, settings } = useAppStore();
+  const { todayStats, loadTodayStats, logDrink } = useAppStore();
 
   useEffect(() => {
     loadTodayStats();

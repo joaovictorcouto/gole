@@ -6,8 +6,6 @@ interface CircularProgressProps {
 }
 
 export function CircularProgress({ percent, size = 64, strokeWidth = 2.5, className = "" }: CircularProgressProps) {
-  const radius = 15.9155;
-  const circumference = 2 * Math.PI * radius;
   const dashArray = (percent / 100) * 100;
 
   return (

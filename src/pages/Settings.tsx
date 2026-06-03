@@ -68,7 +68,6 @@ function SettingRow({ label, children }: { label: string; children: React.ReactN
 export function Settings() {
   const { settings, saveSettings, loadSettings } = useAppStore();
   const [localGoal, setLocalGoal] = useState<number | null>(null);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -85,12 +84,6 @@ export function Settings() {
       </div>
     );
   }
-
-  const handleSave = async () => {
-    await saveSettings({});
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
 
   const handleWeightChange = async (weight: number) => {
     await saveSettings({ weight_kg: weight });
