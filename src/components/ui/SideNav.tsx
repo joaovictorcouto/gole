@@ -8,6 +8,7 @@ import appIcon from "../../assets/icon.png";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
+  { path: "/reminders", label: "Lembretes", icon: "notifications" },
   ...(featureFlags.statistics ? [{ path: "/statistics", label: "Estatísticas", icon: "bar_chart" }] : []),
   ...(featureFlags.achievements ? [{ path: "/achievements", label: "Conquistas", icon: "emoji_events" }] : []),
   { path: "/settings", label: "Configurações", icon: "settings" },

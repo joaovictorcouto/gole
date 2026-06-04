@@ -20,6 +20,30 @@ export interface Settings {
   work_start_hour: string;
   work_end_hour: string;
   sip_ml: number;
+  next_override_at: string;
+  next_override_ml: number;
+}
+
+export interface ScheduleEntry {
+  time: string;
+  amount_ml: number;
+  sips: number;
+  status: "confirmed" | "missed" | "next" | "upcoming";
+  reminder_id: number | null;
+  is_override: boolean;
+}
+
+export interface ScheduleData {
+  past: ScheduleEntry[];
+  next: ScheduleEntry | null;
+  upcoming: ScheduleEntry[];
+  work_start: string;
+  work_end: string;
+  interval_min: number;
+  sip_ml: number;
+  has_override: boolean;
+  override_at: string;
+  override_ml: number;
 }
 
 export interface TodayStats {
@@ -174,6 +198,14 @@ export const api = {
 
   installSilentUpdate: (url: string): Promise<void> =>
     invoke("install_silent_update", { url }),
+
+  getReminderSchedule: () => invoke<ScheduleData>("get_reminder_schedule"),
+
+  setNextReminderOverride: (at: string, amount_ml: number) =>
+    invoke<void>("set_next_reminder_override", { at, amountMl: amount_ml }),
+
+  clearNextReminderOverride: () =>
+    invoke<void>("clear_next_reminder_override"),
 };
 
 export interface DrinkLog {

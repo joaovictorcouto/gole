@@ -416,6 +416,172 @@ fn set_reminders_paused(state: State<AppState>, paused: bool) -> Result<(), Stri
         .map_err(|e| e.to_string())
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct ScheduleEntry {
+    time: String,        // HH:MM
+    amount_ml: i64,
+    sips: i64,
+    status: String,      // 'confirmed' | 'missed' | 'next' | 'upcoming'
+    reminder_id: Option<i64>,
+    is_override: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct ScheduleData {
+    past: Vec<ScheduleEntry>,
+    next: Option<ScheduleEntry>,
+    upcoming: Vec<ScheduleEntry>,
+    work_start: String,
+    work_end: String,
+    interval_min: i64,
+    sip_ml: i64,
+    has_override: bool,
+    override_at: String,
+    override_ml: i64,
+}
+
+#[tauri::command]
+fn get_reminder_schedule(state: State<AppState>) -> Result<ScheduleData, String> {
+    let conn = state.conn.lock().unwrap();
+    let settings = db::get_settings(&conn).map_err(|e| e.to_string())?;
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    let rows = db::list_today_reminders(&conn, &date).map_err(|e| e.to_string())?;
+    drop(conn);
+
+    let suggested_ml = hydration::suggested_per_reminder(
+        settings.daily_goal_ml,
+        settings.reminder_interval_min,
+        &settings.work_start_hour,
+        &settings.work_end_hour,
+        settings.sip_ml,
+    );
+    let suggested_sips = hydration::sips_per_reminder(
+        settings.daily_goal_ml,
+        settings.reminder_interval_min,
+        &settings.work_start_hour,
+        &settings.work_end_hour,
+        settings.sip_ml,
+    );
+
+    let mut past = Vec::new();
+    for r in &rows {
+        let time = r.sent_at.get(11..16).unwrap_or("").to_string();
+        past.push(ScheduleEntry {
+            time,
+            amount_ml: suggested_ml,
+            sips: suggested_sips,
+            status: if r.confirmed { "confirmed".into() } else { "missed".into() },
+            reminder_id: Some(r.id),
+            is_override: false,
+        });
+    }
+
+    // Determine next reminder time
+    let now = Local::now();
+    let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
+        .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
+    let start_time = chrono::NaiveTime::parse_from_str(&settings.work_start_hour, "%H:%M")
+        .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(8, 0, 0).unwrap());
+
+    // Base: last fire + interval (or now + interval if no past) — capped by work window
+    let last_fire = rows.last().and_then(|r| chrono::NaiveDateTime::parse_from_str(&r.sent_at, "%Y-%m-%dT%H:%M:%S").ok());
+    let base_next = match last_fire {
+        Some(t) => t + chrono::Duration::minutes(settings.reminder_interval_min),
+        None => {
+            // First of day: use max(now, work_start)
+            let now_naive = now.naive_local();
+            let today_start = now.date_naive().and_time(start_time);
+            if now_naive < today_start { today_start } else { now_naive + chrono::Duration::minutes(settings.reminder_interval_min) }
+        }
+    };
+
+    let mut has_override = false;
+    let mut override_amount_ml = suggested_ml;
+    let mut override_sips = suggested_sips;
+    let next_at = if !settings.next_override_at.is_empty() {
+        if let Ok(dt) = chrono::NaiveDateTime::parse_from_str(&settings.next_override_at, "%Y-%m-%dT%H:%M:%S") {
+            if dt > now.naive_local() {
+                has_override = true;
+                if settings.next_override_ml > 0 {
+                    override_amount_ml = settings.next_override_ml;
+                    override_sips = ((settings.next_override_ml as f64) / settings.sip_ml as f64).ceil() as i64;
+                }
+                dt
+            } else {
+                base_next
+            }
+        } else {
+            base_next
+        }
+    } else {
+        base_next
+    };
+
+    let today_end = now.date_naive().and_time(end_time);
+    let next_entry = if next_at <= today_end {
+        Some(ScheduleEntry {
+            time: next_at.format("%H:%M").to_string(),
+            amount_ml: override_amount_ml,
+            sips: override_sips,
+            status: "next".into(),
+            reminder_id: None,
+            is_override: has_override,
+        })
+    } else {
+        None
+    };
+
+    // Upcoming after next
+    let mut upcoming = Vec::new();
+    if let Some(_) = &next_entry {
+        let mut t = next_at + chrono::Duration::minutes(settings.reminder_interval_min);
+        while t <= today_end {
+            upcoming.push(ScheduleEntry {
+                time: t.format("%H:%M").to_string(),
+                amount_ml: suggested_ml,
+                sips: suggested_sips,
+                status: "upcoming".into(),
+                reminder_id: None,
+                is_override: false,
+            });
+            t = t + chrono::Duration::minutes(settings.reminder_interval_min);
+        }
+    }
+
+    Ok(ScheduleData {
+        past,
+        next: next_entry,
+        upcoming,
+        work_start: settings.work_start_hour,
+        work_end: settings.work_end_hour,
+        interval_min: settings.reminder_interval_min,
+        sip_ml: settings.sip_ml,
+        has_override,
+        override_at: settings.next_override_at,
+        override_ml: settings.next_override_ml,
+    })
+}
+
+#[tauri::command]
+fn set_next_reminder_override(
+    state: State<AppState>,
+    at: String,
+    amount_ml: i64,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    db::set_setting(&conn, "next_override_at", &at).map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "next_override_ml", &amount_ml.to_string()).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn clear_next_reminder_override(state: State<AppState>) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    db::set_setting(&conn, "next_override_at", "").map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "next_override_ml", "0").map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[tauri::command]
 fn get_last_reminder_id(state: State<AppState>) -> Option<i64> {
     *state.last_reminder_id.lock().unwrap()
@@ -577,7 +743,16 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
             return Ok(());
         }
 
-        suggested = hydration::suggested_per_reminder(settings.daily_goal_ml, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml);
+        suggested = if settings.next_override_ml > 0 {
+            settings.next_override_ml
+        } else {
+            hydration::suggested_per_reminder(settings.daily_goal_ml, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml)
+        };
+        // Consume override now that it has fired
+        if !settings.next_override_at.is_empty() || settings.next_override_ml > 0 {
+            let _ = db::set_setting(&conn, "next_override_at", "");
+            let _ = db::set_setting(&conn, "next_override_ml", "0");
+        }
         let date = Local::now().format("%Y-%m-%d").to_string();
         consumed = db::get_today_consumed(&conn, &date).map_err(|e| e.to_string())?;
         phrase = pick_phrase(&conn, &settings.notification_personality);
@@ -844,6 +1019,9 @@ pub fn run() {
             get_drinks_for_date,
             log_drink_at,
             install_silent_update,
+            get_reminder_schedule,
+            set_next_reminder_override,
+            clear_next_reminder_override,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -9,6 +9,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Statistics } from "./pages/Statistics";
 import { Achievements } from "./pages/Achievements";
 import { Settings } from "./pages/Settings";
+import { Reminders } from "./pages/Reminders";
 import { api } from "./lib/api";
 import { featureFlags } from "./lib/featureFlags";
 import { playSound, SoundPreset } from "./lib/sounds";
@@ -138,20 +139,31 @@ export default function App() {
     if (!settings) return;
     const intervalMs = settings.reminder_interval_min * 60 * 1000;
 
+    const nextDelayMs = (): number => {
+      if (settings.next_override_at) {
+        const target = new Date(settings.next_override_at).getTime();
+        const delta = target - Date.now();
+        if (delta > 0) return delta;
+      }
+      return intervalMs;
+    };
+
     const schedule = () => {
       reminderTimerRef.current = setTimeout(async () => {
         if (!settings.reminders_paused) {
           await api.sendReminder(false);
         }
+        // After firing, reload settings so override is cleared
+        await useAppStore.getState().loadSettings();
         schedule();
-      }, intervalMs);
+      }, nextDelayMs());
     };
 
     schedule();
     return () => {
       if (reminderTimerRef.current) clearTimeout(reminderTimerRef.current);
     };
-  }, [settings?.reminder_interval_min, settings?.reminders_paused, drinkTick]);
+  }, [settings?.reminder_interval_min, settings?.reminders_paused, settings?.next_override_at, drinkTick]);
 
   if (!ready) {
     return (
@@ -200,6 +212,11 @@ export default function App() {
                 : <Navigate to="/onboarding" replace />
             } />
           )}
+          <Route path="/reminders" element={
+            onboardingDone
+              ? <AppLayout><Reminders /></AppLayout>
+              : <Navigate to="/onboarding" replace />
+          } />
           <Route path="/settings" element={
             onboardingDone
               ? <AppLayout><Settings /></AppLayout>

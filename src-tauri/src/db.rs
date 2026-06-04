@@ -69,6 +69,8 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         INSERT OR IGNORE INTO settings (key, value) VALUES ('work_start_hour', '08:00');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('work_end_hour', '18:00');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('sip_ml', '20');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('next_override_at', '');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('next_override_ml', '0');
 
         -- Profissional
         INSERT OR IGNORE INTO phrases (text, category) VALUES ('💧 Hora da água.', 'profissional');
@@ -211,6 +213,8 @@ pub struct Settings {
     pub work_start_hour: String,
     pub work_end_hour: String,
     pub sip_ml: i64,
+    pub next_override_at: String,
+    pub next_override_ml: i64,
 }
 
 pub fn get_settings(conn: &Connection) -> Result<Settings> {
@@ -246,6 +250,8 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
         work_start_hour: map.get("work_start_hour").cloned().unwrap_or_else(|| "08:00".into()),
         work_end_hour: map.get("work_end_hour").cloned().unwrap_or_else(|| "18:00".into()),
         sip_ml: map.get("sip_ml").and_then(|v| v.parse().ok()).unwrap_or(20),
+        next_override_at: map.get("next_override_at").cloned().unwrap_or_default(),
+        next_override_ml: map.get("next_override_ml").and_then(|v| v.parse().ok()).unwrap_or(0),
     })
 }
 
@@ -478,6 +484,29 @@ pub fn snooze_reminder(conn: &Connection, id: i64) -> Result<()> {
         params![id],
     )?;
     Ok(())
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReminderRow {
+    pub id: i64,
+    pub sent_at: String,
+    pub confirmed: bool,
+}
+
+pub fn list_today_reminders(conn: &Connection, date: &str) -> Result<Vec<ReminderRow>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, sent_at, confirmed FROM reminders WHERE date(sent_at) = ?1 ORDER BY sent_at ASC",
+    )?;
+    let rows = stmt.query_map(params![date], |row| {
+        Ok(ReminderRow {
+            id: row.get(0)?,
+            sent_at: row.get(1)?,
+            confirmed: row.get::<_, i64>(2)? != 0,
+        })
+    })?;
+    let mut out = Vec::new();
+    for r in rows { out.push(r?); }
+    Ok(out)
 }
 
 pub fn get_today_reminders(conn: &Connection, date: &str) -> Result<(i64, i64)> {
