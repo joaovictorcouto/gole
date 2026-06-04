@@ -1,70 +1,86 @@
 import { Modal } from "./Modal";
+import { CHANGELOG } from "../../lib/changelog";
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
+function formatDate(iso: string) {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
 export function ChangelogModal({ open, onClose }: Props) {
+  const latest = CHANGELOG[0];
+  const older = CHANGELOG.slice(1);
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       icon="rocket_launch"
       title={`O que há de novo — Versão ${__APP_VERSION__}`}
-      description="Descubra as últimas atualizações e novidades do GOLE."
+      description={latest?.highlight || "Histórico de atualizações do GOLE."}
       maxWidth={500}
     >
-      <div className="space-y-4 text-left max-h-[380px] overflow-y-auto pr-1">
-        <div>
-          <h3 className="text-sm font-bold text-[#257ca3] mb-1 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px]">schedule</span>
-            Onboarding Interativo & Horários
-          </h3>
-          <p className="text-xs text-[#5B6572] leading-relaxed">
-            Agora a definição do seu período ativo no computador no onboarding é feita através de controles deslizantes (sliders) práticos, eliminando a digitação. Além disso, criamos um card dedicado na tela final de resumo para confirmar o horário ativo de lembretes.
-          </p>
-        </div>
+      <div className="space-y-6 text-left max-h-[420px] overflow-y-auto pr-1">
+        {latest && (
+          <section>
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="text-sm font-bold" style={{ color: "#191c1e" }}>
+                Versão {latest.version}
+              </h2>
+              <span className="text-[10px] uppercase font-semibold text-gray-400">
+                {formatDate(latest.date)}
+              </span>
+            </div>
+            <div className="space-y-3">
+              {latest.entries.map((e, i) => (
+                <div key={i}>
+                  <h3 className="text-sm font-bold text-[#257ca3] mb-1 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px]">{e.icon}</span>
+                    {e.title}
+                  </h3>
+                  <p className="text-xs text-[#5B6572] leading-relaxed">{e.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <div>
-          <h3 className="text-sm font-bold text-[#257ca3] mb-1 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px]">edit_calendar</span>
-            Edição Completa de Registros
-          </h3>
-          <p className="text-xs text-[#5B6572] leading-relaxed">
-            Ao editar um registro no histórico, agora você pode alterar tanto a quantidade de água (ml) quanto o horário exato da ingestão. Tudo sincronizado e salvo no banco de dados.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold text-[#257ca3] mb-1 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px]">align_horizontal_center</span>
-            Histórico Centralizado & Maior
-          </h3>
-          <p className="text-xs text-[#5B6572] leading-relaxed">
-            As garrafas no gráfico de histórico de Estatísticas agora ficam perfeitamente centralizadas com margens simétricas nas laterais. O tamanho das garrafas de 30 e 60 dias aumentou (de 40px para 44px de largura) para melhorar o conforto visual e o clique.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold text-[#257ca3] mb-1 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px]">notifications_active</span>
-            Auto-retomada de Lembretes
-          </h3>
-          <p className="text-xs text-[#5B6572] leading-relaxed">
-            Ao pausar seus lembretes, eles serão ativados automaticamente amanhã, evitando que você esqueça de ligá-los novamente. O switch de ativação no painel também recebeu correções para responder de forma imediata ao clique.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold text-[#257ca3] mb-1 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px]">palette</span>
-            Nova Paleta Azul Claro
-          </h3>
-          <p className="text-xs text-[#5B6572] leading-relaxed">
-            Substituímos globalmente o tom de azul anterior por novos tons mais vibrantes e suaves (#257ca3 e #0f76a0) nas janelas, barra de tarefas, tray e cabeçalho, deixando o visual mais moderno.
-          </p>
-        </div>
+        {older.length > 0 && (
+          <section className="pt-4 border-t" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+            <h2 className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">
+              Versões anteriores
+            </h2>
+            <div className="space-y-5">
+              {older.map((v) => (
+                <div key={v.version}>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <h3 className="text-sm font-bold" style={{ color: "#191c1e" }}>
+                      Versão {v.version}
+                    </h3>
+                    <span className="text-[10px] uppercase font-semibold text-gray-400">
+                      {formatDate(v.date)}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {v.entries.map((e, i) => (
+                      <div key={i}>
+                        <h4 className="text-xs font-semibold text-[#257ca3] mb-0.5 flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[14px]">{e.icon}</span>
+                          {e.title}
+                        </h4>
+                        <p className="text-[11px] text-[#5B6572] leading-relaxed">{e.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <button
