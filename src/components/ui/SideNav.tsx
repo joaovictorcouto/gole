@@ -4,6 +4,7 @@ import { useAppStore } from "../../store/useAppStore";
 import { featureFlags } from "../../lib/featureFlags";
 import { SupportModal } from "./SupportModal";
 import { ChangelogModal } from "./ChangelogModal";
+import appIcon from "../../assets/icon.png";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
@@ -44,15 +45,7 @@ export function SideNav() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-12">
         <div className="w-10 h-10 shrink-0 flex items-center justify-center">
-          <svg width="36" height="36" viewBox="0 0 100 100" fill="none" className="overflow-visible">
-            <path d="M50 15C50 15 22 46 22 66C22 80.8 34.2 92 50 92C65.8 92 78 80.8 78 66C78 46 50 15 50 15Z" fill="url(#nav-grad)" />
-            <defs>
-              <linearGradient id="nav-grad" x1="50" y1="15" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#8AD4FF" />
-                <stop offset="1" stopColor="#0f76a0" />
-              </linearGradient>
-            </defs>
-          </svg>
+          <img src={appIcon} alt="Gole" style={{ width: 36, height: 36, objectFit: "contain" }} />
         </div>
         <div>
           <h1 className="text-3xl font-black leading-none" style={{ color: "#257ca3", letterSpacing: "-0.05em" }}>

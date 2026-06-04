@@ -551,8 +551,9 @@ export function Settings() {
                     Em breve
                   </span>
                   <Toggle
-                    checked={settings.smart_mode}
-                    onChange={(v) => saveSettings({ smart_mode: v })}
+                    checked={false}
+                    onChange={() => {}}
+                    disabled
                   />
                 </div>
               </SettingRow>
