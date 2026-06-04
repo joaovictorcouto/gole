@@ -1,3 +1,5 @@
+import { AnimatedNumber } from "./AnimatedNumber";
+
 interface CircularProgressProps {
   percent: number;
   size?: number;
@@ -22,14 +24,13 @@ export function CircularProgress({ percent, size = 64, strokeWidth = 2.5, classN
           stroke="#257ca3"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
-          className="animate-progress"
-          style={{ strokeDasharray: `${dashArray}, 100` }}
+          style={{ strokeDasharray: `${dashArray}, 100`, transition: "stroke-dasharray 600ms cubic-bezier(0.16, 1, 0.3, 1)" }}
           d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="text-[10px] font-bold" style={{ color: "#257ca3" }}>
-          {Math.round(percent)}%
+          <AnimatedNumber value={percent} decimals={0} />%
         </span>
       </div>
     </div>

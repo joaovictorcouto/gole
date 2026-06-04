@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { useIsDev } from "../lib/useIsDev";
 import { Toggle } from "../components/ui/Toggle";
 import { api, Phrase } from "../lib/api";
 import { playSound, SOUND_OPTIONS, SoundPreset } from "../lib/sounds";
@@ -185,7 +187,10 @@ const JugSvg = () => (
 );
 
 export function Settings() {
+  const navigate = useNavigate();
+  const isDev = useIsDev();
   const { settings, saveSettings, loadSettings } = useAppStore();
+  const [testingNotif, setTestingNotif] = useState(false);
   const [localGoal, setLocalGoal] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"general" | "phrases">("general");
 
@@ -289,6 +294,17 @@ export function Settings() {
     await saveSettings({ age_years: age });
     setProfileSavedAt(Date.now());
     setTimeout(() => setProfileSavedAt(null), 2000);
+  };
+
+  const handleTestNotification = async () => {
+    setTestingNotif(true);
+    try {
+      await api.sendReminder(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTimeout(() => setTestingNotif(false), 1500);
+    }
   };
 
   const commitWorkStart = async () => {
@@ -595,6 +611,53 @@ export function Settings() {
                 </p>
               </div>
             </Section>
+
+            {isDev && (
+              <Section title="Módulo de Testes (Dev)" icon="bug_report">
+                <div className="py-2 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleTestNotification}
+                      disabled={testingNotif}
+                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer disabled:opacity-50 hover:-translate-y-0.5 flex items-center gap-2"
+                      style={{
+                        backgroundColor: "rgba(191,232,255,0.4)",
+                        color: "#257ca3",
+                        border: "1px solid #257ca3",
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                      {testingNotif ? "Enviando..." : "Disparar notificação"}
+                    </button>
+                    <span className="text-xs" style={{ color: "#71787c" }}>
+                      Forçar lembrete agora.
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={async () => {
+                        await saveSettings({ onboarding_complete: false });
+                        navigate("/onboarding");
+                      }}
+                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-2"
+                      style={{
+                        backgroundColor: "rgba(191,232,255,0.4)",
+                        color: "#257ca3",
+                        border: "1px solid #257ca3",
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
+                      Testar Onboarding
+                    </button>
+                    <span className="text-xs" style={{ color: "#71787c" }}>
+                      Abre tela de introdução.
+                    </span>
+                  </div>
+
+                </div>
+              </Section>
+            )}
 
             <Section title="Sistema" icon="settings">
               <SettingRow label="Iniciar com o sistema">

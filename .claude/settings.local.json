@@ -14,7 +14,10 @@
       "Bash(cargo update *)",
       "Bash(git tag *)",
       "Bash(git commit *)",
-      "Bash(npx tauri *)"
+      "Bash(npx tauri *)",
+      "PowerShell(Get-Process -Name gole,cargo -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)",
+      "PowerShell(\"done\")"
     ]
   }
 }

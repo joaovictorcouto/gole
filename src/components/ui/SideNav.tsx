@@ -4,6 +4,9 @@ import { useAppStore } from "../../store/useAppStore";
 import { featureFlags } from "../../lib/featureFlags";
 import { SupportModal } from "./SupportModal";
 import { ChangelogModal } from "./ChangelogModal";
+import { UndoChip } from "./UndoChip";
+import { api } from "../../lib/api";
+import { useDevGateAvailable, useIsDev, unlockDev, lockDev } from "../../lib/useIsDev";
 import appIcon from "../../assets/icon.png";
 
 const navItems = [
@@ -20,6 +23,36 @@ export function SideNav() {
   const { logDrink, todayStats, settings, loadSettings } = useAppStore();
   const [supportOpen, setSupportOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [undo, setUndo] = useState<{ amount: number; key: number } | null>(null);
+  const [, setLogoClicks] = useState(0);
+  const [pwdOpen, setPwdOpen] = useState(false);
+  const [pwd, setPwd] = useState("");
+  const [pwdError, setPwdError] = useState(false);
+  const devAvailable = useDevGateAvailable();
+  const isDev = useIsDev();
+
+  const handleLogoClick = () => {
+    if (!devAvailable) return;
+    setLogoClicks((c) => {
+      const next = c + 1;
+      if (next >= 7) {
+        setPwdOpen(true);
+        return 0;
+      }
+      return next;
+    });
+  };
+
+  const handleSubmitPwd = async () => {
+    const ok = await unlockDev(pwd);
+    if (ok) {
+      setPwdOpen(false);
+      setPwd("");
+      setPwdError(false);
+    } else {
+      setPwdError(true);
+    }
+  };
 
   useEffect(() => { if (!settings) loadSettings(); }, []);
 
@@ -30,6 +63,13 @@ export function SideNav() {
 
   const handleDrink = async () => {
     await logDrink(drinkAmount);
+    setUndo({ amount: drinkAmount, key: Date.now() });
+  };
+
+  const handleUndo = async () => {
+    try { await api.deleteLastDrink(); } catch (err) { console.error(err); }
+    setUndo(null);
+    await loadSettings();
   };
 
   return (
@@ -44,7 +84,7 @@ export function SideNav() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 mb-12">
+      <div className="flex items-center gap-3 mb-12 select-none" onClick={handleLogoClick}>
         <div className="w-11 h-11 shrink-0 flex items-center justify-center">
           <img src={appIcon} alt="Gole" style={{ width: 44, height: 44, objectFit: "contain" }} />
         </div>
@@ -66,11 +106,10 @@ export function SideNav() {
             <li key={item.path}>
               <button
                 onClick={() => navigate(item.path)}
-                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-300 group"
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors duration-200 group cursor-pointer ${active ? "bg-[rgba(191,232,255,0.3)]" : "bg-transparent hover:bg-[#e6e8eb]/60"}`}
                 style={{
-                  backgroundColor: active ? "rgba(191,232,255,0.3)" : "transparent",
                   color: active ? "#257ca3" : "#5B6572",
-                  fontWeight: active ? "700" : "500",
+                  fontWeight: active ? 700 : 500,
                   fontSize: "14px",
                   letterSpacing: "0.02em",
                 }}
@@ -106,6 +145,16 @@ export function SideNav() {
             +{drinkAmount}ml
           </span>
         </button>
+        {undo && (
+          <div className="-mt-2">
+            <UndoChip
+              key={undo.key}
+              amount={undo.amount}
+              onUndo={handleUndo}
+              onExpire={() => setUndo(null)}
+            />
+          </div>
+        )}
         <button
           onClick={() => setSupportOpen(true)}
           className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:bg-[#e6e8eb]/50 cursor-pointer"
@@ -124,6 +173,58 @@ export function SideNav() {
 
       <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <ChangelogModal open={changelogOpen} onClose={() => setChangelogOpen(false)} />
+
+      {isDev && (
+        <button
+          onClick={lockDev}
+          className="absolute top-2 right-2 text-[9px] uppercase font-bold px-2 py-0.5 rounded-md cursor-pointer"
+          style={{ background: "#fff3e0", color: "#bf360c" }}
+          title="Bloquear módulo dev"
+        >
+          DEV · lock
+        </button>
+      )}
+
+      {pwdOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={() => { setPwdOpen(false); setPwd(""); setPwdError(false); }}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-[360px] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <span className="material-symbols-outlined text-[24px]" style={{ color: "#257ca3" }}>lock</span>
+              <h2 className="text-lg font-bold" style={{ color: "#191c1e" }}>Acesso restrito</h2>
+            </div>
+            <input
+              type="password"
+              value={pwd}
+              onChange={(e) => { setPwd(e.target.value); setPwdError(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSubmitPwd(); }}
+              placeholder="Senha"
+              autoFocus
+              className="w-full px-3 py-2 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#257ca3]/30"
+              style={{ borderColor: pwdError ? "#bf360c" : "#e0e3e6" }}
+            />
+            {pwdError && <p className="text-[11px] mt-2" style={{ color: "#bf360c" }}>Senha incorreta.</p>}
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => { setPwdOpen(false); setPwd(""); setPwdError(false); }}
+                className="flex-1 px-4 py-2 rounded-xl text-sm cursor-pointer"
+                style={{ backgroundColor: "rgba(236,238,241,0.7)", color: "#5B6572" }}
+              >Cancelar</button>
+              <button
+                onClick={handleSubmitPwd}
+                className="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
+                style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
+              >Desbloquear</button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

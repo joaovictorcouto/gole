@@ -64,6 +64,32 @@ function NavigationListener() {
 export default function App() {
   const { settings, loadSettings, drinkTick } = useAppStore();
   const [ready, setReady] = useState(false);
+
+  // Block devtools / inspect access in production builds. Tauri release
+  // builds already disable the inspector at the OS-webview level; this
+  // additionally suppresses the keyboard and right-click affordances so
+  // there is no visible path to it from inside the app.
+  useEffect(() => {
+    const blockKey = (e: KeyboardEvent) => {
+      const k = e.key;
+      const c = e.ctrlKey, s = e.shiftKey;
+      if (
+        k === "F12" ||
+        (c && s && (k === "I" || k === "i" || k === "J" || k === "j" || k === "C" || k === "c")) ||
+        (c && (k === "U" || k === "u"))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    const blockCtx = (e: MouseEvent) => { e.preventDefault(); };
+    window.addEventListener("keydown", blockKey, true);
+    window.addEventListener("contextmenu", blockCtx, true);
+    return () => {
+      window.removeEventListener("keydown", blockKey, true);
+      window.removeEventListener("contextmenu", blockCtx, true);
+    };
+  }, []);
   const reminderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pauseToast, setPauseToast] = useState<"paused" | "resumed" | null>(null);
   const pauseToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -133,6 +159,27 @@ export default function App() {
       if (s) playSound(s.sound_preset as SoundPreset, s.sound_volume);
     });
     return () => { unlisten.then((fn) => fn()); };
+  }, []);
+
+  // Global live-refresh: any state-changing backend event reloads all stats.
+  // Skipped while the window is hidden so we don't waste CPU on animations
+  // the user can't see; reload-all runs on next visibility-on to catch up.
+  useEffect(() => {
+    const isVisible = () => document.visibilityState === "visible";
+    const handler = () => {
+      if (isVisible()) {
+        useAppStore.getState().reloadAll();
+      }
+    };
+    const unlistenSchedule = listen("schedule_changed", handler);
+    const unlistenStats = listen("stats_changed", handler);
+    const onVis = () => { if (isVisible()) useAppStore.getState().reloadAll(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      unlistenSchedule.then((fn) => fn());
+      unlistenStats.then((fn) => fn());
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   useEffect(() => {

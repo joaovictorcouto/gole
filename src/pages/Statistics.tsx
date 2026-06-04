@@ -46,39 +46,60 @@ function formatHumanDate(iso: string): string {
   return dt.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
 }
 
+const DROP_HIST_PATH = "M50 6 C 32 32, 14 58, 14 72 A 36 36 0 0 0 86 72 C 86 58, 68 32, 50 6 Z";
+// Drop interior bounds inside the 100x100 viewBox.
+const HIST_TOP = 6;
+const HIST_BOTTOM = 108; // 72 + 36 — extends below viewBox; clipped away by drop path
+const HIST_VISIBLE_BOTTOM = 100; // viewBox clip
+const HIST_H = HIST_VISIBLE_BOTTOM - HIST_TOP;
+
 const HistoryBottleSvg = ({ pct, reached }: { pct: number; reached: boolean }) => {
-  const gradientId = useMemo(() => `water-level-grad-${Math.random().toString(36).substr(2, 9)}`, [reached]);
+  const uid = useMemo(() => Math.random().toString(36).slice(2, 9), [reached]);
+  const clipId = `drop-clip-${uid}`;
+  const gradId = `drop-grad-${uid}`;
   const waterColorStart = reached ? "#257ca3" : "#8AD4FF";
   const waterColorEnd = reached ? "#0f76a0" : "#41AFFF";
-  const offsetPct = 100 - Math.min(100, Math.max(0, pct));
-  
+  const clamped = Math.min(100, Math.max(0, pct));
+  // Water surface y inside the drop. Surface at HIST_VISIBLE_BOTTOM when 0%,
+  // at HIST_TOP when 100%. Use HIST_H for proportional fill.
+  const surfaceY = HIST_VISIBLE_BOTTOM - (clamped / 100) * HIST_H;
+  void HIST_BOTTOM; // reserved for future use
+
   return (
     <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" className="overflow-visible">
       <defs>
-        <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
+        <clipPath id={clipId}>
+          <path d={DROP_HIST_PATH} />
+        </clipPath>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={waterColorStart} />
-          <stop offset={`${100 - offsetPct}%`} stopColor={waterColorEnd} />
-          <stop offset={`${100 - offsetPct}%`} stopColor="rgba(236,238,241,0.35)" />
-          <stop offset="100%" stopColor="rgba(236,238,241,0.35)" />
-        </linearGradient>
-        <linearGradient id="glass-grad-hist" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="rgba(255, 255, 255, 0.45)" />
-          <stop offset="30%" stopColor="rgba(255, 255, 255, 0.15)" />
-          <stop offset="70%" stopColor="rgba(255, 255, 255, 0.08)" />
-          <stop offset="100%" stopColor="rgba(255, 255, 255, 0.35)" />
+          <stop offset="100%" stopColor={waterColorEnd} />
         </linearGradient>
       </defs>
-      <rect x="44" y="6" width="12" height="6" rx="1.5" fill="#257ca3" />
-      <rect x="46" y="12" width="8" height="8" fill="#e0e3e6" stroke="#257ca3" strokeWidth="3" />
-      <path d="M35.5 27.5 L64.5 27.5 Q65.5 27.5 65.5 28.5 L65.5 85.5 Q65.5 87.5 62.5 87.5 L37.5 87.5 Q34.5 87.5 34.5 85.5 L34.5 28.5 Q34.5 27.5 35.5 27.5 Z" fill={`url(#${gradientId})`} />
-      <path d="M36 24 L64 24 Q68 24 68 28 L68 86 Q68 90 64 90 L36 90 Q32 90 32 86 L32 28 Q32 24 36 24 Z" stroke="#257ca3" strokeWidth="4.5" strokeLinejoin="round" fill="url(#glass-grad-hist)" />
-      <path d="M36 28 L36 84" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" />
-      <path d="M64 28 L64 84" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeLinecap="round" />
+      {/* Empty drop body */}
+      <path d={DROP_HIST_PATH} fill="rgba(236,238,241,0.55)" />
+      {/* Water fill: tall rect translated so its top edge sits at surfaceY.
+          Extending well past the viewBox guarantees the bottom never empties. */}
+      <g clipPath={`url(#${clipId})`}>
+        <rect
+          x="0"
+          width="100"
+          y={surfaceY}
+          height={200}
+          fill={`url(#${gradId})`}
+          opacity="0.92"
+          style={{ transition: "y 800ms cubic-bezier(0.22, 1, 0.36, 1)" }}
+        />
+      </g>
+      {/* Outline */}
+      <path d={DROP_HIST_PATH} stroke="#257ca3" strokeWidth="3" strokeLinejoin="round" fill="none" />
+      {/* Inner highlight */}
+      <path d="M36 36 C 30 48, 28 58, 30 68" stroke="rgba(255,255,255,0.55)" strokeWidth="3" strokeLinecap="round" fill="none" />
       {reached && (
-        <circle cx="50" cy="62" r="10" fill="#257ca3" />
-      )}
-      {reached && (
-        <path d="M46 62 L49 65 L55 59" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <>
+          <circle cx="50" cy="60" r="11" fill="#0f4c6e" />
+          <path d="M45 60 L49 64 L56 56" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </>
       )}
     </svg>
   );

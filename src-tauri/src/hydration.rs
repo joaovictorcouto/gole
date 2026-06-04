@@ -64,3 +64,24 @@ pub fn sips_per_reminder(goal_ml: i64, interval_min: i64, start_hour: &str, end_
 pub fn suggested_per_reminder(goal_ml: i64, interval_min: i64, start_hour: &str, end_hour: &str, sip_ml: i64) -> i64 {
     sips_per_reminder(goal_ml, interval_min, start_hour, end_hour, sip_ml) * sip_ml.max(1)
 }
+
+/// Sips per remaining slot given how much was already consumed and how many
+/// slots are still ahead today. Rounds up so the daily goal is met or
+/// exceeded (never less). If consumption already meets the goal or no
+/// slots remain, returns 1 as a safety floor.
+pub fn sips_per_remaining_slot(goal_ml: i64, consumed_ml: i64, sip_ml: i64, slots_remaining: i64) -> i64 {
+    if sip_ml <= 0 || slots_remaining <= 0 {
+        return 1;
+    }
+    let remaining_ml = (goal_ml - consumed_ml).max(0);
+    if remaining_ml == 0 {
+        return 0;
+    }
+    let total_sips = ceil_div(remaining_ml, sip_ml);
+    ceil_div(total_sips, slots_remaining).max(1)
+}
+
+/// ML per remaining slot, derived from sips_per_remaining_slot.
+pub fn ml_per_remaining_slot(goal_ml: i64, consumed_ml: i64, sip_ml: i64, slots_remaining: i64) -> i64 {
+    sips_per_remaining_slot(goal_ml, consumed_ml, sip_ml, slots_remaining) * sip_ml.max(1)
+}

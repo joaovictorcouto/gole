@@ -22,6 +22,7 @@ interface AppStore {
   loadWeekStats: () => Promise<void>;
   loadMonthStats: () => Promise<void>;
   loadAchievements: () => Promise<void>;
+  reloadAll: () => Promise<void>;
   logDrink: (ml: number) => Promise<void>;
   confirmReminder: (id: number, ml: number) => Promise<void>;
   saveSettings: (s: Partial<Settings>) => Promise<void>;
@@ -72,6 +73,24 @@ export const useAppStore = create<AppStore>((set, get) => ({
   loadAchievements: async () => {
     const achievements = await api.getAchievements();
     set({ achievements });
+  },
+
+  reloadAll: async () => {
+    const [settings, todayStats, weekStats, monthStats, achievements] = await Promise.all([
+      api.getSettings(),
+      api.getTodayStats(),
+      api.getWeekStats(),
+      api.getMonthStats(),
+      api.getAchievements(),
+    ]);
+    set((s) => ({
+      settings,
+      todayStats,
+      weekStats,
+      monthStats,
+      achievements,
+      drinkTick: s.drinkTick + 1,
+    }));
   },
 
   logDrink: async (ml: number) => {

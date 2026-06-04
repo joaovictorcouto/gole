@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { api, ScheduleData, ScheduleEntry } from "../lib/api";
 import { useAppStore } from "../store/useAppStore";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 
 function StatusBadge({ status, isOverride }: { status: ScheduleEntry["status"]; isOverride: boolean }) {
   if (status === "confirmed") return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#dcedc8", color: "#33691e" }}>Bebido</span>;
@@ -165,8 +167,12 @@ export function Reminders() {
 
   useEffect(() => {
     reload();
-    const tick = setInterval(reload, 30000);
-    return () => clearInterval(tick);
+    const tick = setInterval(reload, 10000); // fallback poll
+    const unlisten = listen("schedule_changed", () => reload());
+    return () => {
+      clearInterval(tick);
+      unlisten.then((fn) => fn());
+    };
   }, []);
 
   if (!data) {
@@ -214,15 +220,15 @@ export function Reminders() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
           <div className="rounded-xl p-4 bg-white border" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
             <div className="text-[11px] uppercase font-bold text-gray-400">Aceitos hoje</div>
-            <div className="text-3xl font-bold mt-1" style={{ color: "#33691e" }}>{totalConfirmed}</div>
+            <div className="text-3xl font-bold mt-1" style={{ color: "#33691e" }}><AnimatedNumber value={totalConfirmed} /></div>
           </div>
           <div className="rounded-xl p-4 bg-white border" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
             <div className="text-[11px] uppercase font-bold text-gray-400">Perdidos hoje</div>
-            <div className="text-3xl font-bold mt-1" style={{ color: "#bf360c" }}>{totalMissed}</div>
+            <div className="text-3xl font-bold mt-1" style={{ color: "#bf360c" }}><AnimatedNumber value={totalMissed} /></div>
           </div>
           <div className="rounded-xl p-4 bg-white border" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
             <div className="text-[11px] uppercase font-bold text-gray-400">Faltam hoje</div>
-            <div className="text-3xl font-bold mt-1" style={{ color: "#0d47a1" }}>{(data.next ? 1 : 0) + data.upcoming.length}</div>
+            <div className="text-3xl font-bold mt-1" style={{ color: "#0d47a1" }}><AnimatedNumber value={(data.next ? 1 : 0) + data.upcoming.length} /></div>
           </div>
         </div>
 

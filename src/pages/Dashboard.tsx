@@ -3,6 +3,9 @@ import { useAppStore } from "../store/useAppStore";
 import { WaterGlass } from "../components/ui/WaterGlass";
 import { CircularProgress } from "../components/ui/CircularProgress";
 import { DrinkHistoryModal } from "../components/ui/DrinkHistoryModal";
+import { SetTotalModal } from "../components/ui/SetTotalModal";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
+import { UndoChip } from "../components/ui/UndoChip";
 import { api } from "../lib/api";
 
 function formatMl(ml: number): string {
@@ -138,6 +141,7 @@ export function Dashboard() {
   const [undoVisible, setUndoVisible] = useState(false);
   const [lastAmount, setLastAmount] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [setTotalOpen, setSetTotalOpen] = useState(false);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -261,6 +265,13 @@ export function Dashboard() {
                   >
                     <span className="material-symbols-outlined text-[16px]">edit</span>
                   </button>
+                  <button
+                    onClick={() => setSetTotalOpen(true)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
+                    title="Definir total bebido hoje"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">tune</span>
+                  </button>
                 </div>
                 <h3 className="text-5xl font-semibold leading-none cursor-pointer" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}
                   onClick={() => setHistoryOpen(true)}
@@ -306,7 +317,10 @@ export function Dashboard() {
             <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#5B6572" }}>Restante</p>
             <div className="flex items-end gap-2">
               <h3 className="text-3xl font-semibold leading-none" style={{ color: "#191c1e", letterSpacing: "-0.02em" }}>
-                {remaining >= 1000 ? (remaining / 1000).toFixed(2).replace(".", ",") : remaining}
+                <AnimatedNumber
+                  value={remaining}
+                  format={(n) => remaining >= 1000 ? (n / 1000).toFixed(2).replace(".", ",") : String(Math.round(n))}
+                />
                 <span className="text-base" style={{ color: "#5B6572" }}>
                   {remaining >= 1000 ? "L" : "ml"}
                 </span>
@@ -344,6 +358,14 @@ export function Dashboard() {
               <span className="material-symbols-outlined text-white">add</span>
             </div>
           </button>
+          {undoVisible && (
+            <UndoChip
+              key={lastAmount + "-dash"}
+              amount={lastAmount}
+              onUndo={handleUndo}
+              onExpire={() => setUndoVisible(false)}
+            />
+          )}
         </div>
 
         {/* Center: Water glass */}
@@ -365,7 +387,7 @@ export function Dashboard() {
             </div>
             <div className="flex items-baseline gap-1">
               <h3 className="text-5xl font-semibold leading-none" style={{ color: "#191c1e", letterSpacing: "-0.04em" }}>
-                {streak}
+                <AnimatedNumber value={streak} decimals={0} />
               </h3>
               <p className="text-base" style={{ color: "#5B6572" }}>dias seguidos</p>
             </div>
@@ -409,34 +431,22 @@ export function Dashboard() {
 
       </div>{/* end scrollable */}
 
-      {/* Undo toast */}
-      {undoVisible && (
-        <div
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg animate-fade-in"
-          style={{
-            background: "rgba(25,28,30,0.92)",
-            backdropFilter: "blur(12px)",
-            zIndex: 100,
-            marginLeft: "140px",
-          }}
-        >
-          <span className="text-sm font-medium text-white">
-            +{lastAmount}ml registrado
-          </span>
-          <button
-            onClick={handleUndo}
-            className="text-sm font-semibold px-3 py-1 rounded-lg transition-colors hover:bg-white/20"
-            style={{ color: "#7DD8F8" }}
-          >
-            Desfazer
-          </button>
-          <button onClick={() => setUndoVisible(false)} className="text-white/40 hover:text-white/70 ml-1">
-            <span className="material-symbols-outlined text-[16px]">close</span>
-          </button>
-        </div>
-      )}
-
       <DrinkHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <SetTotalModal
+        open={setTotalOpen}
+        currentMl={consumed}
+        containerMl={settings?.recipiente_configurado ? settings.recipiente_capacidade_ml : undefined}
+        containerName={
+          settings?.recipiente_configurado
+            ? settings.recipiente_capacidade_ml < 350
+              ? "copo"
+              : settings.recipiente_capacidade_ml >= 1800
+              ? "garrafão"
+              : "garrafa"
+            : undefined
+        }
+        onClose={() => setSetTotalOpen(false)}
+      />
     </div>
   );
 }

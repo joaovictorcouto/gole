@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Dev-only machine hash (local, never commit)
+.gole-dev-password-hash

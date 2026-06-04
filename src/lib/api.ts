@@ -206,6 +206,18 @@ export const api = {
 
   clearNextReminderOverride: () =>
     invoke<void>("clear_next_reminder_override"),
+
+  snoozeReminder: (reminder_id: number, minutes = 5) =>
+    invoke<void>("snooze_reminder", { reminderId: reminder_id, minutes }),
+
+  verifyDevPassword: (password: string) =>
+    invoke<boolean>("verify_dev_password", { password }),
+  computeDevPasswordHash: (password: string) =>
+    invoke<string>("compute_dev_password_hash", { password }),
+  devGateAvailable: () => invoke<boolean>("dev_gate_available"),
+
+  setTodayTotal: (target_ml: number) =>
+    invoke<TodayStats>("set_today_total", { targetMl: target_ml }),
 };
 
 export interface DrinkLog {
