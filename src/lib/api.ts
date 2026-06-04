@@ -19,6 +19,7 @@ export interface Settings {
   sound_volume: number;
   work_start_hour: string;
   work_end_hour: string;
+  sip_ml: number;
 }
 
 export interface TodayStats {
@@ -73,6 +74,7 @@ export const api = {
     sound_volume: number;
     work_start_hour: string;
     work_end_hour: string;
+    sip_ml: number;
   }) => invoke<number>("save_settings", {
     weightKg: params.weight_kg,
     ageYears: params.age_years,
@@ -89,6 +91,7 @@ export const api = {
     soundVolume: params.sound_volume,
     workStartHour: params.work_start_hour,
     workEndHour: params.work_end_hour,
+    sipMl: params.sip_ml,
   }),
 
   completeOnboarding: (params: {

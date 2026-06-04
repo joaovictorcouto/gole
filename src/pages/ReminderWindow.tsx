@@ -10,6 +10,8 @@ interface ReminderData {
   consumed_ml: number;
   remaining_ml: number;
   container_text?: string | null;
+  suggested_sips?: number;
+  sip_ml?: number;
 }
 
 function formatLiters(ml: number): string {

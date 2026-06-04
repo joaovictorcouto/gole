@@ -68,6 +68,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         INSERT OR IGNORE INTO settings (key, value) VALUES ('sound_volume', '70');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('work_start_hour', '08:00');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('work_end_hour', '18:00');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('sip_ml', '20');
 
         -- Profissional
         INSERT OR IGNORE INTO phrases (text, category) VALUES ('💧 Hora da água.', 'profissional');
@@ -209,6 +210,7 @@ pub struct Settings {
     pub sound_volume: i64,
     pub work_start_hour: String,
     pub work_end_hour: String,
+    pub sip_ml: i64,
 }
 
 pub fn get_settings(conn: &Connection) -> Result<Settings> {
@@ -243,6 +245,7 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
         sound_volume: map.get("sound_volume").and_then(|v| v.parse().ok()).unwrap_or(70),
         work_start_hour: map.get("work_start_hour").cloned().unwrap_or_else(|| "08:00".into()),
         work_end_hour: map.get("work_end_hour").cloned().unwrap_or_else(|| "18:00".into()),
+        sip_ml: map.get("sip_ml").and_then(|v| v.parse().ok()).unwrap_or(20),
     })
 }
 

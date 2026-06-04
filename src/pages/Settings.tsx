@@ -404,36 +404,48 @@ export function Settings() {
           {/* Left column */}
           <div className="lg:col-span-7">
             <Section title="Perfil e Medidas" icon="person">
-              {/* Peso + Idade lado a lado */}
-              <div className="grid grid-cols-2 gap-3 py-2">
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Peso (kg)</span>
+              {/* Peso + Idade — sliders */}
+              <div className="grid grid-cols-2 gap-4 py-2">
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Peso</span>
+                    <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{draftWeight || "—"} <span className="text-[10px] text-gray-400 font-medium">kg</span></span>
+                  </div>
                   <input
-                    type="number"
-                    min="40"
-                    max="150"
-                    value={draftWeight}
+                    type="range"
+                    min={40}
+                    max={150}
+                    value={Math.min(150, Math.max(40, Number(draftWeight) || 70))}
                     onChange={(e) => setDraftWeight(e.target.value)}
-                    onBlur={commitWeight}
-                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border focus:outline-none focus:ring-2 focus:ring-[#257ca3]/30"
-                    style={{ backgroundColor: "rgba(255,255,255,0.5)", borderColor: "#e0e3e6", color: "#191c1e" }}
+                    onMouseUp={commitWeight}
+                    onTouchEnd={commitWeight}
+                    className="w-full focus:outline-none mt-1"
                   />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Idade (anos)</span>
+                  <div className="flex justify-between px-1">
+                    <span className="text-[10px] font-bold text-gray-400">40kg</span>
+                    <span className="text-[10px] font-bold text-gray-400">150kg</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Idade</span>
+                    <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{draftAge || "—"} <span className="text-[10px] text-gray-400 font-medium">anos</span></span>
+                  </div>
                   <input
-                    type="number"
-                    min="12"
-                    max="100"
-                    value={draftAge}
+                    type="range"
+                    min={12}
+                    max={100}
+                    value={Math.min(100, Math.max(12, Number(draftAge) || 25))}
                     onChange={(e) => setDraftAge(e.target.value)}
-                    onBlur={commitAge}
-                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border focus:outline-none focus:ring-2 focus:ring-[#257ca3]/30"
-                    style={{ backgroundColor: "rgba(255,255,255,0.5)", borderColor: "#e0e3e6", color: "#191c1e" }}
+                    onMouseUp={commitAge}
+                    onTouchEnd={commitAge}
+                    className="w-full focus:outline-none mt-1"
                   />
-                </label>
+                  <div className="flex justify-between px-1">
+                    <span className="text-[10px] font-bold text-gray-400">12</span>
+                    <span className="text-[10px] font-bold text-gray-400">100</span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
@@ -550,6 +562,38 @@ export function Settings() {
                   />
                 </div>
               </SettingRow>
+            </Section>
+
+            <Section title="Tamanho do Gole" icon="water_drop">
+              <div className="py-2">
+                <div className="flex justify-between items-baseline mb-2">
+                  <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Volume por gole</span>
+                  <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{settings.sip_ml || 20} <span className="text-[10px] text-gray-400 font-medium">ml</span></span>
+                </div>
+                <input
+                  type="range"
+                  min={15}
+                  max={30}
+                  step={5}
+                  value={settings.sip_ml || 20}
+                  onChange={(e) => saveSettings({ sip_ml: Number(e.target.value) })}
+                  className="w-full focus:outline-none"
+                />
+                <div className="flex justify-between px-1 mt-1">
+                  {[15, 20, 25, 30].map((v) => (
+                    <span
+                      key={v}
+                      className="text-[10px] font-bold"
+                      style={{ color: settings.sip_ml === v ? "#257ca3" : "#9aa0a6" }}
+                    >
+                      {v}ml
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[11px] text-gray-400 mt-2 italic">
+                  Padrão: 20ml. Usado para calcular quantos goles você deve dar por lembrete.
+                </p>
+              </div>
             </Section>
 
             <Section title="Sistema" icon="settings">

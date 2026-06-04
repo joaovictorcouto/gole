@@ -104,6 +104,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       sound_volume: merged.sound_volume,
       work_start_hour: merged.work_start_hour || "08:00",
       work_end_hour: merged.work_end_hour || "18:00",
+      sip_ml: merged.sip_ml || 20,
     });
     await get().loadSettings();
     await get().loadTodayStats();

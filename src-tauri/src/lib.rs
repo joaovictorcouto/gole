@@ -38,7 +38,7 @@ fn position_reminder_window(window: &tauri::WebviewWindow) {
 fn current_suggested_amount(conn: &Connection) -> i64 {
     db::get_settings(conn)
         .ok()
-        .map(|s| hydration::suggested_per_reminder(s.daily_goal_ml, s.reminder_interval_min, &s.work_start_hour, &s.work_end_hour))
+        .map(|s| hydration::suggested_per_reminder(s.daily_goal_ml, s.reminder_interval_min, &s.work_start_hour, &s.work_end_hour, s.sip_ml))
         .unwrap_or(250)
 }
 
@@ -107,17 +107,10 @@ fn save_settings(
     sound_volume: i64,
     work_start_hour: String,
     work_end_hour: String,
+    sip_ml: i64,
 ) -> Result<i64, String> {
     let conn = state.conn.lock().unwrap();
-    let base_goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
-    let wake_hours = 16.0f64;
-    let reminders_per_day = (wake_hours * 60.0 / reminder_interval_min as f64).floor() as i64;
-    let goal = if reminders_per_day > 0 {
-        let suggested = (base_goal as f64 / reminders_per_day as f64).round() as i64;
-        suggested * reminders_per_day
-    } else {
-        base_goal
-    };
+    let goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
     db::set_setting(&conn, "weight_kg", &weight_kg.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "age_years", &age_years.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "activity_level", &activity_level).map_err(|e| e.to_string())?;
@@ -134,7 +127,9 @@ fn save_settings(
     db::set_setting(&conn, "sound_volume", &sound_volume.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "work_start_hour", &work_start_hour).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "work_end_hour", &work_end_hour).map_err(|e| e.to_string())?;
-    
+    let sip_ml = if sip_ml > 0 { sip_ml } else { 20 };
+    db::set_setting(&conn, "sip_ml", &sip_ml.to_string()).map_err(|e| e.to_string())?;
+
     // Configura o sistema operacional para iniciar com o Windows ou não
     use tauri_plugin_autostart::ManagerExt;
     let autostart_manager = app.autolaunch();
@@ -216,15 +211,7 @@ fn complete_onboarding(
     work_end_hour: String,
 ) -> Result<i64, String> {
     let conn = state.conn.lock().unwrap();
-    let base_goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
-    let interval = 60; // default interval is 60 minutes
-    let reminders_per_day = (16.0 * 60.0 / interval as f64).floor() as i64;
-    let goal = if reminders_per_day > 0 {
-        let suggested = (base_goal as f64 / reminders_per_day as f64).round() as i64;
-        suggested * reminders_per_day
-    } else {
-        base_goal
-    };
+    let goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
 
     db::set_setting(&conn, "weight_kg", &weight_kg.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "age_years", &age_years.to_string()).map_err(|e| e.to_string())?;
@@ -273,7 +260,7 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
     let percent = if goal > 0 { consumed as f64 / goal as f64 * 100.0 } else { 0.0 };
     let streak = db::get_streak(&conn, goal).map_err(|e| e.to_string())?;
     let (sent, confirmed) = db::get_today_reminders(&conn, &date).map_err(|e| e.to_string())?;
-    let suggested = hydration::suggested_per_reminder(goal, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour);
+    let suggested = hydration::suggested_per_reminder(goal, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml);
     Ok(TodayStats {
         date,
         goal_ml: goal,
@@ -590,7 +577,7 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
             return Ok(());
         }
 
-        suggested = hydration::suggested_per_reminder(settings.daily_goal_ml, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour);
+        suggested = hydration::suggested_per_reminder(settings.daily_goal_ml, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml);
         let date = Local::now().format("%Y-%m-%d").to_string();
         consumed = db::get_today_consumed(&conn, &date).map_err(|e| e.to_string())?;
         phrase = pick_phrase(&conn, &settings.notification_personality);
@@ -609,34 +596,11 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
 
     let remaining = (settings.daily_goal_ml - consumed).max(0);
 
-    let container_text = if settings.recipiente_configurado {
-        let container_name = if settings.recipiente_capacidade_ml < 350 {
-            "copo"
-        } else if settings.recipiente_capacidade_ml >= 1800 {
-            "garrafão"
-        } else {
-            "garrafa"
-        };
-        let ratio = suggested as f64 / settings.recipiente_capacidade_ml as f64;
-        let text = if suggested <= 50 {
-            format!("um pequeno gole da sua {}", container_name)
-        } else if suggested <= 100 {
-            "aprox. 2 dedos de água".to_string()
-        } else if (ratio - 0.25).abs() <= 0.05 {
-            format!("cerca de 1/4 da sua {}", container_name)
-        } else if (ratio - 0.5).abs() <= 0.05 {
-            format!("metade da sua {}", container_name)
-        } else if (ratio - 0.75).abs() <= 0.05 {
-            format!("3/4 da sua {}", container_name)
-        } else if (ratio - 1.0).abs() <= 0.08 {
-            format!("uma {} inteira", container_name)
-        } else {
-            let pct = (ratio * 100.0).round() as i64;
-            format!("≈ {}% da sua {}", pct, container_name)
-        };
-        Some(text)
+    let suggested_sips = hydration::sips_per_reminder(settings.daily_goal_ml, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml);
+    let container_text = if suggested_sips == 1 {
+        format!("1 gole de {}ml", settings.sip_ml)
     } else {
-        None
+        format!("{} goles de {}ml", suggested_sips, settings.sip_ml)
     };
 
     let payload = serde_json::json!({
@@ -646,6 +610,8 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
         "consumed_ml": consumed,
         "remaining_ml": remaining,
         "container_text": container_text,
+        "suggested_sips": suggested_sips,
+        "sip_ml": settings.sip_ml,
     });
 
     // Also emit to main window so the in-app sound plays
