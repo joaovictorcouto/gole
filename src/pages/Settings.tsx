@@ -613,8 +613,8 @@ export function Settings() {
                   onChange={(v) => saveSettings({ recipiente_configurado: v })}
                 />
               </SettingRow>
-              
-              {settings.recipiente_configurado && (
+
+              {settings.recipiente_configurado ? (
                 <div className="py-4 animate-fade-in flex flex-col items-center">
                   <div className="w-full flex justify-between items-center mb-4">
                     <span className="text-sm font-medium text-gray-500 font-semibold">Capacidade do recipiente</span>
@@ -663,6 +663,19 @@ export function Settings() {
                         : "Garrafão"
                     }
                   </span>
+                </div>
+              ) : (
+                /* Estado visual quando o recipiente está desativado */
+                <div className="py-5 flex flex-col items-center gap-3 animate-fade-in">
+                  <div className="opacity-25 grayscale">
+                    <BottleSvg />
+                  </div>
+                  <p className="text-xs text-center font-medium" style={{ color: "#9aa0a6" }}>
+                    Sem recipiente configurado
+                  </p>
+                  <p className="text-[11px] text-center" style={{ color: "#b0b8c1" }}>
+                    Os registros serão feitos em ml por dose calculada automaticamente.
+                  </p>
                 </div>
               )}
             </Section>

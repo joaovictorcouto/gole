@@ -44,10 +44,16 @@ function NavigationListener() {
       navigate("/onboarding", { replace: true });
     });
 
+    // Sincroniza quando a tray toggle pausa/retoma lembretes
+    const unlistenRemindersPaused = listen<boolean>("reminders_paused", async () => {
+      await loadSettings();
+    });
+
     return () => {
       unlistenNavigate.then((fn) => fn());
       unlistenQuickDrink.then((fn) => fn());
       unlistenResetOnboarding.then((fn) => fn());
+      unlistenRemindersPaused.then((fn) => fn());
     };
   }, [navigate]);
 
@@ -58,6 +64,21 @@ export default function App() {
   const { settings, loadSettings, drinkTick } = useAppStore();
   const [ready, setReady] = useState(false);
   const reminderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pauseToast, setPauseToast] = useState<"paused" | "resumed" | null>(null);
+  const pauseToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevPausedRef = useRef<boolean | null>(null);
+
+  // Mostra toast quando reminders_paused muda
+  useEffect(() => {
+    if (settings === null) return;
+    const paused = settings.reminders_paused;
+    if (prevPausedRef.current !== null && prevPausedRef.current !== paused) {
+      if (pauseToastTimerRef.current) clearTimeout(pauseToastTimerRef.current);
+      setPauseToast(paused ? "paused" : "resumed");
+      pauseToastTimerRef.current = setTimeout(() => setPauseToast(null), 4000);
+    }
+    prevPausedRef.current = paused;
+  }, [settings?.reminders_paused]);
 
   useEffect(() => {
     loadSettings().then(() => setReady(true));
@@ -153,45 +174,80 @@ export default function App() {
   }
 
   const onboardingDone = settings?.onboarding_complete ?? false;
-
   return (
-    <BrowserRouter>
-      <NavigationListener />
-      <Routes>
-        <Route path="/onboarding" element={<Onboarding />} />
+    <>
+      <BrowserRouter>
+        <NavigationListener />
+        <Routes>
+          <Route path="/onboarding" element={<Onboarding />} />
 
-        <Route path="/dashboard" element={
-          onboardingDone
-            ? <AppLayout><Dashboard /></AppLayout>
-            : <Navigate to="/onboarding" replace />
-        } />
-        {featureFlags.statistics && (
-          <Route path="/statistics" element={
+          <Route path="/dashboard" element={
             onboardingDone
-              ? <AppLayout><Statistics /></AppLayout>
+              ? <AppLayout><Dashboard /></AppLayout>
               : <Navigate to="/onboarding" replace />
           } />
-        )}
-        {featureFlags.achievements && (
-          <Route path="/achievements" element={
+          {featureFlags.statistics && (
+            <Route path="/statistics" element={
+              onboardingDone
+                ? <AppLayout><Statistics /></AppLayout>
+                : <Navigate to="/onboarding" replace />
+            } />
+          )}
+          {featureFlags.achievements && (
+            <Route path="/achievements" element={
+              onboardingDone
+                ? <AppLayout><Achievements /></AppLayout>
+                : <Navigate to="/onboarding" replace />
+            } />
+          )}
+          <Route path="/settings" element={
             onboardingDone
-              ? <AppLayout><Achievements /></AppLayout>
+              ? <AppLayout><Settings /></AppLayout>
               : <Navigate to="/onboarding" replace />
           } />
-        )}
-        <Route path="/settings" element={
-          onboardingDone
-            ? <AppLayout><Settings /></AppLayout>
-            : <Navigate to="/onboarding" replace />
-        } />
 
-        <Route path="/" element={
-          onboardingDone
-            ? <Navigate to="/dashboard" replace />
-            : <Navigate to="/onboarding" replace />
-        } />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="/" element={
+            onboardingDone
+              ? <Navigate to="/dashboard" replace />
+              : <Navigate to="/onboarding" replace />
+          } />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+
+      {/* Toast global de pausa/retomada de lembretes */}
+      {pauseToast && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl animate-fade-in"
+          style={{
+            background: pauseToast === "paused"
+              ? "rgba(25,28,30,0.94)"
+              : "linear-gradient(135deg, #257ca3, #0f76a0)",
+            backdropFilter: "blur(12px)",
+            zIndex: 9999,
+            minWidth: 320,
+            justifyContent: "center",
+          }}
+        >
+          <span className="text-lg">{pauseToast === "paused" ? "⏸" : "▶"}</span>
+          <div className="text-sm text-white font-medium">
+            {pauseToast === "paused" ? (
+              <>
+                <span className="font-semibold">Lembretes pausados</span>
+                <span className="text-white/70 ml-1">— serão retomados amanhã automaticamente.</span>
+              </>
+            ) : (
+              <span className="font-semibold">Lembretes retomados! 💧</span>
+            )}
+          </div>
+          <button
+            onClick={() => setPauseToast(null)}
+            className="text-white/40 hover:text-white/70 ml-2 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[16px]">close</span>
+          </button>
+        </div>
+      )}
+    </>
   );
 }
