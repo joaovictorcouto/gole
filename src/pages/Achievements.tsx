@@ -53,9 +53,9 @@ const ACHIEVEMENT_META: Record<string, { icon: string; title: string; descriptio
     description: "Consumiu 50 litros de água no total",
   },
   liters_500: {
-    icon: "🏆",
-    title: "500 Litros",
-    description: "Marco de meio milhão de mililitros",
+    icon: "🌊",
+    title: "Oceano",
+    description: "Atingiu a marca histórica de meio milhão de mililitros (500L)",
   },
   active_7: {
     icon: "📅",
@@ -78,8 +78,8 @@ const ACHIEVEMENT_META: Record<string, { icon: string; title: string; descriptio
     description: "Bateu a meta diária em 50 dias no total",
   },
   big_gulp: {
-    icon: "🥤",
-    title: "Goldão",
+    icon: "🐳",
+    title: "Super Golada",
     description: "Registrou 1L ou mais em um único registro",
   },
   early_bird: {
@@ -93,7 +93,7 @@ const ACHIEVEMENT_META: Record<string, { icon: string; title: string; descriptio
     description: "Bebeu água depois das 22h",
   },
   overflow_day: {
-    icon: "🔥",
+    icon: "⚡",
     title: "Acima da Meta",
     description: "Passou de 120% da meta em um único dia",
   },
@@ -125,7 +125,7 @@ export function Achievements() {
   return (
     <div className="flex flex-col h-full" style={{ marginLeft: "280px" }}>
       <header className="px-10 pt-10 pb-6 shrink-0">
-        <h1 className="text-5xl font-semibold mb-2" style={{ color: "#3b6377", letterSpacing: "-0.04em" }}>
+        <h1 className="text-5xl font-semibold mb-2" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}>
           Conquistas
         </h1>
         <p className="text-lg" style={{ color: "#41484c" }}>
@@ -160,7 +160,7 @@ export function Achievements() {
                   </h3>
                   <p className="text-sm mb-3" style={{ color: "#5B6572" }}>{meta.description}</p>
                   {a.unlocked_at && (
-                    <p className="text-xs font-semibold tracking-wider" style={{ color: "#3b6377" }}>
+                    <p className="text-xs font-semibold tracking-wider" style={{ color: "#257ca3" }}>
                       ✓ {formatDate(a.unlocked_at)}
                     </p>
                   )}

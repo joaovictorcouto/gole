@@ -40,25 +40,24 @@ export function SideNav() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center gap-4 mb-12">
-        <div className="w-12 h-12 rounded-full overflow-hidden border shrink-0 flex items-center justify-center"
-          style={{ backgroundColor: "#bfe8ff", borderColor: "rgba(44,52,64,0.08)" }}>
-          <svg width="28" height="28" viewBox="0 0 100 100" fill="none">
-            <path d="M50 15C50 15 25 45 25 65C25 78.8071 36.1929 90 50 90C63.8071 90 75 78.8071 75 65C75 45 50 15 50 15Z" fill="url(#nav-grad)" />
+      <div className="flex items-center gap-3 mb-12">
+        <div className="w-10 h-10 shrink-0 flex items-center justify-center">
+          <svg width="36" height="36" viewBox="0 0 100 100" fill="none" className="overflow-visible">
+            <path d="M50 15C50 15 22 46 22 66C22 80.8 34.2 92 50 92C65.8 92 78 80.8 78 66C78 46 50 15 50 15Z" fill="url(#nav-grad)" />
             <defs>
-              <linearGradient id="nav-grad" x1="50" y1="15" x2="50" y2="90" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#BFE8FF" />
-                <stop offset="1" stopColor="#5ABEFF" />
+              <linearGradient id="nav-grad" x1="50" y1="15" x2="50" y2="92" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#8AD4FF" />
+                <stop offset="1" stopColor="#0f76a0" />
               </linearGradient>
             </defs>
           </svg>
         </div>
         <div>
-          <h1 className="text-2xl font-semibold leading-none" style={{ color: "#3b6377", letterSpacing: "-0.01em" }}>
-            Hidratação
+          <h1 className="text-3xl font-black leading-none" style={{ color: "#257ca3", letterSpacing: "-0.05em" }}>
+            GOLE
           </h1>
-          <p className="text-xs font-semibold tracking-[0.05em] mt-1" style={{ color: "#5B6572" }}>
-            Mantenha-se fluído
+          <p className="text-[11px] font-semibold tracking-[0.01em] mt-1" style={{ color: "#5B6572" }}>
+            Mantenha-se hidratado
           </p>
         </div>
       </div>
@@ -74,7 +73,7 @@ export function SideNav() {
                 className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-300 group"
                 style={{
                   backgroundColor: active ? "rgba(191,232,255,0.3)" : "transparent",
-                  color: active ? "#3b6377" : "#5B6572",
+                  color: active ? "#257ca3" : "#5B6572",
                   fontWeight: active ? "700" : "500",
                   fontSize: "14px",
                   letterSpacing: "0.02em",
@@ -99,7 +98,7 @@ export function SideNav() {
           onClick={handleDrink}
           className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-md hover:saturate-150"
           style={{
-            background: "linear-gradient(180deg, #3b6377 0%, #0d658c 100%)",
+            background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
             boxShadow: "0 8px 20px rgba(59,99,119,0.2)",
             letterSpacing: "0.02em",
           }}

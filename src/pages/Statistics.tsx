@@ -4,10 +4,13 @@ import { api, DayStats } from "../lib/api";
 import { DrinkHistoryModal } from "../components/ui/DrinkHistoryModal";
 import { DatePicker } from "../components/ui/DatePicker";
 
-type Period = "7d" | "30d" | "90d" | "custom";
+type Period = "7d" | "30d" | "60d" | "custom";
 
 function toIsoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const r = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${r}`;
 }
 
 function defaultRange(period: Period): { start: string; end: string } {
@@ -15,8 +18,26 @@ function defaultRange(period: Period): { start: string; end: string } {
   const start = new Date();
   if (period === "7d") start.setDate(end.getDate() - 6);
   else if (period === "30d") start.setDate(end.getDate() - 29);
-  else if (period === "90d") start.setDate(end.getDate() - 89);
+  else if (period === "60d") start.setDate(end.getDate() - 59);
   return { start: toIsoDate(start), end: toIsoDate(end) };
+}
+
+
+function distributeIntoRows<T>(arr: T[], maxPerRow: number): T[][] {
+  const n = arr.length;
+  if (n <= 7) return [arr];
+  const numRows = Math.ceil(n / maxPerRow);
+  const base = Math.floor(n / numRows);
+  const extra = n % numRows;
+  
+  const result: T[][] = [];
+  let index = 0;
+  for (let i = 0; i < numRows; i++) {
+    const size = base + (i < extra ? 1 : 0);
+    result.push(arr.slice(index, index + size));
+    index += size;
+  }
+  return result;
 }
 
 function formatHumanDate(iso: string): string {
@@ -25,19 +46,60 @@ function formatHumanDate(iso: string): string {
   return dt.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
 }
 
+const HistoryBottleSvg = ({ pct, reached }: { pct: number; reached: boolean }) => {
+  const gradientId = useMemo(() => `water-level-grad-${Math.random().toString(36).substr(2, 9)}`, [reached]);
+  const waterColorStart = reached ? "#257ca3" : "#8AD4FF";
+  const waterColorEnd = reached ? "#0f76a0" : "#41AFFF";
+  const offsetPct = 100 - Math.min(100, Math.max(0, pct));
+  
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" className="overflow-visible">
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor={waterColorStart} />
+          <stop offset={`${100 - offsetPct}%`} stopColor={waterColorEnd} />
+          <stop offset={`${100 - offsetPct}%`} stopColor="rgba(236,238,241,0.35)" />
+          <stop offset="100%" stopColor="rgba(236,238,241,0.35)" />
+        </linearGradient>
+        <linearGradient id="glass-grad-hist" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="rgba(255, 255, 255, 0.45)" />
+          <stop offset="30%" stopColor="rgba(255, 255, 255, 0.15)" />
+          <stop offset="70%" stopColor="rgba(255, 255, 255, 0.08)" />
+          <stop offset="100%" stopColor="rgba(255, 255, 255, 0.35)" />
+        </linearGradient>
+      </defs>
+      <rect x="44" y="6" width="12" height="6" rx="1.5" fill="#257ca3" />
+      <rect x="46" y="12" width="8" height="8" fill="#e0e3e6" stroke="#257ca3" strokeWidth="3" />
+      <path d="M35.5 27.5 L64.5 27.5 Q65.5 27.5 65.5 28.5 L65.5 85.5 Q65.5 87.5 62.5 87.5 L37.5 87.5 Q34.5 87.5 34.5 85.5 L34.5 28.5 Q34.5 27.5 35.5 27.5 Z" fill={`url(#${gradientId})`} />
+      <path d="M36 24 L64 24 Q68 24 68 28 L68 86 Q68 90 64 90 L36 90 Q32 90 32 86 L32 28 Q32 24 36 24 Z" stroke="#257ca3" strokeWidth="4.5" strokeLinejoin="round" fill="url(#glass-grad-hist)" />
+      <path d="M36 28 L36 84" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M64 28 L64 84" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeLinecap="round" />
+      {reached && (
+        <circle cx="50" cy="62" r="10" fill="#257ca3" />
+      )}
+      {reached && (
+        <path d="M46 62 L49 65 L55 59" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      )}
+    </svg>
+  );
+};
+
 interface BarProps {
   stats: DayStats;
   maxMl: number;
   showLabel: boolean;
+  width: string;
+  height: string;
   onClick: () => void;
   onHover: (e: React.MouseEvent, stats: DayStats) => void;
   onLeave: () => void;
 }
 
-function Bar({ stats, maxMl, showLabel, onClick, onHover, onLeave }: BarProps) {
-  const pct = maxMl > 0 ? Math.min((stats.consumed_ml / maxMl) * 100, 100) : 0;
+function Bar({ stats, showLabel, width, height, onClick, onHover, onLeave }: BarProps) {
+  const pct = stats.goal_ml > 0 ? (stats.consumed_ml / stats.goal_ml) * 100 : 0;
   const reached = stats.consumed_ml >= stats.goal_ml && stats.goal_ml > 0;
-  const label = stats.date.slice(5).replace("-", "/");
+  const [_, m, d] = stats.date.split("-");
+  const label = `${d}/${m}`;
 
   return (
     <button
@@ -45,35 +107,16 @@ function Bar({ stats, maxMl, showLabel, onClick, onHover, onLeave }: BarProps) {
       onMouseEnter={(e) => onHover(e, stats)}
       onMouseMove={(e) => onHover(e, stats)}
       onMouseLeave={onLeave}
-      className="flex flex-col items-center gap-1 flex-1 min-w-0 cursor-pointer group"
+      className="flex flex-col items-center gap-2 cursor-pointer group shrink-0"
+      style={{ width }}
     >
       <div
-        className="w-full flex flex-col justify-end rounded-lg relative transition-all duration-200 group-hover:brightness-110"
+        className="w-full relative transition-transform duration-200 group-hover:scale-105"
         style={{
-          height: "120px",
-          backgroundColor: "#eceef1",
-          overflow: "hidden",
+          height,
         }}
       >
-        {/* Tinted overlay on hover (subtle blue wash) */}
-        <div
-          className="absolute inset-0 rounded-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-          style={{ background: "linear-gradient(180deg, rgba(191,232,255,0.35) 0%, rgba(125,216,248,0.18) 100%)" }}
-        />
-        <div
-          className="w-full rounded-lg transition-all duration-700 relative"
-          style={{
-            height: `${pct}%`,
-            background: reached
-              ? "linear-gradient(180deg, #3b6377 0%, #0d658c 100%)"
-              : "linear-gradient(180deg, #a4cce3 0%, #bfe8ff 100%)",
-          }}
-        />
-        {reached && showLabel && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 pointer-events-none">
-            <span className="material-symbols-outlined text-white" style={{ fontSize: "14px" }}>check</span>
-          </div>
-        )}
+        <HistoryBottleSvg pct={pct} reached={reached} />
       </div>
       {showLabel && (
         <span className="text-[10px] font-semibold tracking-wider truncate w-full text-center" style={{ color: "#71787c" }}>{label}</span>
@@ -153,6 +196,11 @@ export function Statistics() {
   const [editingDate, setEditingDate] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
+  const handleStartChange = (val: string) => {
+    setCustomStart(val);
+    setCustomEnd(val);
+  };
+
   const handleHover = (e: React.MouseEvent, s: DayStats) => {
     setTooltip({ stats: s, x: e.clientX, y: e.clientY });
   };
@@ -186,7 +234,7 @@ export function Statistics() {
   return (
     <div className="flex flex-col h-full" style={{ marginLeft: "280px" }}>
       <header className="px-10 pt-10 pb-6 shrink-0">
-        <h1 className="text-5xl font-semibold mb-2" style={{ color: "#3b6377", letterSpacing: "-0.04em" }}>
+        <h1 className="text-5xl font-semibold mb-2" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}>
           Estatísticas
         </h1>
         <p className="text-lg" style={{ color: "#41484c" }}>Acompanhe sua evolução de hidratação.</p>
@@ -207,7 +255,7 @@ export function Statistics() {
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#5B6572" }}>
               {item.label}
             </p>
-            <p className="text-3xl font-semibold" style={{ color: "#3b6377", letterSpacing: "-0.02em" }}>
+            <p className="text-3xl font-semibold" style={{ color: "#257ca3", letterSpacing: "-0.02em" }}>
               {item.value}
             </p>
           </div>
@@ -225,7 +273,7 @@ export function Statistics() {
             {([
               { id: "7d", label: "7 dias" },
               { id: "30d", label: "30 dias" },
-              { id: "90d", label: "90 dias" },
+              { id: "60d", label: "60 dias" },
               { id: "custom", label: "Personalizado" },
             ] as { id: Period; label: string }[]).map((p) => (
               <button
@@ -233,7 +281,7 @@ export function Statistics() {
                 onClick={() => setPeriod(p.id)}
                 className="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer"
                 style={{
-                  backgroundColor: period === p.id ? "#3b6377" : "#eceef1",
+                  backgroundColor: period === p.id ? "#257ca3" : "#eceef1",
                   color: period === p.id ? "#ffffff" : "#5B6572",
                   letterSpacing: "0.02em",
                 }}
@@ -250,8 +298,8 @@ export function Statistics() {
               <span>De</span>
               <DatePicker
                 value={customStart}
-                max={customEnd}
-                onChange={setCustomStart}
+                max={toIsoDate(new Date())}
+                onChange={handleStartChange}
                 label="Data inicial"
               />
             </div>
@@ -273,37 +321,62 @@ export function Statistics() {
 
         {(() => {
           const count = chartData.length;
-          const showLabels = count <= 14;
-          const gap = count > 60 ? 2 : count > 30 ? 3 : 4;
-          return (
-            <div className="w-full overflow-x-hidden overflow-y-visible py-1">
-              <div className="flex items-end w-full" style={{ gap: `${gap}px` }}>
-                {chartData.map((d) => (
-                  <Bar
-                    key={d.date}
-                    stats={d}
-                    maxMl={maxMl}
-                    showLabel={showLabels}
-                    onClick={() => setEditingDate(d.date)}
-                    onHover={handleHover}
-                    onLeave={handleLeave}
-                  />
-                ))}
-                {count === 0 && (
-                  <div className="w-full text-center py-12" style={{ color: "#5B6572" }}>
-                    Sem dados para o período selecionado.
-                  </div>
-                )}
+          if (count === 0) {
+            return (
+              <div className="w-full text-center py-12" style={{ color: "#5B6572" }}>
+                Sem dados para o período selecionado.
               </div>
-              {!showLabels && count > 0 && (
-                <div className="flex justify-between mt-2 text-[10px] font-semibold tracking-wider" style={{ color: "#71787c" }}>
-                  <span>{formatHumanDate(chartData[0].date)}</span>
-                  {count >= 3 && (
-                    <span>{formatHumanDate(chartData[Math.floor(count / 2)].date)}</span>
-                  )}
-                  <span>{formatHumanDate(chartData[count - 1].date)}</span>
-                </div>
-              )}
+            );
+          }
+
+          const showLabels = count <= 7;
+          const chunks = showLabels ? [chartData] : distributeIntoRows(chartData, 15);
+
+          const bottleWidth = showLabels ? "56px" : "44px";
+          const bottleHeight = showLabels ? "96px" : "78px";
+
+          return (
+            <div className="w-full overflow-x-hidden overflow-y-visible py-1 flex flex-col gap-2">
+              {chunks.map((chunk, chunkIdx) => {
+                const first = chunk[0];
+                const last = chunk[chunk.length - 1];
+                const mid = chunk[Math.floor(chunk.length / 2)];
+
+                return (
+                  <div key={chunkIdx} className="flex flex-col gap-0.5 items-center">
+                    <div className="flex items-end gap-3 justify-center w-full">
+                      {chunk.map((d) => (
+                        <Bar
+                          key={d.date}
+                          stats={d}
+                          maxMl={maxMl}
+                          showLabel={showLabels}
+                          width={bottleWidth}
+                          height={bottleHeight}
+                          onClick={() => setEditingDate(d.date)}
+                          onHover={handleHover}
+                          onLeave={handleLeave}
+                        />
+                      ))}
+                    </div>
+                    {!showLabels && chunk.length > 0 && (
+                      <div 
+                        className="flex justify-between px-1.5 mt-0.5 text-[10px] font-semibold tracking-wider" 
+                        style={{ 
+                          color: "#71787c", 
+                          width: `${chunk.length * 44 + (chunk.length - 1) * 12}px` 
+                        }}
+                      >
+                        <span>{formatHumanDate(first.date)}</span>
+                        {chunk.length >= 3 && (
+                          <span>{formatHumanDate(mid.date)}</span>
+                        )}
+                        <span>{formatHumanDate(last.date)}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
         })()}
@@ -311,7 +384,7 @@ export function Statistics() {
         {/* Legend */}
         <div className="flex gap-6 mt-4 items-center flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#3b6377" }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#257ca3" }} />
             <span className="text-xs" style={{ color: "#5B6572" }}>Meta atingida</span>
           </div>
           <div className="flex items-center gap-2">
@@ -319,7 +392,7 @@ export function Statistics() {
             <span className="text-xs" style={{ color: "#5B6572" }}>Parcial</span>
           </div>
           <span className="text-xs ml-auto italic" style={{ color: "#71787c" }}>
-            Clique em uma barra para editar os registros daquele dia.
+            Clique em uma garrafa para editar os registros daquele dia.
           </span>
         </div>
       </div>
@@ -331,7 +404,7 @@ export function Statistics() {
           <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#5B6572" }}>
             Média diária
           </p>
-          <p className="text-4xl font-semibold" style={{ color: "#3b6377", letterSpacing: "-0.02em" }}>
+          <p className="text-4xl font-semibold" style={{ color: "#257ca3", letterSpacing: "-0.02em" }}>
             {avgConsumed >= 1000 ? `${(avgConsumed / 1000).toFixed(2).replace(".", ",")}L` : `${avgConsumed}ml`}
           </p>
           <p className="text-sm mt-1" style={{ color: "#5B6572" }}>no período selecionado</p>
@@ -341,7 +414,7 @@ export function Statistics() {
           <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#5B6572" }}>
             Dias com meta atingida
           </p>
-          <p className="text-4xl font-semibold" style={{ color: "#3b6377", letterSpacing: "-0.02em" }}>
+          <p className="text-4xl font-semibold" style={{ color: "#257ca3", letterSpacing: "-0.02em" }}>
             {daysGoalReached}/{chartData.length}
           </p>
           <p className="text-sm mt-1" style={{ color: "#5B6572" }}>dias no período</p>

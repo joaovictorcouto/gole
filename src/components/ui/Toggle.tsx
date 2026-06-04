@@ -4,18 +4,20 @@ interface ToggleProps {
   id?: string;
 }
 
-export function Toggle({ checked, onChange, id }: ToggleProps) {
+export function Toggle({ checked, onChange }: ToggleProps) {
   return (
-    <label className="toggle-switch select-none" htmlFor={id}>
+    <div 
+      className="toggle-switch select-none"
+      onClick={() => onChange(!checked)}
+    >
       <input
-        id={id}
         type="checkbox"
         className="toggle-input"
         checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+        readOnly
       />
       <div className="toggle-track" />
       <div className="toggle-thumb" style={{ transform: checked ? "translateX(20px)" : "translateX(0)" }} />
-    </label>
+    </div>
   );
 }

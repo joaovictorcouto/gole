@@ -38,7 +38,7 @@ fn position_reminder_window(window: &tauri::WebviewWindow) {
 fn current_suggested_amount(conn: &Connection) -> i64 {
     db::get_settings(conn)
         .ok()
-        .map(|s| hydration::suggested_per_reminder(s.daily_goal_ml, s.reminder_interval_min))
+        .map(|s| hydration::suggested_per_reminder(s.daily_goal_ml, s.reminder_interval_min, &s.work_start_hour, &s.work_end_hour))
         .unwrap_or(250)
 }
 
@@ -99,14 +99,25 @@ fn save_settings(
     reminder_interval_min: i64,
     notification_personality: String,
     smart_mode: bool,
+    reminders_paused: bool,
     autostart: bool,
     recipiente_configurado: bool,
     recipiente_capacidade_ml: i64,
     sound_preset: String,
     sound_volume: i64,
+    work_start_hour: String,
+    work_end_hour: String,
 ) -> Result<i64, String> {
     let conn = state.conn.lock().unwrap();
-    let goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
+    let base_goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
+    let wake_hours = 16.0f64;
+    let reminders_per_day = (wake_hours * 60.0 / reminder_interval_min as f64).floor() as i64;
+    let goal = if reminders_per_day > 0 {
+        let suggested = (base_goal as f64 / reminders_per_day as f64).round() as i64;
+        suggested * reminders_per_day
+    } else {
+        base_goal
+    };
     db::set_setting(&conn, "weight_kg", &weight_kg.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "age_years", &age_years.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "activity_level", &activity_level).map_err(|e| e.to_string())?;
@@ -115,11 +126,24 @@ fn save_settings(
     db::set_setting(&conn, "reminder_interval_min", &reminder_interval_min.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "notification_personality", &notification_personality).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "smart_mode", if smart_mode { "true" } else { "false" }).map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "reminders_paused", if reminders_paused { "true" } else { "false" }).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "autostart", if autostart { "true" } else { "false" }).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "recipiente_configurado", if recipiente_configurado { "true" } else { "false" }).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "recipiente_capacidade_ml", &recipiente_capacidade_ml.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "sound_preset", &sound_preset).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "sound_volume", &sound_volume.to_string()).map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "work_start_hour", &work_start_hour).map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "work_end_hour", &work_end_hour).map_err(|e| e.to_string())?;
+    
+    // Configura o sistema operacional para iniciar com o Windows ou não
+    use tauri_plugin_autostart::ManagerExt;
+    let autostart_manager = app.autolaunch();
+    if autostart {
+        let _ = autostart_manager.enable();
+    } else {
+        let _ = autostart_manager.disable();
+    }
+
     drop(conn);
     refresh_tray_drink_label(&app);
     Ok(goal)
@@ -151,10 +175,10 @@ fn log_drink_at(state: State<AppState>, amount_ml: i64, logged_at: String) -> Re
 }
 
 #[tauri::command]
-fn update_drink(state: State<AppState>, id: i64, amount_ml: i64) -> Result<TodayStats, String> {
+fn update_drink(state: State<AppState>, id: i64, amount_ml: i64, logged_at: String) -> Result<TodayStats, String> {
     {
         let conn = state.conn.lock().unwrap();
-        db::update_drink_amount(&conn, id, amount_ml).map_err(|e| e.to_string())?;
+        db::update_drink(&conn, id, amount_ml, &logged_at).map_err(|e| e.to_string())?;
     }
     get_today_stats(state)
 }
@@ -188,9 +212,20 @@ fn complete_onboarding(
     climate: String,
     recipiente_configurado: bool,
     recipiente_capacidade_ml: i64,
+    work_start_hour: String,
+    work_end_hour: String,
 ) -> Result<i64, String> {
     let conn = state.conn.lock().unwrap();
-    let goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
+    let base_goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
+    let interval = 60; // default interval is 60 minutes
+    let reminders_per_day = (16.0 * 60.0 / interval as f64).floor() as i64;
+    let goal = if reminders_per_day > 0 {
+        let suggested = (base_goal as f64 / reminders_per_day as f64).round() as i64;
+        suggested * reminders_per_day
+    } else {
+        base_goal
+    };
+
     db::set_setting(&conn, "weight_kg", &weight_kg.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "age_years", &age_years.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "activity_level", &activity_level).map_err(|e| e.to_string())?;
@@ -198,8 +233,17 @@ fn complete_onboarding(
     db::set_setting(&conn, "daily_goal_ml", &goal.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "recipiente_configurado", if recipiente_configurado { "true" } else { "false" }).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "recipiente_capacidade_ml", &recipiente_capacidade_ml.to_string()).map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "work_start_hour", &work_start_hour).map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "work_end_hour", &work_end_hour).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "onboarding_complete", "true").map_err(|e| e.to_string())?;
     db::set_setting(&conn, "last_data_check_date", &Local::now().format("%Y-%m-%d").to_string()).map_err(|e| e.to_string())?;
+    
+    // Inicia com o Windows habilitado por padrão
+    db::set_setting(&conn, "autostart", "true").map_err(|e| e.to_string())?;
+    use tauri_plugin_autostart::ManagerExt;
+    let autostart_manager = app.autolaunch();
+    let _ = autostart_manager.enable();
+
     drop(conn);
     refresh_tray_drink_label(&app);
     Ok(goal)
@@ -208,15 +252,28 @@ fn complete_onboarding(
 #[tauri::command]
 fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
     let conn = state.conn.lock().unwrap();
-    let settings = db::get_settings(&conn).map_err(|e| e.to_string())?;
+    let mut settings = db::get_settings(&conn).map_err(|e| e.to_string())?;
     let date = Local::now().format("%Y-%m-%d").to_string();
+
+    // Auto-resume reminders if the day has changed
+    let last_active: String = conn.query_row(
+        "SELECT value FROM settings WHERE key = 'last_active_date'",
+        [],
+        |row| row.get(0),
+    ).unwrap_or_default();
+    if last_active != date {
+        db::set_setting(&conn, "reminders_paused", "false").ok();
+        db::set_setting(&conn, "last_active_date", &date).ok();
+        settings.reminders_paused = false;
+    }
+
     let consumed = db::get_today_consumed(&conn, &date).map_err(|e| e.to_string())?;
     let goal = settings.daily_goal_ml;
     let remaining = (goal - consumed).max(0);
     let percent = if goal > 0 { consumed as f64 / goal as f64 * 100.0 } else { 0.0 };
     let streak = db::get_streak(&conn, goal).map_err(|e| e.to_string())?;
     let (sent, confirmed) = db::get_today_reminders(&conn, &date).map_err(|e| e.to_string())?;
-    let suggested = hydration::suggested_per_reminder(goal, settings.reminder_interval_min);
+    let suggested = hydration::suggested_per_reminder(goal, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour);
     Ok(TodayStats {
         date,
         goal_ml: goal,
@@ -359,7 +416,10 @@ fn check_achievements_internal(state: &AppState) -> Result<(), String> {
 
 #[tauri::command]
 fn calculate_goal_cmd(weight_kg: f64, activity_level: String, climate: String) -> i64 {
-    hydration::calculate_goal(weight_kg, &activity_level, &climate)
+    let base_goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
+    let reminders_per_day = (16.0f64 * 60.0 / 60.0).floor() as i64; // default 60min interval = 16 reminders
+    let suggested = (base_goal as f64 / reminders_per_day as f64).round() as i64;
+    suggested * reminders_per_day
 }
 
 #[tauri::command]
@@ -481,30 +541,43 @@ fn pick_phrase(conn: &rusqlite::Connection, personality: &str) -> String {
     }
 
     if pool.is_empty() {
-        return "Hora de beber água! 💧".to_string();
+        return "Hora de beber água!".to_string();
     }
 
     use rand::seq::SliceRandom;
     let mut rng = rand::thread_rng();
     if let Some((id, text)) = pool.choose(&mut rng) {
         let _ = conn.execute("UPDATE phrases SET displayed = 1 WHERE id = ?1", rusqlite::params![id]);
-        text.clone()
+        text.trim_start_matches('💧').trim().to_string()
     } else {
-        "Hora de beber água! 💧".to_string()
+        "Hora de beber água!".to_string()
     }
 }
 
 #[tauri::command]
-fn send_reminder(state: State<AppState>, app: AppHandle) -> Result<(), String> {
+fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) -> Result<(), String> {
     let settings;
     let suggested;
     let consumed;
     let phrase;
+    let is_forced = force.unwrap_or(false);
     {
         let conn = state.conn.lock().unwrap();
         settings = db::get_settings(&conn).map_err(|e| e.to_string())?;
-        if settings.reminders_paused { return Ok(()); }
-        suggested = hydration::suggested_per_reminder(settings.daily_goal_ml, settings.reminder_interval_min);
+        if !is_forced && settings.reminders_paused { return Ok(()); }
+
+        // Valida se o horário atual do PC está dentro do período ativo de trabalho do usuário
+        let now_time = Local::now().time();
+        let start_time = chrono::NaiveTime::parse_from_str(&settings.work_start_hour, "%H:%M")
+            .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(8, 0, 0).unwrap());
+        let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
+            .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
+            
+        if !is_forced && (now_time < start_time || now_time > end_time) {
+            return Ok(());
+        }
+
+        suggested = hydration::suggested_per_reminder(settings.daily_goal_ml, settings.reminder_interval_min, &settings.work_start_hour, &settings.work_end_hour);
         let date = Local::now().format("%Y-%m-%d").to_string();
         consumed = db::get_today_consumed(&conn, &date).map_err(|e| e.to_string())?;
         phrase = pick_phrase(&conn, &settings.notification_personality);
@@ -612,6 +685,28 @@ pub fn run() {
                 last_reminder_id: Mutex::new(None),
                 tray_drink_item: Mutex::new(None),
             });
+
+            // Sincroniza estado de autostart com o sistema operacional
+            let is_autostart_enabled = {
+                let state: State<AppState> = app.state();
+                let conn = state.conn.lock().unwrap();
+                db::get_settings(&conn).map(|s| s.autostart).unwrap_or(false)
+            };
+            if is_autostart_enabled {
+                use tauri_plugin_autostart::ManagerExt;
+                let autostart_manager = app.autolaunch();
+                let _ = autostart_manager.enable();
+            }
+
+            // Exibe a janela principal se não iniciar oculto (--hidden)
+            let args: Vec<String> = std::env::args().collect();
+            let start_hidden = args.contains(&"--hidden".to_string());
+            if !start_hidden {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
 
             let initial_paused = {
                 let state: State<AppState> = app.state();

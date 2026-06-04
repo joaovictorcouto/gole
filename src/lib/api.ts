@@ -17,6 +17,8 @@ export interface Settings {
   recipiente_capacidade_ml: number;
   sound_preset: string;
   sound_volume: number;
+  work_start_hour: string;
+  work_end_hour: string;
 }
 
 export interface TodayStats {
@@ -63,11 +65,14 @@ export const api = {
     reminder_interval_min: number;
     notification_personality: string;
     smart_mode: boolean;
+    reminders_paused: boolean;
     autostart: boolean;
     recipiente_configurado: boolean;
     recipiente_capacidade_ml: number;
     sound_preset: string;
     sound_volume: number;
+    work_start_hour: string;
+    work_end_hour: string;
   }) => invoke<number>("save_settings", {
     weightKg: params.weight_kg,
     ageYears: params.age_years,
@@ -76,11 +81,14 @@ export const api = {
     reminderIntervalMin: params.reminder_interval_min,
     notificationPersonality: params.notification_personality,
     smartMode: params.smart_mode,
+    remindersPaused: params.reminders_paused,
     autostart: params.autostart,
     recipienteConfigurado: params.recipiente_configurado,
     recipienteCapacidadeMl: params.recipiente_capacidade_ml,
     soundPreset: params.sound_preset,
     soundVolume: params.sound_volume,
+    workStartHour: params.work_start_hour,
+    workEndHour: params.work_end_hour,
   }),
 
   completeOnboarding: (params: {
@@ -90,6 +98,8 @@ export const api = {
     climate: string;
     recipiente_configurado: boolean;
     recipiente_capacidade_ml: number;
+    work_start_hour: string;
+    work_end_hour: string;
   }) => invoke<number>("complete_onboarding", {
     weightKg: params.weight_kg,
     ageYears: params.age_years,
@@ -97,6 +107,8 @@ export const api = {
     climate: params.climate,
     recipienteConfigurado: params.recipiente_configurado,
     recipienteCapacidadeMl: params.recipiente_capacidade_ml,
+    workStartHour: params.work_start_hour,
+    workEndHour: params.work_end_hour,
   }),
 
   getTodayStats: () => invoke<TodayStats>("get_today_stats"),
@@ -125,7 +137,7 @@ export const api = {
   setRemindersPaused: (paused: boolean) =>
     invoke<void>("set_reminders_paused", { paused }),
 
-  sendReminder: () => invoke<void>("send_reminder"),
+  sendReminder: (force?: boolean) => invoke<void>("send_reminder", { force }),
 
   getLastReminderId: () => invoke<number | null>("get_last_reminder_id"),
 
@@ -152,8 +164,8 @@ export const api = {
   logDrinkAt: (amount_ml: number, logged_at: string): Promise<TodayStats> =>
     invoke("log_drink_at", { amountMl: amount_ml, loggedAt: logged_at }),
 
-  updateDrink: (id: number, amount_ml: number): Promise<TodayStats> =>
-    invoke("update_drink", { id, amountMl: amount_ml }),
+  updateDrink: (id: number, amount_ml: number, logged_at: string): Promise<TodayStats> =>
+    invoke("update_drink", { id, amountMl: amount_ml, loggedAt: logged_at }),
 
   deleteDrink: (id: number): Promise<TodayStats> => invoke("delete_drink", { id }),
 };

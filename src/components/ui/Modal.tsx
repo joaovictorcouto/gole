@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
   open: boolean;
@@ -22,7 +23,7 @@ export function Modal({
   title,
   description,
   icon,
-  iconColor = "#3b6377",
+  iconColor = "#257ca3",
   iconBg = "#bfe8ff",
   maxWidth = 460,
   children,
@@ -40,7 +41,7 @@ export function Modal({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-fade-in"
       style={{ backgroundColor: "rgba(25,28,30,0.35)", backdropFilter: "blur(4px)" }}
@@ -61,7 +62,7 @@ export function Modal({
       >
         {accent && (
           <div className="absolute top-0 left-0 w-full h-1"
-            style={{ background: "linear-gradient(90deg, #3b6377, #006492, #0d658c)" }} />
+            style={{ background: "linear-gradient(90deg, #257ca3, #006492, #0f76a0)" }} />
         )}
 
         <button
@@ -103,7 +104,8 @@ export function Modal({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -117,7 +119,7 @@ export function ModalPrimaryButton({
       disabled={disabled}
       className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300"
       style={{
-        background: "linear-gradient(180deg, #3b6377 0%, #0d658c 100%)",
+        background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
         boxShadow: disabled ? "none" : "0 8px 20px rgba(59,99,119,0.25)",
         opacity: disabled ? 0.4 : 1,
         letterSpacing: "0.02em",

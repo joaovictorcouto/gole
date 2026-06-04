@@ -2,11 +2,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #3b6377;
+  --color-primary: #257ca3;
   --color-on-primary: #ffffff;
   --color-primary-container: #bfe8ff;
   --color-on-primary-container: #41697d;
-  --color-secondary: #0d658c;
+  --color-secondary: #0f76a0;
   --color-on-secondary: #ffffff;
   --color-secondary-container: #8dd1fd;
   --color-on-secondary-container: #005a7f;
@@ -28,7 +28,7 @@
   --color-on-surface-variant: #41484c;
   --color-outline: #71787c;
   --color-outline-variant: #c1c7cc;
-  --color-surface-tint: #3b6377;
+  --color-surface-tint: #257ca3;
   --color-inverse-surface: #2d3133;
   --color-inverse-on-surface: #eff1f4;
   --color-inverse-primary: #a4cce3;
@@ -200,7 +200,7 @@ input[type=range]::-webkit-slider-thumb:active {
 }
 
 .toggle-input:checked ~ .toggle-track {
-  background-color: #3b6377;
+  background-color: #257ca3;
 }
 
 .toggle-thumb {

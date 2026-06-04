@@ -31,7 +31,9 @@ interface AppStore {
     activity: string,
     climate: string,
     recipienteConfigurado: boolean,
-    recipienteCapacidade: number
+    recipienteCapacidade: number,
+    workStartHour?: string,
+    workEndHour?: string
   ) => Promise<void>;
   setReminderNotif: (n: ReminderNotif | null) => void;
   updateLastCheckDate: () => Promise<void>;
@@ -94,11 +96,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
       reminder_interval_min: merged.reminder_interval_min,
       notification_personality: merged.notification_personality,
       smart_mode: merged.smart_mode,
+      reminders_paused: merged.reminders_paused,
       autostart: merged.autostart,
       recipiente_configurado: merged.recipiente_configurado,
       recipiente_capacidade_ml: merged.recipiente_capacidade_ml,
       sound_preset: merged.sound_preset,
       sound_volume: merged.sound_volume,
+      work_start_hour: merged.work_start_hour || "08:00",
+      work_end_hour: merged.work_end_hour || "18:00",
     });
     await get().loadSettings();
     await get().loadTodayStats();
@@ -110,7 +115,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
     activity: string,
     climate: string,
     recipienteConfigurado: boolean,
-    recipienteCapacidade: number
+    recipienteCapacidade: number,
+    workStartHour: string = "08:00",
+    workEndHour: string = "18:00"
   ) => {
     await api.completeOnboarding({
       weight_kg: weight,
@@ -119,6 +126,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
       climate,
       recipiente_configurado: recipienteConfigurado,
       recipiente_capacidade_ml: recipienteCapacidade,
+      work_start_hour: workStartHour,
+      work_end_hour: workEndHour,
     });
     await get().loadSettings();
     await get().loadTodayStats();

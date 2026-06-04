@@ -34,7 +34,9 @@ function playEnvelope(
     osc.frequency.exponentialRampToValueAtTime(freqEnd, ac.currentTime + duration);
   }
 
-  const vol = volume / 100;
+  // Escala quadrática para volume mais natural
+  const scale = volume / 100;
+  const vol = scale * scale;
   gain.gain.setValueAtTime(0, ac.currentTime);
   gain.gain.linearRampToValueAtTime(vol, ac.currentTime + attack);
   gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
@@ -46,51 +48,38 @@ function playEnvelope(
 }
 
 function playGota(volume: number) {
-  // Realistic water drop: sharp pitch drop with a subtle ripple
+  // Som de gota realista com rampa de frequência ascendente
+  const scale = volume / 100;
+  const vol = scale * scale * 0.7;
   const ac = getCtx();
-  const vol = (volume / 100) * 0.5;
 
-  // Main "plop": fast pitch slide from high to low
+  // "Plop" principal: de 600Hz a 1500Hz
   const osc1 = ac.createOscillator();
   const gain1 = ac.createGain();
   osc1.type = "sine";
-  osc1.frequency.setValueAtTime(2200, ac.currentTime);
-  osc1.frequency.exponentialRampToValueAtTime(180, ac.currentTime + 0.12);
+  osc1.frequency.setValueAtTime(600, ac.currentTime);
+  osc1.frequency.exponentialRampToValueAtTime(1500, ac.currentTime + 0.12);
   gain1.gain.setValueAtTime(0, ac.currentTime);
-  gain1.gain.linearRampToValueAtTime(vol, ac.currentTime + 0.002);
-  gain1.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.25);
+  gain1.gain.linearRampToValueAtTime(vol, ac.currentTime + 0.005);
+  gain1.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.22);
   osc1.connect(gain1);
   gain1.connect(ac.destination);
   osc1.start(ac.currentTime);
-  osc1.stop(ac.currentTime + 0.3);
+  osc1.stop(ac.currentTime + 0.25);
 
-  // Ripple harmonic for body
+  // Harmônico secundário curto e agudo para simular o destaque da gota
   const osc2 = ac.createOscillator();
   const gain2 = ac.createGain();
   osc2.type = "sine";
-  osc2.frequency.setValueAtTime(900, ac.currentTime + 0.02);
-  osc2.frequency.exponentialRampToValueAtTime(300, ac.currentTime + 0.18);
-  gain2.gain.setValueAtTime(0, ac.currentTime + 0.02);
-  gain2.gain.linearRampToValueAtTime(vol * 0.4, ac.currentTime + 0.04);
-  gain2.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.35);
+  osc2.frequency.setValueAtTime(1300, ac.currentTime + 0.08);
+  osc2.frequency.exponentialRampToValueAtTime(1800, ac.currentTime + 0.16);
+  gain2.gain.setValueAtTime(0, ac.currentTime + 0.08);
+  gain2.gain.linearRampToValueAtTime(vol * 0.3, ac.currentTime + 0.09);
+  gain2.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.20);
   osc2.connect(gain2);
   gain2.connect(ac.destination);
-  osc2.start(ac.currentTime + 0.02);
-  osc2.stop(ac.currentTime + 0.4);
-
-  // Tiny secondary droplet "tick"
-  const osc3 = ac.createOscillator();
-  const gain3 = ac.createGain();
-  osc3.type = "sine";
-  osc3.frequency.setValueAtTime(1600, ac.currentTime + 0.18);
-  osc3.frequency.exponentialRampToValueAtTime(800, ac.currentTime + 0.25);
-  gain3.gain.setValueAtTime(0, ac.currentTime + 0.18);
-  gain3.gain.linearRampToValueAtTime(vol * 0.2, ac.currentTime + 0.19);
-  gain3.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.35);
-  osc3.connect(gain3);
-  gain3.connect(ac.destination);
-  osc3.start(ac.currentTime + 0.18);
-  osc3.stop(ac.currentTime + 0.4);
+  osc2.start(ac.currentTime + 0.08);
+  osc2.stop(ac.currentTime + 0.22);
 }
 
 function playDing(volume: number) {

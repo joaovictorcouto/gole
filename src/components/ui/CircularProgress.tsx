@@ -19,7 +19,7 @@ export function CircularProgress({ percent, size = 64, strokeWidth = 2.5, classN
         />
         <path
           fill="none"
-          stroke="#3b6377"
+          stroke="#257ca3"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           className="animate-progress"
@@ -28,7 +28,7 @@ export function CircularProgress({ percent, size = 64, strokeWidth = 2.5, classN
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[10px] font-bold" style={{ color: "#3b6377" }}>
+        <span className="text-[10px] font-bold" style={{ color: "#257ca3" }}>
           {Math.round(percent)}%
         </span>
       </div>

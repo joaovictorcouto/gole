@@ -124,11 +124,11 @@ export function DatePicker({ value, onChange, min, max, label }: DatePickerProps
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm transition-colors hover:bg-[#f7f9fc] focus:outline-none focus:ring-2 focus:ring-[#3b6377]/30 cursor-pointer"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm transition-colors hover:bg-[#f7f9fc] focus:outline-none focus:ring-2 focus:ring-[#257ca3]/30 cursor-pointer"
         style={{ borderColor: "#e0e3e6", backgroundColor: "white", color: "#191c1e" }}
         aria-label={label}
       >
-        <span className="material-symbols-outlined text-[16px]" style={{ color: "#3b6377" }}>
+        <span className="material-symbols-outlined text-[16px]" style={{ color: "#257ca3" }}>
           calendar_month
         </span>
         <span className="font-medium tabular-nums">{formatHuman(value)}</span>
@@ -155,7 +155,7 @@ export function DatePicker({ value, onChange, min, max, label }: DatePickerProps
               disabled={!canGoPrev()}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#eceef1] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]" style={{ color: "#3b6377" }}>chevron_left</span>
+              <span className="material-symbols-outlined text-[18px]" style={{ color: "#257ca3" }}>chevron_left</span>
             </button>
             <span className="text-sm font-semibold" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
               {MONTH_NAMES[view.getMonth()]} {view.getFullYear()}
@@ -166,7 +166,7 @@ export function DatePicker({ value, onChange, min, max, label }: DatePickerProps
               disabled={!canGoNext()}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#eceef1] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]" style={{ color: "#3b6377" }}>chevron_right</span>
+              <span className="material-symbols-outlined text-[18px]" style={{ color: "#257ca3" }}>chevron_right</span>
             </button>
           </div>
 
@@ -194,7 +194,7 @@ export function DatePicker({ value, onChange, min, max, label }: DatePickerProps
                   className="w-9 h-9 rounded-lg text-xs font-medium transition-all cursor-pointer disabled:cursor-not-allowed flex items-center justify-center"
                   style={{
                     backgroundColor: isSelected
-                      ? "#3b6377"
+                      ? "#257ca3"
                       : isToday
                       ? "rgba(191,232,255,0.5)"
                       : "transparent",
@@ -205,7 +205,7 @@ export function DatePicker({ value, onChange, min, max, label }: DatePickerProps
                       : !inMonth
                       ? "#c1c7cc"
                       : isToday
-                      ? "#3b6377"
+                      ? "#257ca3"
                       : "#191c1e",
                     fontWeight: isSelected || isToday ? 700 : 500,
                     opacity: disabled ? 0.5 : 1,
@@ -232,7 +232,7 @@ export function DatePicker({ value, onChange, min, max, label }: DatePickerProps
               onClick={() => handleSelect(today)}
               disabled={isDisabled(today)}
               className="w-full py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#eceef1] disabled:opacity-30 cursor-pointer"
-              style={{ color: "#3b6377" }}
+              style={{ color: "#257ca3" }}
             >
               Hoje
             </button>

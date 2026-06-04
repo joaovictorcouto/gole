@@ -66,6 +66,8 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         INSERT OR IGNORE INTO settings (key, value) VALUES ('recipiente_capacidade_ml', '500');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('sound_preset', 'gota');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('sound_volume', '70');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('work_start_hour', '08:00');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('work_end_hour', '18:00');
 
         -- Profissional
         INSERT OR IGNORE INTO phrases (text, category) VALUES ('💧 Hora da água.', 'profissional');
@@ -205,6 +207,8 @@ pub struct Settings {
     pub recipiente_capacidade_ml: i64,
     pub sound_preset: String,
     pub sound_volume: i64,
+    pub work_start_hour: String,
+    pub work_end_hour: String,
 }
 
 pub fn get_settings(conn: &Connection) -> Result<Settings> {
@@ -237,6 +241,8 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
         recipiente_capacidade_ml: map.get("recipiente_capacidade_ml").and_then(|v| v.parse().ok()).unwrap_or(500),
         sound_preset: map.get("sound_preset").cloned().unwrap_or_else(|| "gota".into()),
         sound_volume: map.get("sound_volume").and_then(|v| v.parse().ok()).unwrap_or(70),
+        work_start_hour: map.get("work_start_hour").cloned().unwrap_or_else(|| "08:00".into()),
+        work_end_hour: map.get("work_end_hour").cloned().unwrap_or_else(|| "18:00".into()),
     })
 }
 
@@ -291,10 +297,10 @@ pub fn get_today_drinks(conn: &Connection, date: &str) -> Result<Vec<DrinkLog>> 
     Ok(out)
 }
 
-pub fn update_drink_amount(conn: &Connection, id: i64, amount_ml: i64) -> Result<()> {
+pub fn update_drink(conn: &Connection, id: i64, amount_ml: i64, logged_at: &str) -> Result<()> {
     conn.execute(
-        "UPDATE daily_logs SET amount_ml = ?1 WHERE id = ?2",
-        params![amount_ml, id],
+        "UPDATE daily_logs SET amount_ml = ?1, logged_at = ?2 WHERE id = ?3",
+        params![amount_ml, logged_at, id],
     )?;
     Ok(())
 }

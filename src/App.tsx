@@ -78,7 +78,7 @@ export default function App() {
     const schedule = () => {
       reminderTimerRef.current = setTimeout(async () => {
         if (!settings.reminders_paused) {
-          await api.sendReminder();
+          await api.sendReminder(false);
         }
         schedule();
       }, intervalMs);

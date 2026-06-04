@@ -71,14 +71,14 @@ export function UpdateProfileToast() {
           backdropFilter: "blur(30px)",
           WebkitBackdropFilter: "blur(30px)",
           border: "1px solid rgba(255,255,255,0.9)",
-          borderLeft: "4px solid #3b6377",
+          borderLeft: "4px solid #257ca3",
         }}
       >
         <div className="p-5">
           <div className="flex items-start gap-3 mb-4">
             <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
               style={{ backgroundColor: "#bfe8ff" }}>
-              <span className="material-symbols-outlined" style={{ color: "#3b6377", fontVariationSettings: "'FILL' 1" }}>
+              <span className="material-symbols-outlined" style={{ color: "#257ca3", fontVariationSettings: "'FILL' 1" }}>
                 edit_square
               </span>
             </div>
@@ -107,7 +107,7 @@ export function UpdateProfileToast() {
             <button
               onClick={handleUpdate}
               className="flex-1 py-2.5 rounded-lg text-white text-xs font-semibold transition-all duration-200 hover:shadow-md cursor-pointer"
-              style={{ background: "linear-gradient(180deg, #3b6377 0%, #0d658c 100%)" }}
+              style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
             >
               Atualizar
             </button>

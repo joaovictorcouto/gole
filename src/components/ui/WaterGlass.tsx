@@ -31,7 +31,7 @@ export function WaterGlass({ percent, className = "" }: WaterGlassProps) {
           className="absolute bottom-0 left-0 w-full rounded-b-full animate-water-fill"
           style={{
             height: `${fillHeight}%`,
-            background: "linear-gradient(to top, #0d658c, #bfe8ff)",
+            background: "linear-gradient(to top, #0f76a0, #bfe8ff)",
             opacity: 0.9,
             ["--fill-height" as string]: `${fillHeight}%`,
           }}>
@@ -51,7 +51,7 @@ export function WaterGlass({ percent, className = "" }: WaterGlassProps) {
           backgroundColor: "rgba(255,255,255,0.7)",
           borderColor: "rgba(255,255,255,0.4)"
         }}>
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#3b6377" }}>Nível Atual</p>
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#257ca3" }}>Nível Atual</p>
         <p className="text-xl font-medium" style={{ color: "#191c1e" }}>{Math.round(fillHeight)}%</p>
       </div>
     </div>

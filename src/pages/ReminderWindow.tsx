@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { api } from "../lib/api";
@@ -19,19 +19,14 @@ function formatLiters(ml: number): string {
 export function ReminderWindow() {
   const [data, setData] = useState<ReminderData | null>(null);
   const [closing, setClosing] = useState(false);
-  const autoCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const unlisten = listen<ReminderData>("reminder", (event) => {
       setData(event.payload);
       setClosing(false);
-      // Auto-dismiss after 30s
-      if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
-      autoCloseTimer.current = setTimeout(() => closeWindow(), 30000);
     });
     return () => {
       unlisten.then((fn) => fn());
-      if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
     };
   }, []);
 
@@ -74,7 +69,7 @@ export function ReminderWindow() {
         width: "100vw",
         height: "100vh",
         background: "transparent",
-        padding: 12,
+        padding: 8,
         boxSizing: "border-box",
         opacity: closing ? 0 : 1,
         transform: closing ? "translateY(8px)" : "translateY(0)",
@@ -89,15 +84,17 @@ export function ReminderWindow() {
           backdropFilter: "blur(30px)",
           WebkitBackdropFilter: "blur(30px)",
           border: "1px solid rgba(255,255,255,0.9)",
-          borderLeft: "4px solid #3b6377",
-          borderRadius: 18,
+          borderLeft: "4px solid #257ca3",
+          borderRadius: 16,
           boxShadow: "0 18px 50px rgba(11,32,48,0.28)",
-          padding: 18,
+          padding: 14,
           display: "flex",
           flexDirection: "column",
+          justifyContent: "space-between",
           fontFamily: "'Geist', sans-serif",
           color: "#191c1e",
           animation: "slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+          boxSizing: "border-box",
         }}
       >
         <style>{`
@@ -108,52 +105,30 @@ export function ReminderWindow() {
         `}</style>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div
             style={{
-              width: 40,
-              height: 40,
+              width: 28,
+              height: 28,
               borderRadius: "50%",
               background: "linear-gradient(135deg, #7DD8F8 0%, #2A8EC9 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              boxShadow: "0 4px 12px rgba(42,142,201,0.35)",
+              boxShadow: "0 4px 10px rgba(42,142,201,0.25)",
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+            <svg width="15" height="15" viewBox="0 0 100 100" fill="none">
               <path d="M50 14C50 14 22 44 22 66C22 81.464 34.536 94 50 94C65.464 94 78 81.464 78 66C78 44 50 14 50 14Z"
                 fill="#ffffff" />
             </svg>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#3b6377", letterSpacing: "0.02em" }}>
-              💧 GOLE
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: "#191c1e", marginTop: 2, lineHeight: 1.35 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#191c1e", lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }} title={data.phrase}>
               {data.phrase}
             </div>
           </div>
-          <button
-            onClick={closeWindow}
-            style={{
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-              color: "#71787c",
-              padding: 4,
-              borderRadius: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.05)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            title="Fechar"
-          >
-            ✕
-          </button>
         </div>
 
         {/* Stats */}
@@ -161,22 +136,21 @@ export function ReminderWindow() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            marginTop: 14,
-            paddingTop: 10,
+            paddingTop: 8,
             borderTop: "1px solid rgba(44,52,64,0.08)",
             fontSize: 11,
           }}
         >
           <div>
             <div style={{ color: "#71787c", fontWeight: 600, marginBottom: 2 }}>BEBA</div>
-            <div style={{ color: "#3b6377", fontWeight: 700, fontSize: 13 }}>{data.suggested_ml}ml</div>
+            <div style={{ color: "#257ca3", fontWeight: 700, fontSize: 13 }}>{data.suggested_ml}ml</div>
             {data.container_text && (
               <div style={{ color: "#71787c", fontSize: 9, marginTop: 1 }}>{data.container_text}</div>
             )}
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ color: "#71787c", fontWeight: 600, marginBottom: 2 }}>JÁ BEBIDO</div>
-            <div style={{ color: "#0d658c", fontWeight: 700, fontSize: 13 }}>{formatLiters(data.consumed_ml)}</div>
+            <div style={{ color: "#0f76a0", fontWeight: 700, fontSize: 13 }}>{formatLiters(data.consumed_ml)}</div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ color: "#71787c", fontWeight: 600, marginBottom: 2 }}>FALTA</div>
@@ -185,19 +159,19 @@ export function ReminderWindow() {
         </div>
 
         {/* Actions */}
-        <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+        <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={handleConfirm}
             style={{
               flex: 1,
-              padding: "10px 14px",
+              padding: "8px 12px",
               borderRadius: 10,
               border: "none",
               color: "white",
               fontSize: 13,
               fontWeight: 600,
               cursor: "pointer",
-              background: "linear-gradient(180deg, #3b6377 0%, #0d658c 100%)",
+              background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
               boxShadow: "0 4px 10px rgba(59,99,119,0.25)",
             }}
           >
@@ -207,7 +181,7 @@ export function ReminderWindow() {
             onClick={handleSnooze}
             style={{
               flex: 1,
-              padding: "10px 14px",
+              padding: "8px 12px",
               borderRadius: 10,
               border: "1px solid #c1c7cc",
               color: "#5B6572",
