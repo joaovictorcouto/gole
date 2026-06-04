@@ -2,7 +2,7 @@
 name = "gole"
 version = "1.0.0"
 description = "GOLE - Hydration Tracker"
-authors = ["GOLE"]
+authors = ["CoutoApps"]
 edition = "2021"
 
 [lib]
