@@ -44,14 +44,14 @@ export function SideNav() {
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-12">
-        <div className="w-10 h-10 shrink-0 flex items-center justify-center">
-          <img src={appIcon} alt="Gole" style={{ width: 36, height: 36, objectFit: "contain" }} />
+        <div className="w-11 h-11 shrink-0 flex items-center justify-center">
+          <img src={appIcon} alt="Gole" style={{ width: 44, height: 44, objectFit: "contain" }} />
         </div>
         <div>
-          <h1 className="text-3xl font-black leading-none" style={{ color: "#257ca3", letterSpacing: "-0.05em" }}>
+          <h1 className="text-2xl font-black leading-none" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}>
             GOLE
           </h1>
-          <p className="text-[11px] font-semibold tracking-[0.01em] mt-1" style={{ color: "#5B6572" }}>
+          <p className="text-[10.5px] font-semibold tracking-[0.04em] mt-1.5" style={{ color: "#5B6572" }}>
             Mantenha-se hidratado
           </p>
         </div>
