@@ -1,6 +1,6 @@
 [package]
 name = "gole"
-version = "0.0.9"
+version = "0.1.0"
 description = "GOLE - Hydration Tracker"
 authors = ["GOLE"]
 edition = "2021"

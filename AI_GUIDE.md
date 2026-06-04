@@ -58,7 +58,8 @@ gole/
 │   │   ├── Modal.tsx                ← Modal genérico reutilizável
 │   │   ├── DatePicker.tsx           ← Calendário customizado (popover) com pt-BR
 │   │   ├── DrinkHistoryModal.tsx    ← Edição de registros de QUALQUER dia
-│   │   └── SupportModal.tsx         ← Form de bug/sugestão (mailto / GitHub issue)
+│   │   ├── SupportModal.tsx         ← Form de bug/sugestão (mailto / GitHub issue)
+│   │   └── ChangelogModal.tsx       ← Exibe as novidades da versão (changelog)
 │   │
 │   └── pages/
 │       ├── Dashboard.tsx        ← Tela principal + histórico clicável

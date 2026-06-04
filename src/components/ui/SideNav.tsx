@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAppStore } from "../../store/useAppStore";
 import { featureFlags } from "../../lib/featureFlags";
 import { SupportModal } from "./SupportModal";
+import { ChangelogModal } from "./ChangelogModal";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
@@ -16,6 +17,7 @@ export function SideNav() {
   const navigate = useNavigate();
   const { logDrink, todayStats, settings, loadSettings } = useAppStore();
   const [supportOpen, setSupportOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   useEffect(() => { if (!settings) loadSettings(); }, []);
 
@@ -120,9 +122,14 @@ export function SideNav() {
           </span>
           Suporte
         </button>
+
+        <div className="text-[10px] text-center text-gray-400 font-medium pt-1">
+          v0.1.0 • <button onClick={() => setChangelogOpen(true)} className="underline hover:text-gray-600 cursor-pointer">O que há de novo?</button>
+        </div>
       </div>
 
       <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
+      <ChangelogModal open={changelogOpen} onClose={() => setChangelogOpen(false)} />
     </nav>
   );
 }

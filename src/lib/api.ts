@@ -168,6 +168,9 @@ export const api = {
     invoke("update_drink", { id, amountMl: amount_ml, loggedAt: logged_at }),
 
   deleteDrink: (id: number): Promise<TodayStats> => invoke("delete_drink", { id }),
+
+  installSilentUpdate: (url: string): Promise<void> =>
+    invoke("install_silent_update", { url }),
 };
 
 export interface DrinkLog {

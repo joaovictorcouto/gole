@@ -444,6 +444,19 @@ fn update_last_check_date(state: State<AppState>) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn install_silent_update(url: String) -> Result<(), String> {
+    let script = format!(
+        r#"$url = '{}'; $ext = if ($url -like '*msi*') {{ 'msi' }} else {{ 'exe' }}; $dest = "$env:TEMP\gole_installer.$ext"; Remove-Item $dest -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -OutFile $dest; if ($ext -eq 'msi') {{ Start-Process msiexec.exe -ArgumentList '/i', $dest, '/qn', '/norestart' -NoNewWindow }} else {{ Start-Process $dest -ArgumentList '/S' -NoNewWindow }}"#,
+        url
+    );
+    std::process::Command::new("powershell")
+        .args(&["-NoProfile", "-WindowStyle", "Hidden", "-Command", &script])
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
 fn get_all_phrases(state: State<AppState>) -> Result<Vec<PhraseInfo>, String> {
     let conn = state.conn.lock().unwrap();
     let mut stmt = conn.prepare("SELECT id, text, category, favorite, is_custom FROM phrases ORDER BY id ASC")
@@ -864,6 +877,7 @@ pub fn run() {
             get_range_stats,
             get_drinks_for_date,
             log_drink_at,
+            install_silent_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

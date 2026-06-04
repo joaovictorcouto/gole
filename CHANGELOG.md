@@ -16,6 +16,25 @@ e o projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.1.0] — 2026-06-04
+
+### Adicionado
+- **Sliders interativos de horas no onboarding**: Agora a definição do período ativo no computador é feita por barras deslizantes (sliders) de 30 em 30 minutos, eliminando a digitação obrigatória.
+- **Card dedicado de horários**: A tela final do onboarding ganhou um resumo completo com um card próprio mostrando os horários ativos configurados para lembretes.
+- **Edição de horário nos registros**: O histórico de consumo (`DrinkHistoryModal`) agora permite editar tanto a quantidade de água (ml) quanto o horário específico de cada copo registrado.
+- **Changelog integrado no app**: Adicionado o número da versão (`v0.1.0`) e o botão "O que há de novo?" no rodapé do menu lateral, abrindo um modal descritivo das atualizações.
+
+### Alterado
+- **Histórico centralizado e maior**: O gráfico de garrafinhas no histórico de Estatísticas agora fica centralizado (alinhamento simétrico nas laterais) e as garrafas de 30/60 dias aumentaram para 44px de largura (antes 40px) para melhor conforto e precisão de toque.
+- **Auto-retomada de lembretes**: Lembretes pausados nas configurações são reativados automaticamente no dia seguinte.
+- **Suporte simplificado**: O painel de suporte foi reduzido ao essencial, exibindo informações diretas de contato e botões de ação para abrir email padrão.
+- **Nova identidade visual**: Atualização global para tons de azul mais leves e vibrantes (#257ca3 e #0f76a0).
+
+### Corrigido
+- **Clique nos Toggles**: Reescrevemos o componente `<Toggle />` utilizando elementos `<div>` e manipuladores diretos de clique, eliminando conflitos de ID duplicado (`undefined`) associados a labels/inputs aninhados que travavam os botões no painel de configurações.
+
+---
+
 ## [0.0.9] — 2026-06-03
 
 ### Corrigido (segunda iteração)
