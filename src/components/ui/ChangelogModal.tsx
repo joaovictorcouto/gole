@@ -11,7 +11,7 @@ export function ChangelogModal({ open, onClose }: Props) {
       open={open}
       onClose={onClose}
       icon="rocket_launch"
-      title="O que há de novo — Versão 0.1.0"
+      title={`O que há de novo — Versão ${__APP_VERSION__}`}
       description="Descubra as últimas atualizações e novidades do GOLE."
       maxWidth={500}
     >

@@ -117,7 +117,7 @@ export function SideNav() {
         </button>
 
         <div className="text-[10px] text-center text-gray-400 font-medium pt-1">
-          v0.1.0 • <button onClick={() => setChangelogOpen(true)} className="underline hover:text-gray-600 cursor-pointer">O que há de novo?</button>
+          v{__APP_VERSION__} • <button onClick={() => setChangelogOpen(true)} className="underline hover:text-gray-600 cursor-pointer">O que há de novo?</button>
         </div>
       </div>
 

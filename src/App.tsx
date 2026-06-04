@@ -110,7 +110,7 @@ export default function App() {
         const data = await res.json();
         
         const latestVersion = data.tag_name.replace(/^v/, "");
-        const currentVersion = "0.1.0";
+        const currentVersion = __APP_VERSION__;
 
         if (isNewerVersion(currentVersion, latestVersion)) {
           const asset = data.assets.find((a: any) => a.name.endsWith(".msi") || a.name.endsWith(".exe"));
