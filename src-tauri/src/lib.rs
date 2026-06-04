@@ -485,15 +485,20 @@ fn get_reminder_schedule(state: State<AppState>) -> Result<ScheduleData, String>
 
     // Base: last fire + interval (or now + interval if no past) — capped by work window
     let last_fire = rows.last().and_then(|r| chrono::NaiveDateTime::parse_from_str(&r.sent_at, "%Y-%m-%dT%H:%M:%S").ok());
-    let base_next = match last_fire {
+    let now_naive = now.naive_local();
+    let mut base_next = match last_fire {
         Some(t) => t + chrono::Duration::minutes(settings.reminder_interval_min),
         None => {
             // First of day: use max(now, work_start)
-            let now_naive = now.naive_local();
             let today_start = now.date_naive().and_time(start_time);
             if now_naive < today_start { today_start } else { now_naive + chrono::Duration::minutes(settings.reminder_interval_min) }
         }
     };
+    // Advance until base_next is in the future (in case the scheduled slot already passed
+    // without firing — e.g. the app was closed or paused).
+    while base_next <= now_naive {
+        base_next = base_next + chrono::Duration::minutes(settings.reminder_interval_min);
+    }
 
     let mut has_override = false;
     let mut override_amount_ml = suggested_ml;
