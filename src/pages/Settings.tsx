@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import { Toggle } from "../components/ui/Toggle";
 import { api, Phrase } from "../lib/api";
@@ -186,7 +185,6 @@ const JugSvg = () => (
 );
 
 export function Settings() {
-  const navigate = useNavigate();
   const { settings, saveSettings, loadSettings } = useAppStore();
   const [localGoal, setLocalGoal] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"general" | "phrases">("general");
@@ -196,7 +194,10 @@ export function Settings() {
   const [draftAge, setDraftAge] = useState<string>("");
   const [profileSavedAt, setProfileSavedAt] = useState<number | null>(null);
   const [previewGoal, setPreviewGoal] = useState<number | null>(null);
-  const [testingNotif, setTestingNotif] = useState(false);
+
+  // Work hours draft (commit on blur to avoid input glitch while typing)
+  const [draftWorkStart, setDraftWorkStart] = useState<string>("");
+  const [draftWorkEnd, setDraftWorkEnd] = useState<string>("");
 
   // State for phrase manager
   const [phrases, setPhrases] = useState<Phrase[]>([]);
@@ -215,8 +216,10 @@ export function Settings() {
       setLocalGoal(settings.daily_goal_ml);
       setDraftWeight(String(settings.weight_kg));
       setDraftAge(String(settings.age_years));
+      setDraftWorkStart(settings.work_start_hour || "08:00");
+      setDraftWorkEnd(settings.work_end_hour || "18:00");
     }
-  }, [settings?.weight_kg, settings?.age_years, settings?.daily_goal_ml]);
+  }, [settings?.weight_kg, settings?.age_years, settings?.daily_goal_ml, settings?.work_start_hour, settings?.work_end_hour]);
 
   // Live preview of goal as user types weight (or changes activity/climate)
   useEffect(() => {
@@ -288,15 +291,24 @@ export function Settings() {
     setTimeout(() => setProfileSavedAt(null), 2000);
   };
 
-  const handleTestNotification = async () => {
-    setTestingNotif(true);
-    try {
-      await api.sendReminder(true);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setTimeout(() => setTestingNotif(false), 1500);
+  const commitWorkStart = async () => {
+    if (!settings) return;
+    if (!/^\d{2}:\d{2}$/.test(draftWorkStart)) {
+      setDraftWorkStart(settings.work_start_hour || "08:00");
+      return;
     }
+    if (draftWorkStart === settings.work_start_hour) return;
+    await saveSettings({ work_start_hour: draftWorkStart });
+  };
+
+  const commitWorkEnd = async () => {
+    if (!settings) return;
+    if (!/^\d{2}:\d{2}$/.test(draftWorkEnd)) {
+      setDraftWorkEnd(settings.work_end_hour || "18:00");
+      return;
+    }
+    if (draftWorkEnd === settings.work_end_hour) return;
+    await saveSettings({ work_end_hour: draftWorkEnd });
   };
 
   // Phrases CRUD handlers
@@ -521,16 +533,18 @@ export function Settings() {
                 <div className="flex items-center gap-2">
                   <input
                     type="time"
-                    value={settings.work_start_hour || "08:00"}
-                    onChange={(e) => saveSettings({ work_start_hour: e.target.value })}
+                    value={draftWorkStart}
+                    onChange={(e) => setDraftWorkStart(e.target.value)}
+                    onBlur={commitWorkStart}
                     className="px-2 py-1 rounded-lg text-sm font-semibold border focus:outline-none focus:ring-1 focus:ring-[#257ca3] bg-white text-[#191c1e]"
                     style={{ borderColor: "#e0e3e6" }}
                   />
                   <span className="text-xs text-gray-400 font-medium">às</span>
                   <input
                     type="time"
-                    value={settings.work_end_hour || "18:00"}
-                    onChange={(e) => saveSettings({ work_end_hour: e.target.value })}
+                    value={draftWorkEnd}
+                    onChange={(e) => setDraftWorkEnd(e.target.value)}
+                    onBlur={commitWorkEnd}
                     className="px-2 py-1 rounded-lg text-sm font-semibold border focus:outline-none focus:ring-1 focus:ring-[#257ca3] bg-white text-[#191c1e]"
                     style={{ borderColor: "#e0e3e6" }}
                   />
@@ -559,49 +573,6 @@ export function Settings() {
               </SettingRow>
             </Section>
 
-            <Section title="Módulo de Testes" icon="bug_report">
-              <div className="py-2 flex flex-col gap-4">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleTestNotification}
-                    disabled={testingNotif}
-                    className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer disabled:opacity-50 hover:-translate-y-0.5 flex items-center gap-2"
-                    style={{
-                      backgroundColor: "rgba(191,232,255,0.4)",
-                      color: "#257ca3",
-                      border: "1px solid #257ca3",
-                    }}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">notifications_active</span>
-                    {testingNotif ? "Enviando..." : "Testar notificação"}
-                  </button>
-                  <span className="text-xs" style={{ color: "#71787c" }}>
-                    Envia uma notificação de lembrete agora.
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={async () => {
-                      await saveSettings({ onboarding_complete: false });
-                      navigate("/onboarding");
-                    }}
-                    className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-2"
-                    style={{
-                      backgroundColor: "rgba(191,232,255,0.4)",
-                      color: "#257ca3",
-                      border: "1px solid #257ca3",
-                    }}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
-                    Testar Onboarding
-                  </button>
-                  <span className="text-xs" style={{ color: "#71787c" }}>
-                    Abre a tela de introdução (passo a passo).
-                  </span>
-                </div>
-              </div>
-            </Section>
           </div>
 
           {/* Right column */}
