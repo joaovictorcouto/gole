@@ -81,7 +81,4 @@ pub fn sips_per_remaining_slot(goal_ml: i64, consumed_ml: i64, sip_ml: i64, slot
     ceil_div(total_sips, slots_remaining).max(1)
 }
 
-/// ML per remaining slot, derived from sips_per_remaining_slot.
-pub fn ml_per_remaining_slot(goal_ml: i64, consumed_ml: i64, sip_ml: i64, slots_remaining: i64) -> i64 {
-    sips_per_remaining_slot(goal_ml, consumed_ml, sip_ml, slots_remaining) * sip_ml.max(1)
-}
+

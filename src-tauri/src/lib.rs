@@ -127,25 +127,68 @@ fn current_suggested_amount(conn: &Connection) -> i64 {
     if settings.next_override_ml > 0 {
         return settings.next_override_ml;
     }
+    
     let date = Local::now().format("%Y-%m-%d").to_string();
+    let rows = db::list_today_reminders(conn, &date).unwrap_or_default();
     let consumed = db::get_today_consumed(conn, &date).unwrap_or(0);
-    let goal = settings.daily_goal_ml;
-    let interval = settings.reminder_interval_min;
+    
+    let now = Local::now();
+    let start_time = chrono::NaiveTime::parse_from_str(&settings.work_start_hour, "%H:%M")
+        .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(8, 0, 0).unwrap());
     let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
         .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
-    let now_naive = Local::now().naive_local();
-    let today_end = Local::now().date_naive().and_time(end_time);
-    let mut slots_remaining: i64 = 1;
-    let mut t = now_naive + chrono::Duration::minutes(interval);
-    while t <= today_end {
-        slots_remaining += 1;
-        t = t + chrono::Duration::minutes(interval);
+        
+    let last_fire = rows.last().and_then(|r| chrono::NaiveDateTime::parse_from_str(&r.sent_at, "%Y-%m-%dT%H:%M:%S").ok());
+    let now_naive = now.naive_local();
+    let mut base_next = match last_fire {
+        Some(t) => t + chrono::Duration::minutes(settings.reminder_interval_min),
+        None => {
+            let today_start = now.date_naive().and_time(start_time);
+            if now_naive < today_start { today_start } else { now_naive + chrono::Duration::minutes(settings.reminder_interval_min) }
+        }
+    };
+    while base_next <= now_naive {
+        base_next = base_next + chrono::Duration::minutes(settings.reminder_interval_min);
     }
-    let dynamic = hydration::ml_per_remaining_slot(goal, consumed, settings.sip_ml, slots_remaining);
-    if dynamic > 0 {
-        dynamic
+    
+    let next_at = base_next;
+    let today_end = now.date_naive().and_time(end_time);
+    
+    let next_exists = next_at <= today_end;
+    if !next_exists {
+        return hydration::suggested_per_reminder(
+            settings.daily_goal_ml,
+            settings.reminder_interval_min,
+            &settings.work_start_hour,
+            &settings.work_end_hour,
+            settings.sip_ml,
+        );
+    }
+    
+    let mut upcoming_count = 0;
+    let mut t = next_at + chrono::Duration::minutes(settings.reminder_interval_min);
+    while t <= today_end {
+        upcoming_count += 1;
+        t = t + chrono::Duration::minutes(settings.reminder_interval_min);
+    }
+    
+    let total_remaining_slots = 1 + upcoming_count;
+    
+    let dyn_sips = hydration::sips_per_remaining_slot(
+        settings.daily_goal_ml, consumed, settings.sip_ml, total_remaining_slots,
+    );
+    let dyn_ml = dyn_sips * settings.sip_ml.max(1);
+    
+    if dyn_ml > 0 {
+        dyn_ml
     } else {
-        hydration::suggested_per_reminder(goal, interval, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml)
+        hydration::suggested_per_reminder(
+            settings.daily_goal_ml,
+            settings.reminder_interval_min,
+            &settings.work_start_hour,
+            &settings.work_end_hour,
+            settings.sip_ml,
+        )
     }
 }
 
@@ -398,27 +441,7 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
     let (sent, confirmed) = db::get_today_reminders(&conn, &date).map_err(|e| e.to_string())?;
     // Dynamic suggested: reflect what the user should drink right now to
     // hit the meta exactly, distributing remaining ml across remaining slots.
-    let suggested = {
-        if settings.next_override_ml > 0 {
-            settings.next_override_ml
-        } else {
-            let interval = settings.reminder_interval_min;
-            let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
-                .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
-            let now_naive = Local::now().naive_local();
-            let today_end = Local::now().date_naive().and_time(end_time);
-            let mut slots_remaining: i64 = 1;
-            let mut t = now_naive + chrono::Duration::minutes(interval);
-            while t <= today_end {
-                slots_remaining += 1;
-                t = t + chrono::Duration::minutes(interval);
-            }
-            let dynamic = hydration::ml_per_remaining_slot(goal, consumed, settings.sip_ml, slots_remaining);
-            if dynamic > 0 { dynamic } else {
-                hydration::suggested_per_reminder(goal, interval, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml)
-            }
-        }
-    };
+    let suggested = current_suggested_amount(&conn);
     Ok(TodayStats {
         date,
         goal_ml: goal,
@@ -986,25 +1009,7 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
         let date = Local::now().format("%Y-%m-%d").to_string();
         consumed = db::get_today_consumed(&conn, &date).map_err(|e| e.to_string())?;
 
-        suggested = if settings.next_override_ml > 0 {
-            settings.next_override_ml
-        } else {
-            // Dynamic: redistribute remaining-to-meta across remaining slots
-            // including the one firing right now. Counts upcoming slots within
-            // the work window.
-            let interval = settings.reminder_interval_min;
-            let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
-                .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
-            let now_naive = Local::now().naive_local();
-            let today_end = Local::now().date_naive().and_time(end_time);
-            let mut slots_remaining: i64 = 1; // this one
-            let mut t = now_naive + chrono::Duration::minutes(interval);
-            while t <= today_end {
-                slots_remaining += 1;
-                t = t + chrono::Duration::minutes(interval);
-            }
-            hydration::ml_per_remaining_slot(settings.daily_goal_ml, consumed, settings.sip_ml, slots_remaining)
-        };
+        suggested = current_suggested_amount(&conn);
 
         // Consume override now that it has fired
         if !settings.next_override_at.is_empty() || settings.next_override_ml > 0 {
