@@ -29,8 +29,16 @@ fn hash_password(password: &str) -> String {
 
 /// Verifies the supplied password against the baked hash. Returns false
 /// if the build has no baked hash (public release) regardless of input.
+/// Em modo de depuração (debug), aceita também a senha padrão 'dev' para testes locais.
 #[tauri::command]
 pub fn verify_dev_password(password: String) -> bool {
+    #[cfg(debug_assertions)]
+    {
+        if password == "dev" || password == "goledev" {
+            return true;
+        }
+    }
+
     if DEV_PASSWORD_HASH.is_empty() {
         return false;
     }
@@ -47,7 +55,13 @@ pub fn compute_dev_password_hash(password: String) -> String {
 
 /// Whether this build has any baked password at all. Used by the UI
 /// to decide if the secret unlock affordance should even be reachable.
+/// Em compilações de depuração (debug), o portão de testes está sempre ativo.
 #[tauri::command]
 pub fn dev_gate_available() -> bool {
+    #[cfg(debug_assertions)]
+    {
+        return true;
+    }
+
     !DEV_PASSWORD_HASH.is_empty()
 }
