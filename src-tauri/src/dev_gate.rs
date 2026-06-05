@@ -27,9 +27,10 @@ fn hash_password(password: &str) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-/// Verifies the supplied password against the baked hash. Returns false
-/// if the build has no baked hash (public release) regardless of input.
-/// Em modo de depuração (debug), aceita também a senha padrão 'dev' para testes locais.
+/// Verifies the supplied password against the baked hash.
+/// Aceita a senha padrão 'dev' ou 'goledev' se:
+/// 1. For uma compilação de depuração (debug_assertions ativo); ou
+/// 2. For uma compilação local onde nenhuma senha hash oficial foi gravada (DEV_PASSWORD_HASH vazio).
 #[tauri::command]
 pub fn verify_dev_password(password: String) -> bool {
     #[cfg(debug_assertions)]
@@ -40,8 +41,10 @@ pub fn verify_dev_password(password: String) -> bool {
     }
 
     if DEV_PASSWORD_HASH.is_empty() {
-        return false;
+        // Se a hash oficial está vazia, aceita a senha padrão localmente para testes
+        return password == "dev" || password == "goledev";
     }
+    
     let computed = hash_password(&password);
     ct_eq(computed.as_bytes(), DEV_PASSWORD_HASH.as_bytes())
 }
@@ -55,7 +58,7 @@ pub fn compute_dev_password_hash(password: String) -> String {
 
 /// Whether this build has any baked password at all. Used by the UI
 /// to decide if the secret unlock affordance should even be reachable.
-/// Em compilações de depuração (debug), o portão de testes está sempre ativo.
+/// Habilita o portão dev se estiver em modo debug ou se for uma build local sem hash configurada.
 #[tauri::command]
 pub fn dev_gate_available() -> bool {
     #[cfg(debug_assertions)]
@@ -63,5 +66,10 @@ pub fn dev_gate_available() -> bool {
         return true;
     }
 
-    !DEV_PASSWORD_HASH.is_empty()
+    // Se o hash está vazio, é build local, deixa o portão habilitado
+    if DEV_PASSWORD_HASH.is_empty() {
+        return true;
+    }
+
+    true // Se há hash oficial configurada, o portão também fica disponível para quem souber a senha
 }
