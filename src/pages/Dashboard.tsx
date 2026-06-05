@@ -167,6 +167,8 @@ export function Dashboard() {
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDev = useIsDev();
   const [tipIndex, setTipIndex] = useState(new Date().getDate() % HYDRATION_TIPS.length);
+  const [devInputVisible, setDevInputVisible] = useState(false);
+  const [customTipText, setCustomTipText] = useState("");
 
   useEffect(() => {
     loadTodayStats();
@@ -251,7 +253,7 @@ export function Dashboard() {
   return (
     <div className="flex flex-col h-full" style={{ marginLeft: "280px" }}>
       {/* Fixed header */}
-      <header className="flex justify-between items-end px-10 pt-10 pb-6 shrink-0">
+      <header className="flex justify-between items-end px-10 pt-6 pb-4 shrink-0">
         <div>
           <h2 className="text-2xl font-medium mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
             Resumo Diário
@@ -267,14 +269,14 @@ export function Dashboard() {
       </header>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-10 pb-10">
+      <div className="flex-1 overflow-y-auto px-10 pb-6">
 
       {/* Bento grid */}
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-5">
         {/* Left column */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
           {/* Consumed card */}
-          <div className="bg-white rounded-xl p-6 border border-white/20 group hover:border-[#006492] transition-colors duration-300 relative overflow-hidden"
+          <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300 relative overflow-hidden"
             style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -336,7 +338,7 @@ export function Dashboard() {
           </div>
 
           {/* Remaining card */}
-          <div className="bg-white rounded-xl p-6 border border-white/20 group hover:border-[#006492] transition-colors duration-300"
+          <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300"
             style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
             <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#5B6572" }}>Restante</p>
             <div className="flex items-end gap-2">
@@ -356,7 +358,7 @@ export function Dashboard() {
           {/* Quick action */}
           <button
             onClick={() => handleLogDrink(drinkAmount)}
-            className="w-full rounded-xl p-6 flex items-center justify-between group transition-all duration-300 hover:shadow-lg hover:scale-[1.02] mt-auto cursor-pointer"
+            className="w-full rounded-xl p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-lg hover:scale-[1.02] mt-auto cursor-pointer"
             style={{ background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)" }}
           >
             <div className="text-left">
@@ -395,14 +397,14 @@ export function Dashboard() {
         </div>
 
         {/* Center: Water glass */}
-        <div className="col-span-12 lg:col-span-5 flex justify-center items-center relative min-h-[500px]">
-          <WaterGlass percent={percent} className="min-h-[500px]" />
+        <div className="col-span-12 lg:col-span-5 flex justify-center items-center relative min-h-[420px]">
+          <WaterGlass percent={percent} className="min-h-[420px]" />
         </div>
 
         {/* Right column */}
-        <div className="col-span-12 lg:col-span-3 flex flex-col gap-6">
+        <div className="col-span-12 lg:col-span-3 flex flex-col gap-4">
           {/* Streak */}
-          <div className="bg-white rounded-xl p-6 border border-white/20 group hover:border-[#006492] transition-colors duration-300"
+          <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300"
             style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full flex items-center justify-center"
@@ -436,37 +438,89 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Tip card horizontal at the bottom */}
-      <div className="rounded-xl p-5 border shrink-0 transition-all duration-300 mt-6"
+        {/* Tip card horizontal at the bottom */}
+      <div className="rounded-xl p-5 border shrink-0 transition-all duration-300 mt-4"
         style={{
           background: "rgba(255,255,255,0.7)",
           backdropFilter: "blur(20px)",
           borderColor: "rgba(255,255,255,0.3)",
           boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
         }}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
-              <span className="material-symbols-outlined" style={{ color: "#257ca3" }}>lightbulb</span>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
+                <span className="material-symbols-outlined" style={{ color: "#257ca3" }}>lightbulb</span>
+              </div>
+              <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-4 flex-1">
+                <span className="text-sm font-bold shrink-0" style={{ color: "#191c1e" }}>
+                  Dica de Hidratação:
+                </span>
+                <p className="text-sm text-left flex-1" style={{ color: "#5B6572", lineHeight: "1.5" }}>
+                  {customTipText || HYDRATION_TIPS[tipIndex]}
+                </p>
+              </div>
             </div>
-            <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-4">
-              <span className="text-sm font-bold shrink-0" style={{ color: "#191c1e" }}>
-                Dica de Hidratação:
-              </span>
-              <p className="text-sm text-left" style={{ color: "#5B6572", lineHeight: "1.5" }}>
-                {HYDRATION_TIPS[tipIndex]}
-              </p>
+            <div className="flex items-center gap-2 shrink-0">
+              {isDev && (
+                <>
+                  <button
+                    onClick={() => setDevInputVisible(!devInputVisible)}
+                    className={`hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer ${
+                      devInputVisible ? "text-[#0f76a0] bg-[#bfe8ff]/30" : "text-[#257ca3]"
+                    }`}
+                    title="Digitar frase de teste (Dev)"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">edit</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const giantText = "Esta é uma dica de hidratação experimental extremamente longa, projetada especificamente para testar o limite absoluto de quebra de layout no painel lateral direito do aplicativo Gole, contendo mais de duzentos caracteres para fins de testes de interface de usuário.";
+                      setCustomTipText(giantText);
+                    }}
+                    className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+                    title="Inserir frase gigante de teste (Dev)"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">text_fields</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCustomTipText("");
+                      setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length);
+                    }}
+                    className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+                    title={`Avançar dica (Dev: ${tipIndex + 1}/${HYDRATION_TIPS.length})`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
-          {isDev && (
-            <button
-              onClick={() => setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length)}
-              className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center shrink-0 cursor-pointer"
-              title={`Avançar dica (Dev: ${tipIndex + 1}/${HYDRATION_TIPS.length})`}
-            >
-              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-            </button>
+
+          {/* Campo de input dev para digitar frase customizada na hora */}
+          {isDev && devInputVisible && (
+            <div className="flex gap-2 items-center pl-14 animate-fade-in">
+              <input
+                type="text"
+                value={customTipText || HYDRATION_TIPS[tipIndex]}
+                onChange={(e) => setCustomTipText(e.target.value)}
+                placeholder="Escreva sua frase de teste dev..."
+                className="flex-1 px-3 py-1.5 border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#257ca3] bg-white text-[#191c1e]"
+                style={{ borderColor: "#e0e3e6" }}
+              />
+              <button
+                onClick={() => {
+                  setCustomTipText("");
+                  setDevInputVisible(false);
+                }}
+                className="px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors cursor-pointer"
+                style={{ backgroundColor: "#eceef1", color: "#5B6572" }}
+              >
+                Resetar
+              </button>
+            </div>
           )}
         </div>
       </div>
