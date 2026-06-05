@@ -433,36 +433,41 @@ export function Dashboard() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Tip */}
-          <div className="rounded-xl p-6 border mt-auto"
-            style={{
-              background: "rgba(255,255,255,0.7)",
-              backdropFilter: "blur(20px)",
-              borderColor: "rgba(255,255,255,0.3)",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
-            }}>
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined mt-1" style={{ color: "#257ca3" }}>lightbulb</span>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-semibold" style={{ color: "#191c1e" }}>Dica de Hidratação</p>
-                  {isDev && (
-                    <button
-                      onClick={() => setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length)}
-                      className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
-                      title={`Avançar dica (Dev: ${tipIndex + 1}/${HYDRATION_TIPS.length})`}
-                    >
-                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                    </button>
-                  )}
-                </div>
-                <p className="text-sm" style={{ color: "#5B6572", lineHeight: "1.6" }}>
-                  {HYDRATION_TIPS[tipIndex]}
-                </p>
-              </div>
+      {/* Tip card horizontal at the bottom */}
+      <div className="rounded-xl p-5 border shrink-0 transition-all duration-300 mt-6"
+        style={{
+          background: "rgba(255,255,255,0.7)",
+          backdropFilter: "blur(20px)",
+          borderColor: "rgba(255,255,255,0.3)",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
+        }}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
+              <span className="material-symbols-outlined" style={{ color: "#257ca3" }}>lightbulb</span>
+            </div>
+            <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-4">
+              <span className="text-sm font-bold shrink-0" style={{ color: "#191c1e" }}>
+                Dica de Hidratação:
+              </span>
+              <p className="text-sm text-left" style={{ color: "#5B6572", lineHeight: "1.5" }}>
+                {HYDRATION_TIPS[tipIndex]}
+              </p>
             </div>
           </div>
+          {isDev && (
+            <button
+              onClick={() => setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length)}
+              className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center shrink-0 cursor-pointer"
+              title={`Avançar dica (Dev: ${tipIndex + 1}/${HYDRATION_TIPS.length})`}
+            >
+              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+            </button>
+          )}
         </div>
       </div>
 
