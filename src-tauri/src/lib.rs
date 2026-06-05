@@ -838,10 +838,14 @@ fn install_silent_update(url: String) -> Result<(), String> {
         r#"$url = '{}'; $ext = if ($url -like '*msi*') {{ 'msi' }} else {{ 'exe' }}; $dest = "$env:TEMP\gole_installer.$ext"; Remove-Item $dest -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -OutFile $dest; if ($ext -eq 'msi') {{ Start-Process msiexec.exe -ArgumentList '/i', $dest, '/qn', '/norestart' -NoNewWindow }} else {{ Start-Process $dest -ArgumentList '/S' -NoNewWindow }}"#,
         url
     );
-    std::process::Command::new("powershell")
-        .args(&["-NoProfile", "-WindowStyle", "Hidden", "-Command", &script])
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    let mut cmd = std::process::Command::new("powershell");
+    cmd.args(&["-NoProfile", "-WindowStyle", "Hidden", "-Command", &script]);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    cmd.spawn().map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -1103,6 +1107,7 @@ pub fn run() {
             // Migração de banco de dados e arquivos de configuração (se necessário)
             #[cfg(target_os = "windows")]
             {
+                use std::os::windows::process::CommandExt;
                 let db_path = db::get_db_path(&app_data_dir);
                 if !db_path.exists() {
                     if let Some(parent) = app_data_dir.parent() {
@@ -1131,6 +1136,7 @@ pub fn run() {
                         "-Command",
                         "Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'GOLE' -ErrorAction SilentlyContinue"
                     ])
+                    .creation_flags(0x08000000) // CREATE_NO_WINDOW
                     .spawn();
             }
 
