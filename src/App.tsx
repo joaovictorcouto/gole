@@ -226,7 +226,7 @@ export default function App() {
               </linearGradient>
             </defs>
           </svg>
-          <p className="text-sm" style={{ color: "#5B6572" }}>Carregando GOLE...</p>
+          <p className="text-sm" style={{ color: "#5B6572" }}>Carregando Gole...</p>
         </div>
       </div>
     );

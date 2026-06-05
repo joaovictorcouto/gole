@@ -90,7 +90,7 @@ export function SideNav() {
         </div>
         <div>
           <h1 className="text-2xl font-black leading-none" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}>
-            GOLE
+            Gole
           </h1>
           <p className="text-[10.5px] font-semibold tracking-[0.04em] mt-1.5" style={{ color: "#5B6572" }}>
             Mantenha-se hidratado

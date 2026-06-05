@@ -179,7 +179,7 @@ function OnboardingShell({
 
       {/* Unified header */}
       <header className="absolute top-0 left-0 w-full px-8 py-6 flex justify-between items-center z-20">
-        <div className="text-2xl font-semibold tracking-tight" style={{ color: "#257ca3" }}>GOLE</div>
+        <div className="text-2xl font-semibold tracking-tight" style={{ color: "#257ca3" }}>Gole</div>
         {step > 0 ? (
           <div className="flex gap-2 items-center">
             {Array.from({ length: totalSteps }).map((_, i) => (

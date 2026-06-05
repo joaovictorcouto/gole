@@ -60,7 +60,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         INSERT OR IGNORE INTO settings (key, value) VALUES ('notification_personality', 'tudo');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('smart_mode', 'true');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('reminders_paused', 'false');
-        INSERT OR IGNORE INTO settings (key, value) VALUES ('autostart', 'false');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('autostart', 'true');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('last_data_check_date', '');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('recipiente_configurado', 'false');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('recipiente_capacidade_ml', '500');

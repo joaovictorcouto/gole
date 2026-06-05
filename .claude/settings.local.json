@@ -17,7 +17,15 @@
       "Bash(npx tauri *)",
       "PowerShell(Get-Process -Name gole,cargo -ErrorAction SilentlyContinue)",
       "PowerShell(Stop-Process -Force)",
-      "PowerShell(\"done\")"
+      "PowerShell(\"done\")",
+      "Bash(npm install *)",
+      "Bash(node scripts/gen-icon.mjs)",
+      "PowerShell(Get-Process -Name \"gole\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(\"ok\")",
+      "Bash(taskkill /F /IM gole.exe /T)",
+      "Bash(tasklist)",
+      "Bash(git -C \"C:\\\\Users\\\\Jz Viagens\\\\Documents\\\\code\\\\gole\" log --oneline -10)"
     ]
   }
 }

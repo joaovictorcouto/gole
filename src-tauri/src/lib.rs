@@ -120,10 +120,33 @@ fn emit_schedule_changed(app: &AppHandle) {
 }
 
 fn current_suggested_amount(conn: &Connection) -> i64 {
-    db::get_settings(conn)
-        .ok()
-        .map(|s| hydration::suggested_per_reminder(s.daily_goal_ml, s.reminder_interval_min, &s.work_start_hour, &s.work_end_hour, s.sip_ml))
-        .unwrap_or(250)
+    let settings = match db::get_settings(conn) {
+        Ok(s) => s,
+        Err(_) => return 250,
+    };
+    if settings.next_override_ml > 0 {
+        return settings.next_override_ml;
+    }
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    let consumed = db::get_today_consumed(conn, &date).unwrap_or(0);
+    let goal = settings.daily_goal_ml;
+    let interval = settings.reminder_interval_min;
+    let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
+        .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
+    let now_naive = Local::now().naive_local();
+    let today_end = Local::now().date_naive().and_time(end_time);
+    let mut slots_remaining: i64 = 1;
+    let mut t = now_naive + chrono::Duration::minutes(interval);
+    while t <= today_end {
+        slots_remaining += 1;
+        t = t + chrono::Duration::minutes(interval);
+    }
+    let dynamic = hydration::ml_per_remaining_slot(goal, consumed, settings.sip_ml, slots_remaining);
+    if dynamic > 0 {
+        dynamic
+    } else {
+        hydration::suggested_per_reminder(goal, interval, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml)
+    }
 }
 
 fn refresh_tray_drink_label(app: &AppHandle) {
@@ -376,20 +399,24 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
     // Dynamic suggested: reflect what the user should drink right now to
     // hit the meta exactly, distributing remaining ml across remaining slots.
     let suggested = {
-        let interval = settings.reminder_interval_min;
-        let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
-            .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
-        let now_naive = Local::now().naive_local();
-        let today_end = Local::now().date_naive().and_time(end_time);
-        let mut slots_remaining: i64 = 1;
-        let mut t = now_naive + chrono::Duration::minutes(interval);
-        while t <= today_end {
-            slots_remaining += 1;
-            t = t + chrono::Duration::minutes(interval);
-        }
-        let dynamic = hydration::ml_per_remaining_slot(goal, consumed, settings.sip_ml, slots_remaining);
-        if dynamic > 0 { dynamic } else {
-            hydration::suggested_per_reminder(goal, interval, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml)
+        if settings.next_override_ml > 0 {
+            settings.next_override_ml
+        } else {
+            let interval = settings.reminder_interval_min;
+            let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
+                .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
+            let now_naive = Local::now().naive_local();
+            let today_end = Local::now().date_naive().and_time(end_time);
+            let mut slots_remaining: i64 = 1;
+            let mut t = now_naive + chrono::Duration::minutes(interval);
+            while t <= today_end {
+                slots_remaining += 1;
+                t = t + chrono::Duration::minutes(interval);
+            }
+            let dynamic = hydration::ml_per_remaining_slot(goal, consumed, settings.sip_ml, slots_remaining);
+            if dynamic > 0 { dynamic } else {
+                hydration::suggested_per_reminder(goal, interval, &settings.work_start_hour, &settings.work_end_hour, settings.sip_ml)
+            }
         }
     };
     Ok(TodayStats {
@@ -1072,6 +1099,41 @@ pub fn run() {
         })
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir().expect("failed to get app data dir");
+            
+            // Migração de banco de dados e arquivos de configuração (se necessário)
+            #[cfg(target_os = "windows")]
+            {
+                let db_path = db::get_db_path(&app_data_dir);
+                if !db_path.exists() {
+                    if let Some(parent) = app_data_dir.parent() {
+                        let old_dirs = [
+                            parent.join("com.gole.app"),
+                            parent.join("GOLE"),
+                        ];
+                        for old_dir in &old_dirs {
+                            let old_db = old_dir.join("gole.db");
+                            if old_db.exists() {
+                                std::fs::create_dir_all(&app_data_dir).ok();
+                                if std::fs::copy(&old_db, &db_path).is_ok() {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Limpa chave de inicialização antiga 'GOLE' silenciosamente para evitar duplicatas
+                let _ = std::process::Command::new("powershell")
+                    .args(&[
+                        "-NoProfile",
+                        "-WindowStyle",
+                        "Hidden",
+                        "-Command",
+                        "Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'GOLE' -ErrorAction SilentlyContinue"
+                    ])
+                    .spawn();
+            }
+
             std::fs::create_dir_all(&app_data_dir).ok();
             let db_path = db::get_db_path(&app_data_dir);
             let conn = Connection::open(&db_path).expect("failed to open db");
@@ -1118,7 +1180,7 @@ pub fn run() {
                 current_suggested_amount(&conn)
             };
 
-            let item_open = MenuItem::with_id(app, "dashboard", "Abrir GOLE", true, None::<&str>)?;
+            let item_open = MenuItem::with_id(app, "dashboard", "Abrir Gole", true, None::<&str>)?;
             let item_drink = MenuItem::with_id(app, "drink", drink_label(initial_drink_amount), true, None::<&str>)?;
             let item_pause_toggle = MenuItem::with_id(app, "pause_toggle", pause_label, true, None::<&str>)?;
             let item_quit = MenuItem::with_id(app, "quit", "Sair", true, None::<&str>)?;
@@ -1208,7 +1270,7 @@ pub fn run() {
                 "reminder",
                 WebviewUrl::App("index.html?window=reminder".into()),
             )
-            .title("GOLE Lembrete")
+            .title("Gole Lembrete")
             .inner_size(360.0, 200.0)
             .min_inner_size(360.0, 200.0)
             .decorations(false)
