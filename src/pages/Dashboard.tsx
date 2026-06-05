@@ -253,7 +253,7 @@ export function Dashboard() {
   return (
     <div className="flex flex-col h-full" style={{ marginLeft: "280px" }}>
       {/* Fixed header */}
-      <header className="flex justify-between items-end px-10 pt-6 pb-4 shrink-0">
+      <header className="flex justify-between items-end px-10 pt-10 pb-6 shrink-0">
         <div>
           <h2 className="text-2xl font-medium mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
             Resumo Diário
@@ -439,7 +439,7 @@ export function Dashboard() {
       </div>
 
         {/* Tip card horizontal at the bottom */}
-      <div className="rounded-xl p-5 border shrink-0 transition-all duration-300 mt-4"
+      <div className="rounded-xl p-5 border shrink-0 transition-all duration-300 mt-2"
         style={{
           background: "rgba(255,255,255,0.7)",
           backdropFilter: "blur(20px)",
