@@ -8,6 +8,19 @@ import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 import { UndoChip } from "../components/ui/UndoChip";
 import { api } from "../lib/api";
 
+const HYDRATION_TIPS = [
+  "Beber um copo de água antes das refeições pode ajudar na digestão e na sensação de saciedade.",
+  "Mantenha uma garrafa de água sempre à vista no seu local de trabalho para lembrar de beber.",
+  "Se você pratica atividades físicas, aumente o consumo de água antes, durante e após os treinos.",
+  "Evite esperar sentir sede para beber água; a sede já é um sinal leve de desidratação.",
+  "Água aromatizada com rodelas de limão, hortelã ou pepino pode ser uma alternativa saborosa.",
+  "A desidratação leve pode causar cansaço e dores de cabeça. Experimente beber água ao sentir fadiga.",
+  "Comece o dia bebendo um copo de água morna ou em temperatura ambiente para despertar o organismo.",
+  "Alimentos como melancia, melão, pepino e tomate possuem alto teor de água e ajudam na hidratação.",
+  "Monitore a cor da sua urina: um tom amarelo claro ou transparente indica boa hidratação.",
+  "Beber água ajuda a manter a pele hidratada, saudável e com aspecto mais jovem."
+];
+
 function formatMl(ml: number): string {
   if (ml >= 1000) return (ml / 1000).toFixed(2).replace(".", ",") + "L";
   return ml + "ml";
@@ -358,14 +371,16 @@ export function Dashboard() {
               <span className="material-symbols-outlined text-white">add</span>
             </div>
           </button>
-          {undoVisible && (
-            <UndoChip
-              key={lastAmount + "-dash"}
-              amount={lastAmount}
-              onUndo={handleUndo}
-              onExpire={() => setUndoVisible(false)}
-            />
-          )}
+          <div className="h-12 flex items-center justify-center shrink-0 mt-2">
+            {undoVisible && (
+              <UndoChip
+                key={lastAmount + "-dash"}
+                amount={lastAmount}
+                onUndo={handleUndo}
+                onExpire={() => setUndoVisible(false)}
+              />
+            )}
+          </div>
         </div>
 
         {/* Center: Water glass */}
@@ -421,7 +436,7 @@ export function Dashboard() {
               <div>
                 <p className="text-sm font-semibold mb-1" style={{ color: "#191c1e" }}>Dica de Hidratação</p>
                 <p className="text-sm" style={{ color: "#5B6572", lineHeight: "1.6" }}>
-                  Beber um copo de água antes das refeições pode ajudar na digestão e na sensação de saciedade.
+                  {HYDRATION_TIPS[new Date().getDate() % HYDRATION_TIPS.length]}
                 </p>
               </div>
             </div>

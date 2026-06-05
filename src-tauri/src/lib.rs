@@ -215,6 +215,7 @@ struct TodayStats {
     reminders_sent: i64,
     reminders_confirmed: i64,
     suggested_per_reminder: i64,
+    next_reminder_at: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -442,6 +443,7 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
     // Dynamic suggested: reflect what the user should drink right now to
     // hit the meta exactly, distributing remaining ml across remaining slots.
     let suggested = current_suggested_amount(&conn);
+    let next_reminder_at = compute_next_slot(&conn).map(|t| t.format("%Y-%m-%dT%H:%M:%S").to_string());
     Ok(TodayStats {
         date,
         goal_ml: goal,
@@ -452,6 +454,7 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
         reminders_sent: sent,
         reminders_confirmed: confirmed,
         suggested_per_reminder: suggested,
+        next_reminder_at,
     })
 }
 
@@ -487,7 +490,7 @@ fn try_consume_next_slot(conn: &Connection, now: &chrono::NaiveDateTime) {
     let window_min = (settings.reminder_interval_min / 2).max(5);
     let delta = (next - *now).num_minutes();
     if delta >= 0 && delta <= window_min {
-        let stamp = now.format("%Y-%m-%dT%H:%M:%S").to_string();
+        let stamp = next.format("%Y-%m-%dT%H:%M:%S").to_string();
         let _ = conn.execute(
             "INSERT INTO reminders (sent_at, confirmed, snoozed) VALUES (?1, 1, 0)",
             rusqlite::params![stamp],
@@ -1240,9 +1243,11 @@ pub fn run() {
                                 let conn = state.conn.lock().unwrap();
                                 let amt = current_suggested_amount(&conn);
                                 let _ = db::log_drink(&conn, &date, amt, &logged_at);
+                                try_consume_next_slot(&conn, &now.naive_local());
                                 amt
                             };
                             let _ = app.emit("quick-drink", amount);
+                            let _ = app.emit("schedule_changed", ());
                         }
                     }
                     "pause_toggle" => {

@@ -56,6 +56,7 @@ export interface TodayStats {
   reminders_sent: number;
   reminders_confirmed: number;
   suggested_per_reminder: number;
+  next_reminder_at?: string;
 }
 
 export interface DayStats {
