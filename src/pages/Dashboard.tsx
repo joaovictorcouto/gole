@@ -7,18 +7,27 @@ import { SetTotalModal } from "../components/ui/SetTotalModal";
 import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 import { UndoChip } from "../components/ui/UndoChip";
 import { api } from "../lib/api";
+import { useIsDev } from "../lib/useIsDev";
 
 const HYDRATION_TIPS = [
-  "Beber um copo de água antes das refeições pode ajudar na digestão e na sensação de saciedade.",
-  "Mantenha uma garrafa de água sempre à vista no seu local de trabalho para lembrar de beber.",
-  "Se você pratica atividades físicas, aumente o consumo de água antes, durante e após os treinos.",
-  "Evite esperar sentir sede para beber água; a sede já é um sinal leve de desidratação.",
-  "Água aromatizada com rodelas de limão, hortelã ou pepino pode ser uma alternativa saborosa.",
-  "A desidratação leve pode causar cansaço e dores de cabeça. Experimente beber água ao sentir fadiga.",
-  "Comece o dia bebendo um copo de água morna ou em temperatura ambiente para despertar o organismo.",
-  "Alimentos como melancia, melão, pepino e tomate possuem alto teor de água e ajudam na hidratação.",
-  "Monitore a cor da sua urina: um tom amarelo claro ou transparente indica boa hidratação.",
-  "Beber água ajuda a manter a pele hidratada, saudável e com aspecto mais jovem."
+  "Beber água cerca de 30 minutos antes das refeições prepara o sistema digestivo e ajuda na saciedade.",
+  "Mantenha uma garrafa de água sempre visível no trabalho para servir como lembrete constante.",
+  "Durante os treinos, beba água antes, durante e depois para evitar a fadiga muscular e as cãibras.",
+  "Não espere a sede surgir: ela é um sinal biológico de que o corpo já começou a desidratar.",
+  "Adicione fatias de limão, hortelã ou pepino na garrafa para dar um sabor natural e refrescante.",
+  "Dores de cabeça leves, sonolência e perda de foco costumam ser os primeiros sinais de falta de água.",
+  "Perdemos água naturalmente pela respiração durante o sono. Beba um copo logo ao acordar.",
+  "Frutas como melancia e melão possuem mais de 90% de água e ajudam a complementar sua meta hídrica.",
+  "Monitore sua urina: a cor ideal é amarelo claro. Tons escuros indicam que você precisa beber água.",
+  "A ingestão adequada de água mantém a barreira protetora da pele saudável e hidratada.",
+  "Prefira beber água em pequenos goles ao longo do dia em vez de tomar grandes volumes de uma vez só.",
+  "O álcool desidrata o organismo. Lembre-se de tomar um copo de água para cada dose de bebida alcoólica.",
+  "Água levemente fresca (15°C a 20°C) é absorvida pelo organismo mais rápido do que a água muito gelada.",
+  "O consumo excessivo de cafeína (café e chás escuros) estimula a eliminação de líquidos. Beba água para manter o equilíbrio.",
+  "Idosos sentem menos sede naturalmente devido ao envelhecimento. Incentive-os a beber água.",
+  "A falta de água reduz o volume do sangue, fazendo com que o coração trabalhe mais para bombeá-lo.",
+  "A água compõe as cartilagens, servindo como lubrificante e amortecedor natural para as articulações.",
+  "Em treinos intensos com mais de uma hora de duração, isotônicos ajudam a repor o sódio perdido no suor."
 ];
 
 function formatMl(ml: number): string {
@@ -156,6 +165,8 @@ export function Dashboard() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [setTotalOpen, setSetTotalOpen] = useState(false);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDev = useIsDev();
+  const [tipIndex, setTipIndex] = useState(new Date().getDate() % HYDRATION_TIPS.length);
 
   useEffect(() => {
     loadTodayStats();
@@ -433,10 +444,21 @@ export function Dashboard() {
             }}>
             <div className="flex items-start gap-3">
               <span className="material-symbols-outlined mt-1" style={{ color: "#257ca3" }}>lightbulb</span>
-              <div>
-                <p className="text-sm font-semibold mb-1" style={{ color: "#191c1e" }}>Dica de Hidratação</p>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm font-semibold" style={{ color: "#191c1e" }}>Dica de Hidratação</p>
+                  {isDev && (
+                    <button
+                      onClick={() => setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length)}
+                      className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
+                      title={`Avançar dica (Dev: ${tipIndex + 1}/${HYDRATION_TIPS.length})`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                    </button>
+                  )}
+                </div>
                 <p className="text-sm" style={{ color: "#5B6572", lineHeight: "1.6" }}>
-                  {HYDRATION_TIPS[new Date().getDate() % HYDRATION_TIPS.length]}
+                  {HYDRATION_TIPS[tipIndex]}
                 </p>
               </div>
             </div>

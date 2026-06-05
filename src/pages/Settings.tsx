@@ -193,6 +193,7 @@ export function Settings() {
   const [testingNotif, setTestingNotif] = useState(false);
   const [localGoal, setLocalGoal] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"general" | "phrases">("general");
+  const [devTipText, setDevTipText] = useState("");
 
   // Profile draft (auto-save)
   const [draftWeight, setDraftWeight] = useState<string>("");
@@ -614,7 +615,7 @@ export function Settings() {
 
             {isDev && (
               <Section title="Módulo de Testes (Dev)" icon="bug_report">
-                <div className="py-2 flex flex-col gap-3">
+                <div className="py-2 flex flex-col gap-4">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={handleTestNotification}
@@ -653,6 +654,61 @@ export function Settings() {
                     <span className="text-xs" style={{ color: "#71787c" }}>
                       Abre tela de introdução.
                     </span>
+                  </div>
+
+                  {/* Seção de teste de Dicas de Hidratação */}
+                  <div className="mt-2 pt-4 border-t border-gray-150" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                    <p className="text-sm font-semibold mb-1" style={{ color: "#191c1e" }}>
+                      Testar Visualização de Dicas de Hidratação
+                    </p>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Escreva ou escolha um texto para validar como ele se ajusta no card de dicas do painel.
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      <textarea
+                        rows={2}
+                        value={devTipText}
+                        onChange={(e) => setDevTipText(e.target.value)}
+                        placeholder="Digite um texto customizado longo para testar o encaixe na tela..."
+                        className="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#257ca3] bg-white text-[#191c1e]"
+                        style={{ borderColor: "#e0e3e6" }}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setDevTipText("Esta é uma dica de hidratação experimental extremamente longa, projetada especificamente para testar o limite absoluto de quebra de layout no painel lateral direito do aplicativo Gole, contendo mais de duzentos caracteres para fins de testes de interface de usuário.")}
+                          className="px-3 py-1.5 rounded-lg font-medium text-[11px] transition-colors cursor-pointer"
+                          style={{ backgroundColor: "#eceef1", color: "#5B6572" }}
+                        >
+                          Inserir Frase Gigante
+                        </button>
+                        <button
+                          onClick={() => setDevTipText("")}
+                          className="px-3 py-1.5 rounded-lg font-medium text-[11px] transition-colors cursor-pointer"
+                          style={{ backgroundColor: "#eceef1", color: "#5B6572" }}
+                        >
+                          Limpar
+                        </button>
+                      </div>
+                      
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Preview Real do Card:</p>
+                      <div className="rounded-xl p-6 border max-w-sm"
+                        style={{
+                          background: "rgba(255,255,255,0.7)",
+                          backdropFilter: "blur(20px)",
+                          borderColor: "rgba(255,255,255,0.3)",
+                          boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
+                        }}>
+                        <div className="flex items-start gap-3">
+                          <span className="material-symbols-outlined mt-1" style={{ color: "#257ca3" }}>lightbulb</span>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold mb-1" style={{ color: "#191c1e" }}>Dica de Hidratação</p>
+                            <p className="text-sm" style={{ color: "#5B6572", lineHeight: "1.6" }}>
+                              {devTipText || "O preview da dica aparecerá aqui à medida que você digita..."}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                 </div>
