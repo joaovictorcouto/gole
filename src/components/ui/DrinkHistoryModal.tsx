@@ -63,8 +63,10 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
   };
 
   const handleSaveEdit = async (id: number) => {
-    const n = Number(editValue);
-    if (isNaN(n) || n <= 0 || n > 5000) return;
+    const isBasicMode = settings?.app_mode === "basic";
+    const originalDrink = drinks.find(dr => dr.id === id);
+    const n = isBasicMode ? (originalDrink?.amount_ml ?? 250) : Number(editValue);
+    if (!isBasicMode && (isNaN(n) || n <= 0 || n > 5000)) return;
     const [hh, mm] = (editTime || "12:00").split(":");
     const loggedAt = `${targetDate}T${hh.padStart(2, "0")}:${mm.padStart(2, "0")}:00`;
     const stats = await api.updateDrink(id, Math.round(n), loggedAt);
@@ -80,8 +82,9 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
   };
 
   const handleAdd = async () => {
-    const n = Number(newAmount);
-    if (isNaN(n) || n <= 0 || n > 5000) return;
+    const isBasicMode = settings?.app_mode === "basic";
+    const n = isBasicMode ? (settings?.sip_ml ?? 250) : Number(newAmount);
+    if (!isBasicMode && (isNaN(n) || n <= 0 || n > 5000)) return;
     const [hh, mm] = (newTime || "12:00").split(":");
     const loggedAt = `${targetDate}T${hh.padStart(2, "0")}:${mm.padStart(2, "0")}:00`;
     const stats = await api.logDrinkAt(Math.round(n), loggedAt);
@@ -109,57 +112,68 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
     await load();
   };
 
+  const isBasicMode = settings?.app_mode === "basic";
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       icon="history"
       title={isToday ? "Registros de hoje" : `Registros — ${formatHumanDate(targetDate)}`}
-      description={`${drinks.length} ${drinks.length === 1 ? "registro" : "registros"} · ${(total / 1000).toFixed(2).replace(".", ",")}L no total`}
+      description={
+        isBasicMode 
+          ? `${drinks.length} ${drinks.length === 1 ? "registro" : "registros"}`
+          : `${drinks.length} ${drinks.length === 1 ? "registro" : "registros"} · ${(total / 1000).toFixed(2).replace(".", ",")}L no total`
+      }
       maxWidth={560}
     >
       {/* Botão de Meta Batida */}
-      {remaining > 0 ? (
-        <button
-          onClick={handleCompleteGoal}
-          className="w-full mb-3 py-2.5 rounded-xl border text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] text-white"
-          style={{
-            background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)",
-            border: "none",
-            boxShadow: "0 4px 12px rgba(59,99,119,0.15)"
-          }}
-        >
-          <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
-          Marcar como batida (+{remaining}ml)
-        </button>
-      ) : (
-        <div className="w-full mb-3 py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-emerald-600 font-semibold text-sm bg-emerald-50 border border-emerald-100">
-          <span className="material-symbols-outlined text-[18px]">check_circle</span>
-          Meta de hidratação batida! 🎉
-        </div>
+      {!isBasicMode && (
+        remaining > 0 ? (
+          <button
+            onClick={handleCompleteGoal}
+            className="w-full mb-3 py-2.5 rounded-xl border text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] text-white"
+            style={{
+              background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)",
+              border: "none",
+              boxShadow: "0 4px 12px rgba(59,99,119,0.15)"
+            }}
+          >
+            <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
+            Marcar como batida (+{remaining}ml)
+          </button>
+        ) : (
+          <div className="w-full mb-3 py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-emerald-600 font-semibold text-sm bg-emerald-50 border border-emerald-100">
+            <span className="material-symbols-outlined text-[18px]">check_circle</span>
+            Meta de hidratação batida! 🎉
+          </div>
+        )
       )}
 
       {/* Add new */}
       {adding ? (
         <div className="mb-4 p-3 rounded-xl space-y-2" style={{ backgroundColor: "#f7f9fc" }}>
           <div className="flex gap-2">
-            <input
-              type="number"
-              autoFocus
-              placeholder="Quantidade (ml)"
-              value={newAmount}
-              min={1}
-              max={5000}
-              onChange={(e) => setNewAmount(e.target.value)}
-              className="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#257ca3]"
-              style={{ backgroundColor: "white", borderColor: "#e0e3e6" }}
-            />
+            {!isBasicMode && (
+              <input
+                type="number"
+                autoFocus
+                placeholder="Quantidade (ml)"
+                value={newAmount}
+                min={1}
+                max={5000}
+                onChange={(e) => setNewAmount(e.target.value)}
+                className="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#257ca3]"
+                style={{ backgroundColor: "white", borderColor: "#e0e3e6" }}
+              />
+            )}
             <input
               type="time"
+              autoFocus={isBasicMode}
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              className="px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#257ca3]"
-              style={{ backgroundColor: "white", borderColor: "#e0e3e6", width: 110 }}
+              className="px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#257ca3] flex-1"
+              style={{ backgroundColor: "white", borderColor: "#e0e3e6" }}
               title="Horário"
             />
           </div>
@@ -210,32 +224,35 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
               <div className="flex-grow flex items-center gap-2">
                 {isEditing ? (
                   <>
-                    <input
-                      type="number"
-                      autoFocus
-                      value={editValue}
-                      min={1}
-                      max={5000}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(d.id); if (e.key === "Escape") setEditingId(null); }}
-                      className="w-24 px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#257ca3]"
-                      style={{ borderColor: "#e0e3e6", backgroundColor: "white" }}
-                      title="Quantidade (ml)"
-                    />
+                    {!isBasicMode && (
+                      <input
+                        type="number"
+                        autoFocus
+                        value={editValue}
+                        min={1}
+                        max={5000}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(d.id); if (e.key === "Escape") setEditingId(null); }}
+                        className="w-24 px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#257ca3]"
+                        style={{ borderColor: "#e0e3e6", backgroundColor: "white" }}
+                        title="Quantidade (ml)"
+                      />
+                    )}
                     <input
                       type="time"
+                      autoFocus={isBasicMode}
                       value={editTime}
                       onChange={(e) => setEditTime(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(d.id); if (e.key === "Escape") setEditingId(null); }}
-                      className="px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#257ca3]"
-                      style={{ borderColor: "#e0e3e6", backgroundColor: "white", width: 90 }}
+                      className="px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#257ca3] flex-grow"
+                      style={{ borderColor: "#e0e3e6", backgroundColor: "white" }}
                       title="Horário"
                     />
                   </>
                 ) : (
                   <>
                     <span className="text-sm font-semibold" style={{ color: "#191c1e" }}>
-                      {d.amount_ml}ml
+                      {isBasicMode ? "Copo de água" : `${d.amount_ml}ml`}
                     </span>
                     <span className="text-xs text-gray-400 font-medium bg-[#f1f3f5] px-2 py-0.5 rounded-md ml-1">
                       {formatTime(d.logged_at)}

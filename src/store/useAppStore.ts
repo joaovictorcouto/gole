@@ -34,7 +34,8 @@ interface AppStore {
     recipienteConfigurado: boolean,
     recipienteCapacidade: number,
     workStartHour?: string,
-    workEndHour?: string
+    workEndHour?: string,
+    appMode?: string
   ) => Promise<void>;
   setReminderNotif: (n: ReminderNotif | null) => void;
   updateLastCheckDate: () => Promise<void>;
@@ -124,6 +125,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       work_start_hour: merged.work_start_hour || "08:00",
       work_end_hour: merged.work_end_hour || "18:00",
       sip_ml: merged.sip_ml || 20,
+      app_mode: merged.app_mode || "pro",
     });
     await get().loadSettings();
     await get().loadTodayStats();
@@ -137,7 +139,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     recipienteConfigurado: boolean,
     recipienteCapacidade: number,
     workStartHour: string = "08:00",
-    workEndHour: string = "18:00"
+    workEndHour: string = "18:00",
+    appMode: string = "pro"
   ) => {
     await api.completeOnboarding({
       weight_kg: weight,
@@ -148,6 +151,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       recipiente_capacidade_ml: recipienteCapacidade,
       work_start_hour: workStartHour,
       work_end_hour: workEndHour,
+      app_mode: appMode,
     });
     await get().loadSettings();
     await get().loadTodayStats();

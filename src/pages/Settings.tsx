@@ -419,7 +419,59 @@ export function Settings() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left column */}
           <div className="lg:col-span-7">
-            <Section title="Perfil e Medidas" icon="person">
+            
+            {/* Modo do Aplicativo */}
+            <Section title="Modo do Aplicativo" icon="dashboard">
+              <div className="py-2">
+                <p className="text-xs font-medium mb-3" style={{ color: "#5B6572" }}>
+                  Selecione a modalidade de uso do Gole:
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => saveSettings({ app_mode: "basic" })}
+                    className="p-4 rounded-xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center gap-2"
+                    style={{
+                      backgroundColor: settings.app_mode === "basic" ? "rgba(191,232,255,0.4)" : "rgba(255,255,255,0.5)",
+                      borderColor: settings.app_mode === "basic" ? "#257ca3" : "rgba(44,52,64,0.08)",
+                      boxShadow: settings.app_mode === "basic" ? "0 4px 12px rgba(37,124,163,0.1)" : "none",
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[24px]" style={{ color: settings.app_mode === "basic" ? "#257ca3" : "#5B6572" }}>
+                      notifications_active
+                    </span>
+                    <span className="text-xs font-bold" style={{ color: settings.app_mode === "basic" ? "#257ca3" : "#191c1e" }}>
+                      Básico
+                    </span>
+                    <span className="text-[9px] text-[#5B6572] leading-relaxed">
+                      Apenas lembretes por tempo
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => saveSettings({ app_mode: "pro" })}
+                    className="p-4 rounded-xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center gap-2"
+                    style={{
+                      backgroundColor: settings.app_mode === "pro" ? "rgba(191,232,255,0.4)" : "rgba(255,255,255,0.5)",
+                      borderColor: settings.app_mode === "pro" ? "#257ca3" : "rgba(44,52,64,0.08)",
+                      boxShadow: settings.app_mode === "pro" ? "0 4px 12px rgba(37,124,163,0.1)" : "none",
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[24px]" style={{ color: settings.app_mode === "pro" ? "#257ca3" : "#5B6572" }}>
+                      water_drop
+                    </span>
+                    <span className="text-xs font-bold" style={{ color: settings.app_mode === "pro" ? "#257ca3" : "#191c1e" }}>
+                      Completo
+                    </span>
+                    <span className="text-[9px] text-[#5B6572] leading-relaxed">
+                      Metas, estatísticas e conquistas
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </Section>
+
+            {settings.app_mode !== "basic" && (
+              <Section title="Perfil e Medidas" icon="person">
               {/* Peso + Idade — sliders */}
               <div className="grid grid-cols-2 gap-4 py-2">
                 <div className="flex flex-col gap-1">
@@ -524,6 +576,7 @@ export function Settings() {
                 </div>
               </div>
             </Section>
+            )}
 
             <Section title="Lembretes" icon="notifications">
               <div className="py-4">
@@ -684,79 +737,81 @@ export function Settings() {
 
           {/* Right column */}
           <div className="lg:col-span-5">
-            <Section title="Recipiente Principal" icon="local_drink">
-              <SettingRow label="Habilitar recipiente principal">
-                <Toggle
-                  checked={settings.recipiente_configurado}
-                  onChange={(v) => saveSettings({ recipiente_configurado: v })}
-                />
-              </SettingRow>
-
-              {settings.recipiente_configurado ? (
-                <div className="py-4 animate-fade-in flex flex-col items-center">
-                  <div className="w-full flex justify-between items-center mb-4">
-                    <span className="text-sm font-medium text-gray-500 font-semibold">Capacidade do recipiente</span>
-                    <div className="flex items-baseline gap-1">
-                      <strong className="text-xl" style={{ color: "#257ca3" }}>{settings.recipiente_capacidade_ml}</strong>
-                      <span className="text-xs text-gray-400">ml</span>
-                    </div>
-                  </div>
-
-                  {/* Ilustração dinâmica */}
-                  <div className="my-4 h-20 flex items-center justify-center">
-                    {(() => {
-                      const cap = settings.recipiente_capacidade_ml;
-                      if (cap < 350) return <CopoSvg />;
-                      if (cap >= 350 && cap < 1200) return <BottleSvg />;
-                      if (cap >= 1200 && cap < 1800) return <SportsBottleSvg />;
-                      return <JugSvg />;
-                    })()}
-                  </div>
-
-                  <input
-                    type="range"
-                    min={200}
-                    max={2000}
-                    step={50}
-                    value={settings.recipiente_capacidade_ml}
-                    onChange={(e) => saveSettings({ recipiente_capacidade_ml: Number(e.target.value) })}
-                    className="w-full focus:outline-none"
+            {settings.app_mode !== "basic" && (
+              <Section title="Recipiente Principal" icon="local_drink">
+                <SettingRow label="Habilitar recipiente principal">
+                  <Toggle
+                    checked={settings.recipiente_configurado}
+                    onChange={(v) => saveSettings({ recipiente_configurado: v })}
                   />
-                  <div className="flex justify-between w-full mt-2 px-1">
-                    <span className="text-xs text-gray-400">200ml</span>
-                    <span className="text-xs text-gray-400">2000ml</span>
+                </SettingRow>
+
+                {settings.recipiente_configurado ? (
+                  <div className="py-4 animate-fade-in flex flex-col items-center">
+                    <div className="w-full flex justify-between items-center mb-4">
+                      <span className="text-sm font-medium text-gray-500 font-semibold">Capacidade do recipiente</span>
+                      <div className="flex items-baseline gap-1">
+                        <strong className="text-xl" style={{ color: "#257ca3" }}>{settings.recipiente_capacidade_ml}</strong>
+                        <span className="text-xs text-gray-400">ml</span>
+                      </div>
+                    </div>
+
+                    {/* Ilustração dinâmica */}
+                    <div className="my-4 h-20 flex items-center justify-center">
+                      {(() => {
+                        const cap = settings.recipiente_capacidade_ml;
+                        if (cap < 350) return <CopoSvg />;
+                        if (cap >= 350 && cap < 1200) return <BottleSvg />;
+                        if (cap >= 1200 && cap < 1800) return <SportsBottleSvg />;
+                        return <JugSvg />;
+                      })()}
+                    </div>
+
+                    <input
+                      type="range"
+                      min={200}
+                      max={2000}
+                      step={50}
+                      value={settings.recipiente_capacidade_ml}
+                      onChange={(e) => saveSettings({ recipiente_capacidade_ml: Number(e.target.value) })}
+                      className="w-full focus:outline-none"
+                    />
+                    <div className="flex justify-between w-full mt-2 px-1">
+                      <span className="text-xs text-gray-400">200ml</span>
+                      <span className="text-xs text-gray-400">2000ml</span>
+                    </div>
+                    <span className="text-xs text-gray-400 block mt-2 text-center italic">
+                      Classificação: {
+                        settings.recipiente_capacidade_ml < 350
+                          ? "Copo pequeno"
+                          : settings.recipiente_capacidade_ml < 600
+                          ? "Garrafa pequena"
+                          : settings.recipiente_capacidade_ml < 900
+                          ? "Garrafa média"
+                          : settings.recipiente_capacidade_ml < 1200
+                          ? "Garrafa grande"
+                          : settings.recipiente_capacidade_ml < 1800
+                          ? "Garrafa esportiva"
+                          : "Garrafão"
+                      }
+                    </span>
                   </div>
-                  <span className="text-xs text-gray-400 block mt-2 text-center italic">
-                    Classificação: {
-                      settings.recipiente_capacidade_ml < 350
-                        ? "Copo pequeno"
-                        : settings.recipiente_capacidade_ml < 600
-                        ? "Garrafa pequena"
-                        : settings.recipiente_capacidade_ml < 900
-                        ? "Garrafa média"
-                        : settings.recipiente_capacidade_ml < 1200
-                        ? "Garrafa grande"
-                        : settings.recipiente_capacidade_ml < 1800
-                        ? "Garrafa esportiva"
-                        : "Garrafão"
-                    }
-                  </span>
-                </div>
-              ) : (
-                /* Estado visual quando o recipiente está desativado */
-                <div className="py-5 flex flex-col items-center gap-3 animate-fade-in">
-                  <div className="opacity-25 grayscale">
-                    <BottleSvg />
+                ) : (
+                  /* Estado visual quando o recipiente está desativado */
+                  <div className="py-5 flex flex-col items-center gap-3 animate-fade-in">
+                    <div className="opacity-25 grayscale">
+                      <BottleSvg />
+                    </div>
+                    <p className="text-xs text-center font-medium" style={{ color: "#9aa0a6" }}>
+                      Sem recipiente configurado
+                    </p>
+                    <p className="text-[11px] text-center" style={{ color: "#b0b8c1" }}>
+                      Os registros serão feitos em ml por dose calculada automaticamente.
+                    </p>
                   </div>
-                  <p className="text-xs text-center font-medium" style={{ color: "#9aa0a6" }}>
-                    Sem recipiente configurado
-                  </p>
-                  <p className="text-[11px] text-center" style={{ color: "#b0b8c1" }}>
-                    Os registros serão feitos em ml por dose calculada automaticamente.
-                  </p>
-                </div>
-              )}
-            </Section>
+                )}
+              </Section>
+            )}
 
             <Section title="Notificações" icon="campaign">
               <div className="py-4">

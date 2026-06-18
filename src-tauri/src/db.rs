@@ -56,7 +56,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         INSERT OR IGNORE INTO settings (key, value) VALUES ('activity_level', 'sedentary');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('climate', 'temperate');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('daily_goal_ml', '2450');
-        INSERT OR IGNORE INTO settings (key, value) VALUES ('reminder_interval_min', '60');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('reminder_interval_min', '30');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('notification_personality', 'tudo');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('smart_mode', 'true');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('reminders_paused', 'false');
@@ -71,6 +71,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         INSERT OR IGNORE INTO settings (key, value) VALUES ('sip_ml', '20');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('next_override_at', '');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('next_override_ml', '0');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('app_mode', 'pro');
 
         -- Profissional
         INSERT OR IGNORE INTO phrases (text, category) VALUES ('💧 Hora da água.', 'profissional');
@@ -215,6 +216,7 @@ pub struct Settings {
     pub sip_ml: i64,
     pub next_override_at: String,
     pub next_override_ml: i64,
+    pub app_mode: String,
 }
 
 pub fn get_settings(conn: &Connection) -> Result<Settings> {
@@ -229,6 +231,7 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
     }
     let personality = map.get("notification_personality").cloned().unwrap_or_else(|| "tudo".into());
     let personality = if personality == "mixed" { "tudo".to_string() } else { personality };
+    let app_mode = map.get("app_mode").cloned().unwrap_or_else(|| "pro".into());
 
     Ok(Settings {
         onboarding_complete: map.get("onboarding_complete").map(|v| v == "true").unwrap_or(false),
@@ -237,7 +240,7 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
         activity_level: map.get("activity_level").cloned().unwrap_or_else(|| "sedentary".into()),
         climate: map.get("climate").cloned().unwrap_or_else(|| "temperate".into()),
         daily_goal_ml: map.get("daily_goal_ml").and_then(|v| v.parse().ok()).unwrap_or(2450),
-        reminder_interval_min: map.get("reminder_interval_min").and_then(|v| v.parse().ok()).unwrap_or(60),
+        reminder_interval_min: map.get("reminder_interval_min").and_then(|v| v.parse().ok()).unwrap_or(30),
         notification_personality: personality,
         smart_mode: map.get("smart_mode").map(|v| v == "true").unwrap_or(true),
         reminders_paused: map.get("reminders_paused").map(|v| v == "true").unwrap_or(false),
@@ -252,6 +255,7 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
         sip_ml: map.get("sip_ml").and_then(|v| v.parse().ok()).unwrap_or(20),
         next_override_at: map.get("next_override_at").cloned().unwrap_or_default(),
         next_override_ml: map.get("next_override_ml").and_then(|v| v.parse().ok()).unwrap_or(0),
+        app_mode,
     })
 }
 
@@ -439,6 +443,9 @@ pub fn get_month_stats(conn: &Connection, goal_ml: i64) -> Result<Vec<DayStats>>
 }
 
 pub fn get_streak(conn: &Connection, goal_ml: i64) -> Result<i64> {
+    if goal_ml <= 0 {
+        return Ok(0);
+    }
     let mut streak: i64 = 0;
     let mut i = 0i64;
     loop {

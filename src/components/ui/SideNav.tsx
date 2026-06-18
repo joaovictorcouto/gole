@@ -72,6 +72,14 @@ export function SideNav() {
     await loadSettings();
   };
 
+  const isBasic = settings?.app_mode === "basic";
+  const filteredNavItems = navItems.filter((item) => {
+    if (isBasic && (item.path === "/statistics" || item.path === "/achievements")) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <nav
       className="flex flex-col py-6 px-6 h-screen w-[280px] left-0 fixed border-r z-50"
@@ -100,7 +108,7 @@ export function SideNav() {
 
       {/* Navigation */}
       <ul className="flex-grow space-y-1">
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const active = location.pathname === item.path;
           return (
             <li key={item.path}>
@@ -140,10 +148,12 @@ export function SideNav() {
         >
           <span className="material-symbols-outlined text-[18px]">water_drop</span>
           Beber Água
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full ml-1"
-            style={{ backgroundColor: "rgba(255,255,255,0.18)", letterSpacing: "0.04em" }}>
-            +{drinkAmount}ml
-          </span>
+          {!isBasic && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full ml-1"
+              style={{ backgroundColor: "rgba(255,255,255,0.18)", letterSpacing: "0.04em" }}>
+              +{drinkAmount}ml
+            </span>
+          )}
         </button>
         {undo && (
           <div className="-mt-2">

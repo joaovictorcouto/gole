@@ -252,6 +252,7 @@ export function Onboarding() {
   const { completeOnboarding } = useAppStore();
 
   const [step, setStep] = useState<Step>("welcome");
+  const [appMode, setAppMode] = useState<"basic" | "pro">("pro");
   const [weight, setWeight] = useState(70);
   const [age, setAge] = useState(25);
   const [activity, setActivity] = useState<string>("");
@@ -300,7 +301,8 @@ export function Onboarding() {
         recipienteConfigurado,
         recipienteCapacidade,
         workStartHour,
-        workEndHour
+        workEndHour,
+        appMode
       );
       navigate("/dashboard", { replace: true });
     } catch (err) {
@@ -313,9 +315,9 @@ export function Onboarding() {
   if (step === "welcome") {
     return (
       <OnboardingShell step={0}>
-        <main className="flex-grow flex flex-col justify-center items-center text-center py-12 px-8 z-10 my-auto">
-          <div className="flex justify-center mb-8 animate-fade-in">
-            <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+        <main className="flex-grow flex flex-col justify-center items-center py-8 px-6 z-10 my-auto w-full max-w-4xl mx-auto overflow-y-auto">
+          <div className="flex justify-center mb-6 animate-fade-in">
+            <svg width="80" height="80" viewBox="0 0 100 100" fill="none">
               <path d="M50 15C50 15 25 45 25 65C25 78.8071 36.1929 90 50 90C63.8071 90 75 78.8071 75 65C75 45 50 15 50 15Z"
                 fill="url(#welcome-grad)" />
               <path d="M50 25C50 25 32 48 32 65C32 74.9411 40.0589 83 50 83C59.9411 83 68 74.9411 68 65C68 48 50 25 50 25Z"
@@ -329,25 +331,115 @@ export function Onboarding() {
             </svg>
           </div>
 
-          <div className="space-y-4 max-w-xl mb-12 animate-fade-in">
-            <h1 className="text-5xl font-semibold leading-[1.1] tracking-[-0.04em]" style={{ color: "#2C3440" }}>
-              Vamos calcular sua meta diária de hidratação
+          <div className="space-y-3 max-w-xl text-center mb-8 animate-fade-in">
+            <h1 className="text-4xl font-semibold leading-[1.15] tracking-[-0.03em]" style={{ color: "#2C3440" }}>
+              Escolha seu modo de hidratação
             </h1>
-            <p className="text-lg" style={{ color: "#5B6572", lineHeight: "1.6" }}>
-              Responder algumas perguntas rápidas ajuda a criar lembretes mais inteligentes e adequados.
+            <p className="text-base" style={{ color: "#5B6572", lineHeight: "1.5" }}>
+              O Gole pode funcionar como um lembrete simples ou como um rastreador completo de metas. Escolha a melhor opção para você:
             </p>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl mb-8 animate-fade-in">
+            {/* Card Básico */}
+            <div
+              onClick={() => setAppMode("basic")}
+              className={`p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center text-center gap-4 hover:scale-[1.02] ${
+                appMode === "basic"
+                  ? "border-[#257ca3] bg-white shadow-[0_12px_30px_rgba(37,124,163,0.15)]"
+                  : "border-transparent bg-white/60 hover:bg-white hover:border-[#257ca3]/30"
+              }`}
+              style={{
+                boxShadow: appMode === "basic" ? undefined : "0 8px 25px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center transition-colors"
+                style={{
+                  backgroundColor: appMode === "basic" ? "#bfe8ff" : "rgba(224,227,230,0.5)",
+                }}
+              >
+                <span
+                  className="material-symbols-outlined text-[28px]"
+                  style={{
+                    color: appMode === "basic" ? "#257ca3" : "#5B6572",
+                    fontVariationSettings: appMode === "basic" ? "'FILL' 1" : "'FILL' 0",
+                  }}
+                >
+                  notifications_active
+                </span>
+              </div>
+              <div>
+                <h3
+                  className="text-lg font-bold mb-1 transition-colors"
+                  style={{ color: appMode === "basic" ? "#257ca3" : "#191c1e" }}
+                >
+                  Lembrete Simples
+                </h3>
+                <span className="text-[10px] font-bold tracking-widest uppercase bg-[#EAECEF] px-2.5 py-0.5 rounded-full text-[#5B6572] mb-3 inline-block">
+                  Básico
+                </span>
+                <p className="text-sm text-[#5B6572] leading-relaxed mt-2">
+                  Apenas notificações para lembrar de beber água de tempos em tempos. Sem metas diárias ou estatísticas de consumo.
+                </p>
+              </div>
+            </div>
+
+            {/* Card Pro */}
+            <div
+              onClick={() => setAppMode("pro")}
+              className={`p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center text-center gap-4 hover:scale-[1.02] ${
+                appMode === "pro"
+                  ? "border-[#257ca3] bg-white shadow-[0_12px_30px_rgba(37,124,163,0.15)]"
+                  : "border-transparent bg-white/60 hover:bg-white hover:border-[#257ca3]/30"
+              }`}
+              style={{
+                boxShadow: appMode === "pro" ? undefined : "0 8px 25px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center transition-colors"
+                style={{
+                  backgroundColor: appMode === "pro" ? "#bfe8ff" : "rgba(224,227,230,0.5)",
+                }}
+              >
+                <span
+                  className="material-symbols-outlined text-[28px]"
+                  style={{
+                    color: appMode === "pro" ? "#257ca3" : "#5B6572",
+                    fontVariationSettings: appMode === "pro" ? "'FILL' 1" : "'FILL' 0",
+                  }}
+                >
+                  water_drop
+                </span>
+              </div>
+              <div>
+                <h3
+                  className="text-lg font-bold mb-1 transition-colors"
+                  style={{ color: appMode === "pro" ? "#257ca3" : "#191c1e" }}
+                >
+                  Metas & Métricas
+                </h3>
+                <span className="text-[10px] font-bold tracking-widest uppercase bg-[#257ca3] px-2.5 py-0.5 rounded-full text-white mb-3 inline-block">
+                  Completo
+                </span>
+                <p className="text-sm text-[#5B6572] leading-relaxed mt-2">
+                  Meta diária de hidratação baseada no seu perfil físico (peso/idade/clima). Histórico de gols, conquistas e analytics.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <button
-            onClick={() => setStep("weight")}
-            className="h-14 px-12 rounded-full text-white font-medium text-sm flex items-center gap-2 group transition-all duration-300 hover:-translate-y-0.5 max-w-[320px] w-full cursor-pointer"
+            onClick={() => setStep(appMode === "basic" ? "work_hours" : "weight")}
+            className="h-14 px-12 rounded-full text-white font-medium text-sm flex items-center gap-2 group transition-all duration-300 hover:-translate-y-0.5 max-w-[320px] w-full cursor-pointer justify-center"
             style={{
               background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
               boxShadow: "0 8px 20px rgba(59,99,119,0.25)",
               letterSpacing: "0.02em",
             }}
           >
-            <span className="flex-1 text-center">Vamos lá!</span>
+            <span>Continuar</span>
             <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform duration-200">
               arrow_forward
             </span>
@@ -750,8 +842,8 @@ export function Onboarding() {
           {/* Rodapé (Fixo na Base) */}
           <div className="w-full flex-none">
             <StepFooter
-              onBack={() => setStep("climate")}
-              onNext={() => setStep("recipiente_setup")}
+              onBack={() => setStep(appMode === "basic" ? "welcome" : "climate")}
+              onNext={() => setStep(appMode === "basic" ? "result" : "recipiente_setup")}
             />
           </div>
         </main>
@@ -911,39 +1003,52 @@ export function Onboarding() {
               </span>
             </div>
 
-            <h2 className="text-3xl font-semibold mb-2" style={{ color: "#191c1e", letterSpacing: "-0.02em" }}>
-              Sua meta diária:
-              <span className="block mt-1 text-5xl font-semibold tracking-[-0.04em]" style={{ color: "#006492" }}>
-                {formatGoal(goal)}
-              </span>
-            </h2>
+            {appMode === "basic" ? (
+              <h2 className="text-2xl font-semibold mb-2" style={{ color: "#191c1e", letterSpacing: "-0.02em" }}>
+                Lembretes configurados!
+                <span className="block mt-2 text-base font-normal leading-relaxed text-[#5B6572]">
+                  Você receberá notificações periodicamente para beber água durante o seu horário ativo.
+                </span>
+              </h2>
+            ) : (
+              <h2 className="text-3xl font-semibold mb-2" style={{ color: "#191c1e", letterSpacing: "-0.02em" }}>
+                Sua meta diária:
+                <span className="block mt-1 text-5xl font-semibold tracking-[-0.04em]" style={{ color: "#006492" }}>
+                  {formatGoal(goal)}
+                </span>
+              </h2>
+            )}
 
             {/* Elegant Summary of inputs */}
             <div className="w-full mt-6 pt-6 border-t flex flex-col gap-4 text-left mb-8" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
               <p className="text-xs font-semibold uppercase tracking-widest text-[#5B6572] mb-1">
-                Resumo dos seus dados (clique para editar):
+                Resumo das configurações:
               </p>
               
               <div className="grid grid-cols-2 gap-3">
-                {/* Peso e Idade */}
-                <button 
-                  onClick={() => setStep("weight")}
-                  className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
-                  style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
-                >
-                  <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">person</span>
-                    Perfil
-                  </span>
-                  <span className="text-base font-semibold text-[#191c1e] mt-1">
-                    {weight} kg • {age} anos
-                  </span>
-                </button>
+                {appMode === "pro" && (
+                  <>
+                    {/* Peso e Idade */}
+                    <button 
+                      onClick={() => setStep("weight")}
+                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
+                      style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                    >
+                      <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">person</span>
+                        Perfil
+                      </span>
+                      <span className="text-base font-semibold text-[#191c1e] mt-1">
+                        {weight} kg • {age} anos
+                      </span>
+                    </button>
+                  </>
+                )}
 
                 {/* Horário de Uso */}
                 <button 
                   onClick={() => setStep("work_hours")}
-                  className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
+                  className={`p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer ${appMode === 'basic' ? 'col-span-2' : ''}`}
                   style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
                 >
                   <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
@@ -955,50 +1060,54 @@ export function Onboarding() {
                   </span>
                 </button>
 
-                {/* Atividade */}
-                <button 
-                  onClick={() => setStep("activity")}
-                  className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
-                  style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
-                >
-                  <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">fitness_center</span>
-                    Exercício
-                  </span>
-                  <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
-                    {ACTIVITIES.find(a => a.id === activity)?.label || "Não informado"}
-                  </span>
-                </button>
+                {appMode === "pro" && (
+                  <>
+                    {/* Atividade */}
+                    <button 
+                      onClick={() => setStep("activity")}
+                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
+                      style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                    >
+                      <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">fitness_center</span>
+                        Exercício
+                      </span>
+                      <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
+                        {ACTIVITIES.find(a => a.id === activity)?.label || "Não informado"}
+                      </span>
+                    </button>
 
-                {/* Clima */}
-                <button 
-                  onClick={() => setStep("climate")}
-                  className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
-                  style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
-                >
-                  <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">thermostat</span>
-                    Clima
-                  </span>
-                  <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
-                    {CLIMATES.find(c => c.id === climate)?.label || "Não informado"}
-                  </span>
-                </button>
+                    {/* Clima */}
+                    <button 
+                      onClick={() => setStep("climate")}
+                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
+                      style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                    >
+                      <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">thermostat</span>
+                        Clima
+                      </span>
+                      <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
+                        {CLIMATES.find(c => c.id === climate)?.label || "Não informado"}
+                      </span>
+                    </button>
 
-                {/* Recipiente */}
-                <button 
-                  onClick={() => setStep("recipiente_setup")}
-                  className="col-span-2 p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
-                  style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
-                >
-                  <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">local_drink</span>
-                    Recipiente principal
-                  </span>
-                  <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
-                    {recipienteConfigurado ? `${recipienteCapacidade} ml` : "Não definido"}
-                  </span>
-                </button>
+                    {/* Recipiente */}
+                    <button 
+                      onClick={() => setStep("recipiente_setup")}
+                      className="col-span-2 p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
+                      style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                    >
+                      <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">local_drink</span>
+                        Recipiente principal
+                      </span>
+                      <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
+                        {recipienteConfigurado ? `${recipienteCapacidade} ml` : "Não definido"}
+                      </span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1024,7 +1133,7 @@ export function Onboarding() {
 
             <button
               onClick={() => {
-                setStep("recipiente_setup");
+                setStep(appMode === "basic" ? "work_hours" : "recipiente_setup");
               }}
               className="mt-4 text-sm font-medium transition-colors hover:text-[#257ca3] cursor-pointer"
               style={{ color: "#5B6572" }}

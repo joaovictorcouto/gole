@@ -22,6 +22,7 @@ export interface Settings {
   sip_ml: number;
   next_override_at: string;
   next_override_ml: number;
+  app_mode: string;
 }
 
 export interface ScheduleEntry {
@@ -100,6 +101,7 @@ export const api = {
     work_start_hour: string;
     work_end_hour: string;
     sip_ml: number;
+    app_mode: string;
   }) => invoke<number>("save_settings", {
     weightKg: params.weight_kg,
     ageYears: params.age_years,
@@ -117,6 +119,7 @@ export const api = {
     workStartHour: params.work_start_hour,
     workEndHour: params.work_end_hour,
     sipMl: params.sip_ml,
+    appMode: params.app_mode,
   }),
 
   completeOnboarding: (params: {
@@ -128,6 +131,7 @@ export const api = {
     recipiente_capacidade_ml: number;
     work_start_hour: string;
     work_end_hour: string;
+    app_mode: string;
   }) => invoke<number>("complete_onboarding", {
     weightKg: params.weight_kg,
     ageYears: params.age_years,
@@ -137,6 +141,7 @@ export const api = {
     recipienteCapacidadeMl: params.recipiente_capacidade_ml,
     workStartHour: params.work_start_hour,
     workEndHour: params.work_end_hour,
+    appMode: params.app_mode,
   }),
 
   getTodayStats: () => invoke<TodayStats>("get_today_stats"),

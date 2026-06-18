@@ -11,7 +11,7 @@ function StatusBadge({ status, isOverride }: { status: ScheduleEntry["status"]; 
   return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#eceef1", color: "#71787c" }}>Futuro</span>;
 }
 
-function EntryRow({ entry, onEdit }: { entry: ScheduleEntry; onEdit?: () => void }) {
+function EntryRow({ entry, onEdit, isBasicMode }: { entry: ScheduleEntry; onEdit?: () => void; isBasicMode: boolean }) {
   return (
     <div
       className="flex items-center justify-between p-3 rounded-xl border transition-colors"
@@ -26,9 +26,11 @@ function EntryRow({ entry, onEdit }: { entry: ScheduleEntry; onEdit?: () => void
         </span>
         <div>
           <div className="text-sm font-bold" style={{ color: "#191c1e" }}>{entry.time}</div>
-          <div className="text-[11px]" style={{ color: "#5B6572" }}>
-            {entry.sips} {entry.sips === 1 ? "gole" : "goles"} · {entry.amount_ml}ml
-          </div>
+          {!isBasicMode && (
+            <div className="text-[11px]" style={{ color: "#5B6572" }}>
+              {entry.sips} {entry.sips === 1 ? "gole" : "goles"} · {entry.amount_ml}ml
+            </div>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -64,6 +66,8 @@ function EditNextModal({
   onSave: (time: string, ml: number) => Promise<void>;
   onReset: () => Promise<void>;
 }) {
+  const { settings } = useAppStore();
+  const isBasicMode = settings?.app_mode === "basic";
   const [time, setTime] = useState(defaultTime);
   const [ml, setMl] = useState(defaultMl);
 
@@ -104,21 +108,23 @@ function EditNextModal({
           />
         </label>
 
-        <label className="block mb-4">
-          <div className="flex justify-between items-baseline mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5B6572" }}>Quantidade</span>
-            <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{ml}ml · {sips} {sips === 1 ? "gole" : "goles"}</span>
-          </div>
-          <input
-            type="range"
-            min={sipMl}
-            max={sipMl * 20}
-            step={sipMl}
-            value={ml}
-            onChange={(e) => setMl(Number(e.target.value))}
-            className="w-full focus:outline-none"
-          />
-        </label>
+        {!isBasicMode && (
+          <label className="block mb-4">
+            <div className="flex justify-between items-baseline mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5B6572" }}>Quantidade</span>
+              <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{ml}ml · {sips} {sips === 1 ? "gole" : "goles"}</span>
+            </div>
+            <input
+              type="range"
+              min={sipMl}
+              max={sipMl * 20}
+              step={sipMl}
+              value={ml}
+              onChange={(e) => setMl(Number(e.target.value))}
+              className="w-full focus:outline-none"
+            />
+          </label>
+        )}
 
         <div className="flex gap-2 mt-6">
           <button
@@ -154,7 +160,8 @@ function EditNextModal({
 export function Reminders() {
   const [data, setData] = useState<ScheduleData | null>(null);
   const [editing, setEditing] = useState(false);
-  const { loadSettings } = useAppStore();
+  const { settings, loadSettings } = useAppStore();
+  const isBasicMode = settings?.app_mode === "basic";
 
   const reload = async () => {
     try {
@@ -212,7 +219,10 @@ export function Reminders() {
           Lembretes
         </h1>
         <p className="text-lg text-gray-500">
-          Acompanhe os lembretes do dia. Editar o próximo se beber em quantidade diferente.
+          {isBasicMode 
+            ? "Acompanhe os lembretes do dia. Ajuste o próximo horário se necessário."
+            : "Acompanhe os lembretes do dia. Editar o próximo se beber em quantidade diferente."
+          }
         </p>
       </header>
 
@@ -235,7 +245,7 @@ export function Reminders() {
         <section className="mb-6">
           <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Próximo</h2>
           {data.next ? (
-            <EntryRow entry={data.next} onEdit={() => setEditing(true)} />
+            <EntryRow entry={data.next} onEdit={() => setEditing(true)} isBasicMode={isBasicMode} />
           ) : (
             <div className="text-sm text-gray-400 italic">Sem lembretes restantes hoje.</div>
           )}
@@ -245,7 +255,7 @@ export function Reminders() {
           <section className="mb-6">
             <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Próximos</h2>
             <div className="space-y-2">
-              {data.upcoming.map((e, i) => <EntryRow key={i} entry={e} />)}
+              {data.upcoming.map((e, i) => <EntryRow key={i} entry={e} isBasicMode={isBasicMode} />)}
             </div>
           </section>
         )}
@@ -254,7 +264,7 @@ export function Reminders() {
           <section className="mb-6">
             <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Histórico de hoje</h2>
             <div className="space-y-2">
-              {data.past.map((e, i) => <EntryRow key={i} entry={e} />)}
+              {data.past.map((e, i) => <EntryRow key={i} entry={e} isBasicMode={isBasicMode} />)}
             </div>
           </section>
         )}

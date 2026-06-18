@@ -13,6 +13,7 @@ interface ReminderData {
   suggested_sips?: number;
   sip_ml?: number;
   is_test?: boolean;
+  app_mode?: string;
 }
 
 export function ReminderWindow() {
@@ -180,57 +181,89 @@ export function ReminderWindow() {
           marginTop: 0,
         }}
       >
-        {/* Phrase — left padding clears the decorative droplet */}
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: "#191c1e",
-            lineHeight: 1.4,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            minHeight: 32,
-            paddingLeft: 34,
-          }}
-          title={data.phrase}
-        >
-          {data.phrase}
-        </div>
+        {/* Phrase */}
+        {data.app_mode === "basic" ? (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              padding: "0 10px",
+              marginTop: 10,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "#191c1e",
+                lineHeight: 1.4,
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+              title={data.phrase}
+            >
+              {data.phrase}
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#191c1e",
+              lineHeight: 1.4,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              minHeight: 32,
+              paddingLeft: 34,
+            }}
+            title={data.phrase}
+          >
+            {data.phrase}
+          </div>
+        )}
 
         {/* Highlighted amount */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "8px 12px",
-            borderRadius: 12,
-            background: "linear-gradient(135deg, rgba(138,212,255,0.25) 0%, rgba(37,124,163,0.16) 100%)",
-            border: "1px solid rgba(37,124,163,0.28)",
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, color: "#0f76a0", letterSpacing: 0.6, textTransform: "uppercase" }}>
-              Beba agora
-            </span>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginTop: 3 }}>
-              <span style={{ fontSize: 24, fontWeight: 800, color: "#0f4c6e", letterSpacing: "-0.02em", lineHeight: 1 }}>
-                {sips}
+        {data.app_mode !== "basic" && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "8px 12px",
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(138,212,255,0.25) 0%, rgba(37,124,163,0.16) 100%)",
+              border: "1px solid rgba(37,124,163,0.28)",
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#0f76a0", letterSpacing: 0.6, textTransform: "uppercase" }}>
+                Beba agora
               </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#0f76a0" }}>
-                {sips === 1 ? "gole" : "goles"}
+              <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginTop: 3 }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: "#0f4c6e", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                  {sips}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f76a0" }}>
+                  {sips === 1 ? "gole" : "goles"}
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.1 }}>
+              <span style={{ fontSize: 18, fontWeight: 800, color: "#0f4c6e" }}>{data.suggested_ml}ml</span>
+              <span style={{ fontSize: 9, color: "#71787c", marginTop: 3 }}>
+                {(data.consumed_ml / 1000).toFixed(2).replace(".", ",")}L de {((data.consumed_ml + data.remaining_ml) / 1000).toFixed(2).replace(".", ",")}L
               </span>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.1 }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: "#0f4c6e" }}>{data.suggested_ml}ml</span>
-            <span style={{ fontSize: 9, color: "#71787c", marginTop: 3 }}>
-              {(data.consumed_ml / 1000).toFixed(2).replace(".", ",")}L de {((data.consumed_ml + data.remaining_ml) / 1000).toFixed(2).replace(".", ",")}L
-            </span>
-          </div>
-        </div>
+        )}
 
         {/* Buttons */}
         <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>

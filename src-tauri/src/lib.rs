@@ -194,12 +194,20 @@ fn current_suggested_amount(conn: &Connection) -> i64 {
 
 fn refresh_tray_drink_label(app: &AppHandle) {
     if let Some(state) = app.try_state::<AppState>() {
-        let amount = {
+        let (amount, is_basic) = {
             let conn = state.conn.lock().unwrap();
-            current_suggested_amount(&conn)
+            let amount = current_suggested_amount(&conn);
+            let is_basic = db::get_settings(&conn)
+                .map(|s| s.app_mode == "basic")
+                .unwrap_or(false);
+            (amount, is_basic)
         };
         if let Some(item) = state.tray_drink_item.lock().unwrap().as_ref() {
-            let _ = item.set_text(drink_label(amount));
+            if is_basic {
+                let _ = item.set_text("💧 Beber água agora");
+            } else {
+                let _ = item.set_text(drink_label(amount));
+            }
         }
     }
 }
@@ -259,9 +267,11 @@ fn save_settings(
     work_start_hour: String,
     work_end_hour: String,
     sip_ml: i64,
+    app_mode: String,
 ) -> Result<i64, String> {
     let conn = state.conn.lock().unwrap();
-    let goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
+    let goal = if app_mode == "basic" { 0 } else { hydration::calculate_goal(weight_kg, &activity_level, &climate) };
+    db::set_setting(&conn, "app_mode", &app_mode).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "weight_kg", &weight_kg.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "age_years", &age_years.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "activity_level", &activity_level).map_err(|e| e.to_string())?;
@@ -389,10 +399,12 @@ fn complete_onboarding(
     recipiente_capacidade_ml: i64,
     work_start_hour: String,
     work_end_hour: String,
+    app_mode: String,
 ) -> Result<i64, String> {
     let conn = state.conn.lock().unwrap();
-    let goal = hydration::calculate_goal(weight_kg, &activity_level, &climate);
+    let goal = if app_mode == "basic" { 0 } else { hydration::calculate_goal(weight_kg, &activity_level, &climate) };
 
+    db::set_setting(&conn, "app_mode", &app_mode).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "weight_kg", &weight_kg.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "age_years", &age_years.to_string()).map_err(|e| e.to_string())?;
     db::set_setting(&conn, "activity_level", &activity_level).map_err(|e| e.to_string())?;
@@ -1065,6 +1077,7 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
         "suggested_sips": suggested_sips,
         "sip_ml": settings.sip_ml,
         "is_test": is_forced,
+        "app_mode": settings.app_mode,
     });
 
     // Also emit to main window so the in-app sound plays
@@ -1171,15 +1184,8 @@ pub fn run() {
                 let _ = autostart_manager.enable();
             }
 
-            // Exibe a janela principal se não iniciar oculto (--hidden)
-            let args: Vec<String> = std::env::args().collect();
-            let start_hidden = args.contains(&"--hidden".to_string());
-            if !start_hidden {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-            }
+            // O aplicativo sempre inicia em segundo plano (oculto na bandeja do sistema).
+            // A janela principal só será exibida se o usuário solicitar através do ícone da bandeja.
 
             let initial_paused = {
                 let state: State<AppState> = app.state();
@@ -1188,14 +1194,24 @@ pub fn run() {
             };
             let pause_label = if initial_paused { "▶ Retomar lembretes" } else { "⏸ Pausar lembretes" };
 
-            let initial_drink_amount = {
+            let (initial_drink_amount, is_basic) = {
                 let state: State<AppState> = app.state();
                 let conn = state.conn.lock().unwrap();
-                current_suggested_amount(&conn)
+                let amount = current_suggested_amount(&conn);
+                let is_basic = db::get_settings(&conn)
+                    .map(|s| s.app_mode == "basic")
+                    .unwrap_or(false);
+                (amount, is_basic)
+            };
+
+            let drink_item_text = if is_basic {
+                "💧 Beber água agora".to_string()
+            } else {
+                drink_label(initial_drink_amount)
             };
 
             let item_open = MenuItem::with_id(app, "dashboard", "Abrir Gole", true, None::<&str>)?;
-            let item_drink = MenuItem::with_id(app, "drink", drink_label(initial_drink_amount), true, None::<&str>)?;
+            let item_drink = MenuItem::with_id(app, "drink", drink_item_text, true, None::<&str>)?;
             let item_pause_toggle = MenuItem::with_id(app, "pause_toggle", pause_label, true, None::<&str>)?;
             let item_quit = MenuItem::with_id(app, "quit", "Sair", true, None::<&str>)?;
 
