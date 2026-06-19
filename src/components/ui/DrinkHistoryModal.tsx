@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal } from "./Modal";
+import { Modal, ModalSecondaryButton } from "./Modal";
 import { api, DrinkLog } from "../../lib/api";
 import { useAppStore } from "../../store/useAppStore";
 
@@ -46,6 +46,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
   const [adding, setAdding] = useState(false);
   const [newAmount, setNewAmount] = useState("");
   const [newTime, setNewTime] = useState(nowHHMM());
+  const [drinkToDelete, setDrinkToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -292,8 +293,9 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                       <span className="material-symbols-outlined text-[18px]">edit</span>
                     </button>
                     <button
-                      onClick={() => handleDelete(d.id)}
+                      onClick={() => setDrinkToDelete(d.id)}
                       className="w-8 h-8 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                      title="Excluir registro"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>
                     </button>
@@ -304,6 +306,40 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
           );
         })}
       </div>
+
+      {drinkToDelete !== null && (
+        <Modal
+          open={true}
+          onClose={() => setDrinkToDelete(null)}
+          title="Confirmar Exclusão"
+          description="Deseja realmente excluir este registro de água? Isso atualizará seu total diário."
+          icon="warning"
+          iconColor="#bf360c"
+          iconBg="#ffe0b2"
+          maxWidth={380}
+        >
+          <div className="flex gap-3 mt-2">
+            <ModalSecondaryButton onClick={() => setDrinkToDelete(null)}>
+              Cancelar
+            </ModalSecondaryButton>
+            <button
+              onClick={async () => {
+                const id = drinkToDelete;
+                setDrinkToDelete(null);
+                await handleDelete(id);
+              }}
+              className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer"
+              style={{
+                background: "linear-gradient(180deg, #d32f2f 0%, #c62828 100%)",
+                boxShadow: "0 8px 20px rgba(211,47,47,0.25)",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Excluir
+            </button>
+          </div>
+        </Modal>
+      )}
     </Modal>
   );
 }

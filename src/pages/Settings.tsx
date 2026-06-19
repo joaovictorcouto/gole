@@ -4,6 +4,7 @@ import { useAppStore } from "../store/useAppStore";
 import { useIsDev } from "../lib/useIsDev";
 import { Toggle } from "../components/ui/Toggle";
 import { api, Phrase } from "../lib/api";
+import { Modal, ModalSecondaryButton } from "../components/ui/Modal";
 import { playSound, SOUND_OPTIONS, SoundPreset } from "../lib/sounds";
 
 const ACTIVITY_OPTIONS = [
@@ -211,6 +212,7 @@ export function Settings() {
   const [newPhraseText, setNewPhraseText] = useState("");
   const [editingPhraseId, setEditingPhraseId] = useState<number | null>(null);
   const [editingPhraseText, setEditingPhraseText] = useState("");
+  const [phraseToDelete, setPhraseToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -633,37 +635,39 @@ export function Settings() {
               </SettingRow>
             </Section>
 
-            <Section title="Tamanho do Gole" icon="water_drop">
-              <div className="py-2">
-                <div className="flex justify-between items-baseline mb-2">
-                  <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Volume por gole</span>
-                  <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{settings.sip_ml || 20} <span className="text-[10px] text-gray-400 font-medium">ml</span></span>
+            {settings.app_mode !== "basic" && (
+              <Section title="Tamanho do Gole" icon="water_drop">
+                <div className="py-2">
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Volume por gole</span>
+                    <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{settings.sip_ml || 20} <span className="text-[10px] text-gray-400 font-medium">ml</span></span>
+                  </div>
+                  <input
+                    type="range"
+                    min={15}
+                    max={30}
+                    step={5}
+                    value={settings.sip_ml || 20}
+                    onChange={(e) => saveSettings({ sip_ml: Number(e.target.value) })}
+                    className="w-full focus:outline-none"
+                  />
+                  <div className="flex justify-between px-1 mt-1">
+                    {[15, 20, 25, 30].map((v) => (
+                      <span
+                        key={v}
+                        className="text-[10px] font-bold"
+                        style={{ color: settings.sip_ml === v ? "#257ca3" : "#9aa0a6" }}
+                      >
+                        {v}ml
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-2 italic">
+                    Padrão: 20ml. Usado para calcular quantos goles você deve dar por lembrete.
+                  </p>
                 </div>
-                <input
-                  type="range"
-                  min={15}
-                  max={30}
-                  step={5}
-                  value={settings.sip_ml || 20}
-                  onChange={(e) => saveSettings({ sip_ml: Number(e.target.value) })}
-                  className="w-full focus:outline-none"
-                />
-                <div className="flex justify-between px-1 mt-1">
-                  {[15, 20, 25, 30].map((v) => (
-                    <span
-                      key={v}
-                      className="text-[10px] font-bold"
-                      style={{ color: settings.sip_ml === v ? "#257ca3" : "#9aa0a6" }}
-                    >
-                      {v}ml
-                    </span>
-                  ))}
-                </div>
-                <p className="text-[11px] text-gray-400 mt-2 italic">
-                  Padrão: 20ml. Usado para calcular quantos goles você deve dar por lembrete.
-                </p>
-              </div>
-            </Section>
+              </Section>
+            )}
 
             {isDev && (
               <Section title="Módulo de Testes (Dev)" icon="bug_report">
@@ -1025,8 +1029,9 @@ export function Settings() {
                               <span className="material-symbols-outlined text-[20px]">edit</span>
                             </button>
                             <button
-                              onClick={() => handleDelete(phrase.id)}
+                              onClick={() => setPhraseToDelete(phrase.id)}
                               className="text-red-400 hover:text-red-600 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+                              title="Excluir frase"
                             >
                               <span className="material-symbols-outlined text-[20px]">delete</span>
                             </button>
@@ -1045,6 +1050,40 @@ export function Settings() {
             )}
           </div>
         </div>
+      )}
+
+      {phraseToDelete !== null && (
+        <Modal
+          open={true}
+          onClose={() => setPhraseToDelete(null)}
+          title="Confirmar Exclusão"
+          description="Deseja realmente excluir esta frase personalizada? Ela não poderá ser recuperada."
+          icon="warning"
+          iconColor="#bf360c"
+          iconBg="#ffe0b2"
+          maxWidth={380}
+        >
+          <div className="flex gap-3 mt-2">
+            <ModalSecondaryButton onClick={() => setPhraseToDelete(null)}>
+              Cancelar
+            </ModalSecondaryButton>
+            <button
+              onClick={async () => {
+                const id = phraseToDelete;
+                setPhraseToDelete(null);
+                await handleDelete(id);
+              }}
+              className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer"
+              style={{
+                background: "linear-gradient(180deg, #d32f2f 0%, #c62828 100%)",
+                boxShadow: "0 8px 20px rgba(211,47,47,0.25)",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Excluir
+            </button>
+          </div>
+        </Modal>
       )}
 
       </div>{/* end scrollable */}

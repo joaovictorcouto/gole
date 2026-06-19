@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { useAppStore } from "../store/useAppStore";
 import { WaterGlass } from "../components/ui/WaterGlass";
 import { CircularProgress } from "../components/ui/CircularProgress";
 import { DrinkHistoryModal } from "../components/ui/DrinkHistoryModal";
+import { ReminderHistoryModal } from "../components/ui/ReminderHistoryModal";
 import { SetTotalModal } from "../components/ui/SetTotalModal";
 import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 import { UndoChip } from "../components/ui/UndoChip";
@@ -158,11 +160,56 @@ const JugSvg = () => (
   </svg>
 );
 
+function SuccessRateCircle({ rate }: { rate: number }) {
+  const pct = Math.min(100, Math.max(0, rate * 100));
+  const radius = 24;
+  const stroke = 4;
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (pct / 100) * circumference;
+
+  let colorClass = "text-red-500";
+  if (pct >= 80) {
+    colorClass = "text-green-500";
+  } else if (pct >= 50) {
+    colorClass = "text-yellow-500";
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center relative w-12 h-12 shrink-0">
+      <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
+        <circle
+          stroke="rgba(0,0,0,0.06)"
+          fill="transparent"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        <circle
+          className={`${colorClass} transition-all duration-300`}
+          stroke="currentColor"
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={`${circumference} ${circumference}`}
+          style={{ strokeDashoffset }}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+          strokeLinecap="round"
+        />
+      </svg>
+      <span className="absolute text-[10px] font-bold text-[#191c1e]">{Math.round(pct)}%</span>
+    </div>
+  );
+}
+
 export function Dashboard() {
   const { todayStats, loadTodayStats, logDrink, settings, loadSettings, weekStats, loadWeekStats, drinkTick } = useAppStore();
   const [undoVisible, setUndoVisible] = useState(false);
   const [lastAmount, setLastAmount] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [reminderHistoryOpen, setReminderHistoryOpen] = useState(false);
   const [setTotalOpen, setSetTotalOpen] = useState(false);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDev = useIsDev();
@@ -170,6 +217,13 @@ export function Dashboard() {
   const [devInputVisible, setDevInputVisible] = useState(false);
   const [customTipText, setCustomTipText] = useState("");
   const [todayDrinks, setTodayDrinks] = useState<any[]>([]);
+  const [successRate, setSuccessRate] = useState<number | null>(null);
+
+  const loadSuccessRate = () => {
+    api.getDailySuccessRate()
+      .then(setSuccessRate)
+      .catch((err) => console.error("Erro ao carregar taxa de sucesso diária:", err));
+  };
 
   useEffect(() => {
     api.getTodayDrinks().then(setTodayDrinks).catch(() => {});
@@ -179,9 +233,11 @@ export function Dashboard() {
     loadTodayStats();
     loadSettings();
     loadWeekStats();
+    loadSuccessRate();
     const interval = setInterval(() => {
       loadTodayStats();
       loadWeekStats();
+      loadSuccessRate();
     }, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -189,7 +245,29 @@ export function Dashboard() {
   // Reload week stats whenever a drink is logged (real-time goal indicator)
   useEffect(() => {
     loadWeekStats();
+    loadSuccessRate();
   }, [drinkTick, todayStats?.consumed_ml]);
+
+  // Listen to Tauri events for real-time updates
+  useEffect(() => {
+    const unlistenRefresh = listen("refresh_data", () => {
+      loadTodayStats();
+      loadWeekStats();
+      loadSuccessRate();
+    });
+    const unlistenSchedule = listen("schedule_changed", () => {
+      loadSuccessRate();
+    });
+    const unlistenStats = listen("stats_changed", () => {
+      loadSuccessRate();
+    });
+
+    return () => {
+      unlistenRefresh.then((fn) => fn());
+      unlistenSchedule.then((fn) => fn());
+      unlistenStats.then((fn) => fn());
+    };
+  }, []);
 
   const handleLogDrink = async (amount: number) => {
     await logDrink(amount);
@@ -321,15 +399,29 @@ export function Dashboard() {
                   <span className="text-[10px] font-bold tracking-widest uppercase text-[#5B6572] mb-0.5">Água bebida</span>
                   <span className="text-xl font-bold text-[#191c1e]">{timesDrunk} {timesDrunk === 1 ? "vez" : "vezes"}</span>
                 </div>
-                <div className="bg-gray-50/50 border border-gray-100 rounded-2xl py-2 px-4 flex flex-col items-center">
-                  <span className="material-symbols-outlined text-[20px] mb-0.5 text-[#5B6572]">notifications</span>
-                  <span className="text-[10px] font-bold tracking-widest uppercase text-[#5B6572] mb-0.5">Lembretes</span>
-                  <span className="text-sm font-semibold text-[#191c1e] mt-0.5">
-                    Confirmados: <strong className="text-[#257ca3]">{confirmedReminders}</strong>
-                  </span>
-                  <span className="text-xs text-[#5B6572] font-medium mt-0.5">
-                    Ignorados: <strong>{ignoredReminders}</strong>
-                  </span>
+                <div 
+                  onClick={() => setReminderHistoryOpen(true)}
+                  className="bg-gray-50/50 border border-gray-100 rounded-2xl py-2 px-4 flex items-center justify-between w-full gap-4 text-left cursor-pointer hover:bg-gray-100/50 transition-colors duration-200"
+                  title="Clique para ver o histórico de lembretes"
+                >
+                  <div className="flex flex-col items-start">
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="material-symbols-outlined text-[16px] text-[#5B6572]">notifications</span>
+                      <span className="text-[9px] font-bold tracking-widest uppercase text-[#5B6572]">Lembretes</span>
+                    </div>
+                    <span className="text-xs font-semibold text-[#191c1e]">
+                      Confirmados: <strong className="text-[#257ca3]">{confirmedReminders}</strong>
+                    </span>
+                    <span className="text-xs text-[#5B6572] font-medium mt-0.5">
+                      Ignorados: <strong>{ignoredReminders}</strong>
+                    </span>
+                  </div>
+                  {successRate !== null && (
+                    <div className="flex flex-col items-center shrink-0">
+                      <SuccessRateCircle rate={successRate} />
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-[#5B6572] mt-1">Sucesso</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -413,6 +505,10 @@ export function Dashboard() {
         <DrinkHistoryModal
           open={historyOpen}
           onClose={() => setHistoryOpen(false)}
+        />
+        <ReminderHistoryModal
+          open={reminderHistoryOpen}
+          onClose={() => setReminderHistoryOpen(false)}
         />
       </div>
     );
@@ -696,6 +792,7 @@ export function Dashboard() {
       </div>{/* end scrollable */}
 
       <DrinkHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <ReminderHistoryModal open={reminderHistoryOpen} onClose={() => setReminderHistoryOpen(false)} />
       <SetTotalModal
         open={setTotalOpen}
         currentMl={consumed}

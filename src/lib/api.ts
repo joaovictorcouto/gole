@@ -145,6 +145,12 @@ export const api = {
   }),
 
   getTodayStats: () => invoke<TodayStats>("get_today_stats"),
+  getDailySuccessRate: () => invoke<number>("get_daily_success_rate"),
+  getTodayRemindersList: () => invoke<ReminderRow[]>("get_today_reminders_list"),
+  toggleReminderStatus: (id: number) => invoke<void>("toggle_reminder_status", { id }),
+  deleteReminder: (id: number) => invoke<void>("delete_reminder", { id }),
+  addCustomReminder: (sentAt: string, confirmed: boolean) =>
+    invoke<void>("add_custom_reminder", { sentAt, confirmed }),
 
   logDrink: (amount_ml: number) => invoke<TodayStats>("log_drink", { amountMl: amount_ml }),
 
@@ -230,4 +236,10 @@ export interface DrinkLog {
   id: number;
   amount_ml: number;
   logged_at: string;
+}
+
+export interface ReminderRow {
+  id: number;
+  sent_at: string;
+  confirmed: boolean;
 }

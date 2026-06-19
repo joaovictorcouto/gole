@@ -14,6 +14,7 @@ interface ReminderData {
   sip_ml?: number;
   is_test?: boolean;
   app_mode?: string;
+  snooze_count?: number;
 }
 
 export function ReminderWindow() {
@@ -284,22 +285,24 @@ export function ReminderWindow() {
           >
             Já bebi ✓
           </button>
-          <button
-            onClick={handleSnooze}
-            style={{
-              flex: 1,
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid rgba(193,199,204,0.8)",
-              color: "#5B6572",
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              background: "rgba(255,255,255,0.7)",
-            }}
-          >
-            +5min
-          </button>
+          {(data.snooze_count ?? 0) < 2 && (
+            <button
+              onClick={handleSnooze}
+              style={{
+                flex: 1,
+                padding: "8px 12px",
+                borderRadius: 10,
+                border: "1px solid rgba(193,199,204,0.8)",
+                color: "#5B6572",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                background: "rgba(255,255,255,0.7)",
+              }}
+            >
+              +5min
+            </button>
+          )}
         </div>
       </div>
     </div>

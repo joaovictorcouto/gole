@@ -14,6 +14,7 @@ struct AppState {
     conn: Mutex<Connection>,
     last_reminder_id: Mutex<Option<i64>>,
     tray_drink_item: Mutex<Option<tauri::menu::MenuItem<tauri::Wry>>>,
+    snooze_count: Mutex<u8>,
 }
 
 fn drink_label(amount: i64) -> String {
@@ -482,6 +483,10 @@ fn log_drink(state: State<AppState>, app: AppHandle, amount_ml: i64) -> Result<T
         // without firing a popup. Avoids double-reminding when user drinks proactively.
         try_consume_next_slot(&conn, &now.naive_local());
     }
+    {
+        let mut count = state.snooze_count.lock().unwrap();
+        *count = 0;
+    }
     check_achievements_internal(&state)?;
     emit_schedule_changed(&app);
     get_today_stats(state)
@@ -523,6 +528,10 @@ fn confirm_reminder(state: State<AppState>, app: AppHandle, reminder_id: i64, am
         db::confirm_reminder(&conn, reminder_id).map_err(|e| e.to_string())?;
         db::log_drink(&conn, &date, amount_ml, &logged_at).map_err(|e| e.to_string())?;
     }
+    {
+        let mut count = state.snooze_count.lock().unwrap();
+        *count = 0;
+    }
     check_achievements_internal(&state)?;
     emit_schedule_changed(&app);
     get_today_stats(state)
@@ -536,6 +545,11 @@ fn snooze_reminder(state: State<AppState>, app: AppHandle, reminder_id: i64, min
     let target_str = target.format("%Y-%m-%dT%H:%M:%S").to_string();
     let conn = state.conn.lock().unwrap();
     db::snooze_reminder(&conn, reminder_id).map_err(|e| e.to_string())?;
+
+    {
+        let mut count = state.snooze_count.lock().unwrap();
+        *count = count.saturating_add(1);
+    }
 
     // Carry the original suggested ml into the override
     let settings = db::get_settings(&conn).map_err(|e| e.to_string())?;
@@ -566,6 +580,75 @@ fn snooze_reminder(state: State<AppState>, app: AppHandle, reminder_id: i64, min
     db::set_setting(&conn, "next_override_ml", &override_ml.to_string()).map_err(|e| e.to_string())?;
     drop(conn);
     emit_schedule_changed(&app);
+    Ok(())
+}
+
+#[tauri::command]
+fn get_daily_success_rate(state: State<AppState>) -> Result<f32, String> {
+    let conn = state.conn.lock().unwrap();
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    let (sent, confirmed) = db::get_today_reminders(&conn, &date).map_err(|e| e.to_string())?;
+    if sent == 0 {
+        Ok(0.0)
+    } else {
+        Ok(confirmed as f32 / sent as f32)
+    }
+}
+
+#[tauri::command]
+fn get_today_reminders_list(state: State<AppState>) -> Result<Vec<db::ReminderRow>, String> {
+    let conn = state.conn.lock().unwrap();
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    db::list_today_reminders(&conn, &date).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn toggle_reminder_status(state: State<AppState>, app: AppHandle, id: i64) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    let current_confirmed: i64 = conn.query_row(
+        "SELECT confirmed FROM reminders WHERE id = ?1",
+        rusqlite::params![id],
+        |row| row.get(0),
+    ).map_err(|e| e.to_string())?;
+
+    let new_confirmed = if current_confirmed == 1 { 0 } else { 1 };
+    conn.execute(
+        "UPDATE reminders SET confirmed = ?1 WHERE id = ?2",
+        rusqlite::params![new_confirmed, id],
+    ).map_err(|e| e.to_string())?;
+
+    drop(conn);
+    emit_schedule_changed(&app);
+    let _ = app.emit("refresh_data", ());
+    Ok(())
+}
+
+#[tauri::command]
+fn delete_reminder(state: State<AppState>, app: AppHandle, id: i64) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    conn.execute(
+        "DELETE FROM reminders WHERE id = ?1",
+        rusqlite::params![id],
+    ).map_err(|e| e.to_string())?;
+
+    drop(conn);
+    emit_schedule_changed(&app);
+    let _ = app.emit("refresh_data", ());
+    Ok(())
+}
+
+#[tauri::command]
+fn add_custom_reminder(state: State<AppState>, app: AppHandle, sent_at: String, confirmed: bool) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    let conf = if confirmed { 1 } else { 0 };
+    conn.execute(
+        "INSERT INTO reminders (sent_at, confirmed, snoozed) VALUES (?1, ?2, 0)",
+        rusqlite::params![sent_at, conf],
+    ).map_err(|e| e.to_string())?;
+
+    drop(conn);
+    emit_schedule_changed(&app);
+    let _ = app.emit("refresh_data", ());
     Ok(())
 }
 
@@ -1067,6 +1150,8 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
         format!("{} goles de {}ml", suggested_sips, settings.sip_ml)
     };
 
+    let snooze_count = *state.snooze_count.lock().unwrap();
+
     let payload = serde_json::json!({
         "id": reminder_id,
         "phrase": phrase,
@@ -1078,6 +1163,7 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
         "sip_ml": settings.sip_ml,
         "is_test": is_forced,
         "app_mode": settings.app_mode,
+        "snooze_count": snooze_count,
     });
 
     // Also emit to main window so the in-app sound plays
@@ -1102,6 +1188,46 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_global_shortcut::Builder::new()
+            .with_handler(|app, shortcut, event| {
+                use tauri_plugin_global_shortcut::{Modifiers, Code, ShortcutState};
+                if event.state() == ShortcutState::Pressed {
+                    if shortcut.matches(Modifiers::CONTROL | Modifiers::SHIFT, Code::KeyW) {
+                        if let Some(state) = app.try_state::<AppState>() {
+                            let now = Local::now();
+                            let date = now.format("%Y-%m-%d").to_string();
+                            let logged_at = now.format("%Y-%m-%dT%H:%M:%S").to_string();
+                            let amt = {
+                                let conn = state.conn.lock().unwrap();
+                                let settings = match db::get_settings(&conn) {
+                                    Ok(s) => s,
+                                    Err(_) => return,
+                                };
+                                let amt = if settings.recipiente_configurado {
+                                    settings.recipiente_capacidade_ml
+                                } else {
+                                    current_suggested_amount(&conn)
+                                };
+                                let _ = db::log_drink(&conn, &date, amt, &logged_at);
+                                try_consume_next_slot(&conn, &now.naive_local());
+                                amt
+                            };
+
+                            {
+                                if let Ok(mut count) = state.snooze_count.lock() {
+                                    *count = 0;
+                                }
+                            }
+
+                            let _ = app.emit("quick-drink", amt);
+                            let _ = app.emit("schedule_changed", ());
+                            let _ = app.emit("refresh_data", ());
+                        }
+                    }
+                }
+            })
+            .build()
+        )
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(
@@ -1170,6 +1296,7 @@ pub fn run() {
                 conn: Mutex::new(conn),
                 last_reminder_id: Mutex::new(None),
                 tray_drink_item: Mutex::new(None),
+                snooze_count: Mutex::new(0),
             });
 
             // Sincroniza estado de autostart com o sistema operacional
@@ -1326,6 +1453,16 @@ pub fn run() {
                 }
             });
 
+            // Registra o atalho global Ctrl+Shift+W
+            use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
+            let shortcut = Shortcut::new(
+                Some(Modifiers::CONTROL | Modifiers::SHIFT),
+                Code::KeyW,
+            );
+            if let Err(e) = app.global_shortcut().register(shortcut) {
+                eprintln!("Erro ao registrar atalho global Ctrl+Shift+W: {:?}", e);
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -1360,6 +1497,11 @@ pub fn run() {
             set_next_reminder_override,
             clear_next_reminder_override,
             snooze_reminder,
+            get_daily_success_rate,
+            get_today_reminders_list,
+            toggle_reminder_status,
+            delete_reminder,
+            add_custom_reminder,
             dev_gate::verify_dev_password,
             dev_gate::compute_dev_password_hash,
             dev_gate::dev_gate_available,

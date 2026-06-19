@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAppStore } from "../../store/useAppStore";
 
 interface Props {
   amount: number;
@@ -12,6 +13,8 @@ interface Props {
  * Designed to be placed near the button that triggered the drink.
  */
 export function UndoChip({ amount, onUndo, durationMs = 5000, onExpire }: Props) {
+  const { settings } = useAppStore();
+  const isBasicMode = settings?.app_mode === "basic";
   const [remaining, setRemaining] = useState(durationMs);
 
   useEffect(() => {
@@ -42,7 +45,9 @@ export function UndoChip({ amount, onUndo, durationMs = 5000, onExpire }: Props)
         color: "white",
       }}
     >
-      <span className="text-xs font-medium whitespace-nowrap">+{amount}ml registrado</span>
+      <span className="text-xs font-medium whitespace-nowrap">
+        {isBasicMode ? "Água registrada" : `+${amount}ml registrado`}
+      </span>
       <button
         onClick={() => onUndo()}
         className="relative text-xs font-semibold px-2 py-1 rounded-lg overflow-hidden cursor-pointer"
