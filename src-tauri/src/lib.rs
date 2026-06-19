@@ -2,13 +2,53 @@ mod db;
 mod hydration;
 mod dev_gate;
 
-use std::sync::Mutex;
+use std::sync::{Mutex, Arc};
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use tauri::{Manager, State, AppHandle, Emitter, WindowEvent, WebviewUrl, WebviewWindowBuilder, PhysicalPosition};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent, MouseButton, MouseButtonState};
 use chrono::Local;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Reminder {
+    id: i64,
+    phrase: String,
+    suggested_ml: i64,
+    consumed_ml: i64,
+    remaining_ml: i64,
+    container_text: String,
+    suggested_sips: i64,
+    sip_ml: i64,
+    is_test: bool,
+    app_mode: String,
+    snooze_count: u8,
+}
+
+fn is_fullscreen(app: &AppHandle) -> bool {
+    let monitor = match app.primary_monitor() {
+        Ok(Some(m)) => m,
+        _ => return false,
+    };
+    let scale_factor = monitor.scale_factor();
+    let monitor_size = monitor.size(); // PhysicalSize<u32>
+
+    let monitor_log_width = monitor_size.width as f64 / scale_factor;
+    let monitor_log_height = monitor_size.height as f64 / scale_factor;
+
+    match active_win_pos_rs::get_active_window() {
+        Ok(active_window) => {
+            let win_width = active_window.position.width;
+            let win_height = active_window.position.height;
+
+            let diff_w = (win_width - monitor_log_width).abs();
+            let diff_h = (win_height - monitor_log_height).abs();
+
+            diff_w < 5.0 && diff_h < 5.0
+        }
+        Err(_) => false,
+    }
+}
 
 struct AppState {
     conn: Mutex<Connection>,
@@ -1081,6 +1121,38 @@ fn pick_phrase(conn: &rusqlite::Connection, personality: &str) -> String {
     }
 }
 
+fn trigger_queued_reminder(app: &AppHandle, reminder: Reminder) {
+    let payload = serde_json::json!({
+        "id": reminder.id,
+        "phrase": reminder.phrase,
+        "suggested_ml": reminder.suggested_ml,
+        "consumed_ml": reminder.consumed_ml,
+        "remaining_ml": reminder.remaining_ml,
+        "container_text": reminder.container_text,
+        "suggested_sips": reminder.suggested_sips,
+        "sip_ml": reminder.sip_ml,
+        "is_test": reminder.is_test,
+        "app_mode": reminder.app_mode,
+        "snooze_count": reminder.snooze_count,
+    });
+
+    // Also emit to main window so the in-app sound plays
+    let _ = app.emit("reminder", &payload);
+    emit_schedule_changed(app);
+
+    // Show the custom-styled reminder window (replaces native OS notification)
+    if let Some(window) = app.get_webview_window("reminder") {
+        // Reposition before showing in case primary monitor changed
+        position_reminder_window(&window);
+        let _ = window.show();
+        // Re-assert always-on-top each time. Some shells / focus stealers
+        // can reset this between show cycles.
+        let _ = window.set_always_on_top(true);
+        // Emit again specifically to ensure window has the payload (it's already listening globally)
+        let _ = window.emit("reminder", &payload);
+    }
+}
+
 #[tauri::command]
 fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) -> Result<(), String> {
     let settings;
@@ -1152,34 +1224,27 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
 
     let snooze_count = *state.snooze_count.lock().unwrap();
 
-    let payload = serde_json::json!({
-        "id": reminder_id,
-        "phrase": phrase,
-        "suggested_ml": suggested,
-        "consumed_ml": consumed,
-        "remaining_ml": remaining,
-        "container_text": container_text,
-        "suggested_sips": suggested_sips,
-        "sip_ml": settings.sip_ml,
-        "is_test": is_forced,
-        "app_mode": settings.app_mode,
-        "snooze_count": snooze_count,
-    });
+    let reminder = Reminder {
+        id: reminder_id,
+        phrase,
+        suggested_ml: suggested,
+        consumed_ml: consumed,
+        remaining_ml: remaining,
+        container_text,
+        suggested_sips,
+        sip_ml: settings.sip_ml,
+        is_test: is_forced,
+        app_mode: settings.app_mode,
+        snooze_count,
+    };
 
-    // Also emit to main window so the in-app sound plays
-    let _ = app.emit("reminder", &payload);
-    emit_schedule_changed(&app);
-
-    // Show the custom-styled reminder window (replaces native OS notification)
-    if let Some(window) = app.get_webview_window("reminder") {
-        // Reposition before showing in case primary monitor changed
-        position_reminder_window(&window);
-        let _ = window.show();
-        // Re-assert always-on-top each time. Some shells / focus stealers
-        // can reset this between show cycles.
-        let _ = window.set_always_on_top(true);
-        // Emit again specifically to ensure window has the payload (it's already listening globally)
-        let _ = window.emit("reminder", &payload);
+    if is_fullscreen(&app) {
+        if let Some(queue) = app.try_state::<Arc<Mutex<Vec<Reminder>>>>() {
+            let mut q = queue.lock().unwrap();
+            q.push(reminder);
+        }
+    } else {
+        trigger_queued_reminder(&app, reminder);
     }
 
     Ok(())
@@ -1297,6 +1362,41 @@ pub fn run() {
                 last_reminder_id: Mutex::new(None),
                 tray_drink_item: Mutex::new(None),
                 snooze_count: Mutex::new(0),
+            });
+
+            let queue: Arc<Mutex<Vec<Reminder>>> = Arc::new(Mutex::new(Vec::new()));
+            app.manage(queue.clone());
+
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+                loop {
+                    interval.tick().await;
+
+                    if let Some(q_state) = app_handle.try_state::<Arc<Mutex<Vec<Reminder>>>>() {
+                        let has_items = {
+                            let q = q_state.lock().unwrap();
+                            !q.is_empty()
+                        };
+
+                        if has_items {
+                            if !is_fullscreen(&app_handle) {
+                                let next_reminder = {
+                                    let mut q = q_state.lock().unwrap();
+                                    if !q.is_empty() {
+                                        Some(q.remove(0))
+                                    } else {
+                                        None
+                                    }
+                                };
+
+                                if let Some(reminder) = next_reminder {
+                                    trigger_queued_reminder(&app_handle, reminder);
+                                }
+                            }
+                        }
+                    }
+                }
             });
 
             // Sincroniza estado de autostart com o sistema operacional
