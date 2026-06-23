@@ -364,6 +364,15 @@ fn save_settings(
 
     drop(conn);
     refresh_tray_drink_label(&app);
+
+    // Atualiza o clima imediatamente se estiver ativado
+    if weather_enabled {
+        let app_handle = app.clone();
+        tauri::async_runtime::spawn(async move {
+            update_weather_now(&app_handle).await;
+        });
+    }
+
     Ok(goal)
 }
 
@@ -1844,90 +1853,106 @@ struct ForecastWeather {
 
 // --- Background Workers (Clima e Missões) ---
 
+async fn update_weather_now(app: &tauri::AppHandle) {
+    let state = match app.try_state::<AppState>() {
+        Some(s) => s,
+        None => return,
+    };
+    
+    let (enabled, city, key) = {
+        let conn = state.conn.lock().unwrap();
+        match db::get_settings(&conn) {
+            Ok(s) => (s.weather_enabled, s.weather_city, s.weather_api_key),
+            Err(_) => (false, String::new(), String::new()),
+        }
+    };
+    
+    if !enabled {
+        return;
+    }
+    
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    let mut heat_anomaly = false;
+    
+    if key.is_empty() && city.to_lowercase() == "sinop" {
+        heat_anomaly = true;
+        println!("[Weather Worker Mock] Simulando calor excessivo (36°C) para Sinop.");
+        let conn = state.conn.lock().unwrap();
+        let _ = db::set_setting(&conn, "weather_current_temp", "36.0");
+        let _ = db::set_setting(&conn, "weather_current_condition", "Clear");
+        let _ = db::set_setting(&conn, "weather_current_description", "calor excessivo");
+        let _ = db::set_setting(&conn, "weather_current_icon", "01d");
+        let _ = db::set_setting(&conn, "weather_last_updated", &Local::now().format("%H:%M").to_string());
+        let _ = app.emit("weather_updated", ());
+    } else if !key.is_empty() {
+        let url = format!(
+            "https://api.openweathermap.org/data/2.5/forecast?q={}&appid={}&units=metric&cnt=8",
+            city, key
+        );
+        match reqwest::get(&url).await {
+            Ok(res) => {
+                if res.status().is_success() {
+                    if let Ok(forecast) = res.json::<ForecastResponse>().await {
+                        // Extrair o clima atual do primeiro item do forecast
+                        if let Some(current_item) = forecast.list.first() {
+                            let current_temp = current_item.main.temp;
+                            let current_cond = current_item.weather.first().map(|w| w.main.clone()).unwrap_or_else(|| "Clear".to_string());
+                            let current_desc = current_item.weather.first().map(|w| w.description.clone()).unwrap_or_else(|| "clear sky".to_string());
+                            let current_icon = current_item.weather.first().map(|w| w.icon.clone()).unwrap_or_else(|| "01d".to_string());
+                            
+                            let conn = state.conn.lock().unwrap();
+                            let _ = db::set_setting(&conn, "weather_current_temp", &current_temp.to_string());
+                            let _ = db::set_setting(&conn, "weather_current_condition", &current_cond);
+                            let _ = db::set_setting(&conn, "weather_current_description", &current_desc);
+                            let _ = db::set_setting(&conn, "weather_current_icon", &current_icon);
+                            let _ = db::set_setting(&conn, "weather_last_updated", &Local::now().format("%H:%M").to_string());
+                            let _ = app.emit("weather_updated", ());
+                        }
+
+                        for item in &forecast.list {
+                            if item.main.temp >= 35.0 {
+                                heat_anomaly = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        let _ = app.emit("weather_error", "Erro ao processar os dados de previsão do tempo.".to_string());
+                    }
+                } else {
+                    let status = res.status();
+                    let err_msg = if status == reqwest::StatusCode::UNAUTHORIZED {
+                        "Chave de API do OpenWeather inválida ou ainda não ativada (pode levar até 2h para ativar).".to_string()
+                    } else if status == reqwest::StatusCode::NOT_FOUND {
+                        "Cidade não encontrada. Verifique a ortografia.".to_string()
+                    } else {
+                        format!("Erro do OpenWeather (Status: {}).", status)
+                    };
+                    let _ = app.emit("weather_error", err_msg);
+                }
+            }
+            Err(e) => {
+                eprintln!("Erro ao chamar a API do OpenWeather: {:?}", e);
+                let _ = app.emit("weather_error", format!("Falha de conexão com a API de clima: {}", e));
+            }
+        }
+    }
+    
+    if heat_anomaly {
+        let conn = state.conn.lock().unwrap();
+        if let Err(e) = db::add_daily_modifier(&conn, &date, 500, "Calor excessivo") {
+            eprintln!("Erro ao adicionar modificador de clima: {:?}", e);
+        } else {
+            let _ = app.emit("modifiers_updated", ());
+            let _ = app.emit("schedule_changed", ());
+        }
+    }
+}
+
 async fn run_weather_worker(app: tauri::AppHandle) {
     let mut interval = tokio::time::interval(std::time::Duration::from_secs(60 * 60));
     loop {
         interval.tick().await;
-        
-        let state = match app.try_state::<AppState>() {
-            Some(s) => s,
-            None => continue,
-        };
-        
-        let (enabled, city, key) = {
-            let conn = state.conn.lock().unwrap();
-            match db::get_settings(&conn) {
-                Ok(s) => (s.weather_enabled, s.weather_city, s.weather_api_key),
-                Err(_) => (false, String::new(), String::new()),
-            }
-        };
-        
-        if !enabled {
-            continue;
-        }
-        
-        let date = Local::now().format("%Y-%m-%d").to_string();
-        let mut heat_anomaly = false;
-        
-        if key.is_empty() && city.to_lowercase() == "sinop" {
-            heat_anomaly = true;
-            println!("[Weather Worker Mock] Simulando calor excessivo (36°C) para Sinop.");
-            let conn = state.conn.lock().unwrap();
-            let _ = db::set_setting(&conn, "weather_current_temp", "36.0");
-            let _ = db::set_setting(&conn, "weather_current_condition", "Clear");
-            let _ = db::set_setting(&conn, "weather_current_description", "calor excessivo");
-            let _ = db::set_setting(&conn, "weather_current_icon", "01d");
-            let _ = db::set_setting(&conn, "weather_last_updated", &Local::now().format("%H:%M").to_string());
-            let _ = app.emit("weather_updated", ());
-        } else if !key.is_empty() {
-            let url = format!(
-                "https://api.openweathermap.org/data/2.5/forecast?q={}&appid={}&units=metric&cnt=8",
-                city, key
-            );
-            match reqwest::get(&url).await {
-                Ok(res) => {
-                    if res.status().is_success() {
-                        if let Ok(forecast) = res.json::<ForecastResponse>().await {
-                            // Extrair o clima atual do primeiro item do forecast
-                            if let Some(current_item) = forecast.list.first() {
-                                let current_temp = current_item.main.temp;
-                                let current_cond = current_item.weather.first().map(|w| w.main.clone()).unwrap_or_else(|| "Clear".to_string());
-                                let current_desc = current_item.weather.first().map(|w| w.description.clone()).unwrap_or_else(|| "clear sky".to_string());
-                                let current_icon = current_item.weather.first().map(|w| w.icon.clone()).unwrap_or_else(|| "01d".to_string());
-                                
-                                let conn = state.conn.lock().unwrap();
-                                let _ = db::set_setting(&conn, "weather_current_temp", &current_temp.to_string());
-                                let _ = db::set_setting(&conn, "weather_current_condition", &current_cond);
-                                let _ = db::set_setting(&conn, "weather_current_description", &current_desc);
-                                let _ = db::set_setting(&conn, "weather_current_icon", &current_icon);
-                                let _ = db::set_setting(&conn, "weather_last_updated", &Local::now().format("%H:%M").to_string());
-                                let _ = app.emit("weather_updated", ());
-                            }
-
-                            for item in &forecast.list {
-                                if item.main.temp >= 35.0 {
-                                    heat_anomaly = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Erro ao chamar a API do OpenWeather: {:?}", e);
-                }
-            }
-        }
-        
-        if heat_anomaly {
-            let conn = state.conn.lock().unwrap();
-            if let Err(e) = db::add_daily_modifier(&conn, &date, 500, "Calor excessivo") {
-                eprintln!("Erro ao adicionar modificador de clima: {:?}", e);
-            } else {
-                let _ = app.emit("modifiers_updated", ());
-                let _ = app.emit("schedule_changed", ());
-            }
-        }
+        update_weather_now(&app).await;
     }
 }
 

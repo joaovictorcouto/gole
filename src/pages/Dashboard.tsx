@@ -205,44 +205,7 @@ function SuccessRateCircle({ rate }: { rate: number }) {
   );
 }
 
-const getWeatherIcon = (iconCode: string) => {
-  switch (iconCode) {
-    case "01d": return "sunny";
-    case "01n": return "clear_night";
-    case "02d": return "partly_cloudy_day";
-    case "02n": return "partly_cloudy_night";
-    case "03d":
-    case "03n":
-    case "04d":
-    case "04n": return "cloud";
-    case "09d":
-    case "09n":
-    case "10d":
-    case "10n": return "rainy";
-    case "11d":
-    case "11n": return "thunderstorm";
-    case "13d":
-    case "13n": return "ac_unit";
-    case "50d":
-    case "50n": return "mist";
-    default: return "device_thermostat";
-  }
-};
 
-const translateCondition = (desc: string, cond: string) => {
-  const d = desc.toLowerCase();
-  if (d.includes("céu limpo") || d.includes("clear sky")) return "Céu Limpo";
-  if (d.includes("calor excessivo")) return "Calor Excessivo";
-  if (d.includes("poucas nuvens") || d.includes("few clouds")) return "Poucas Nuvens";
-  if (d.includes("nuvens dispersas") || d.includes("scattered clouds")) return "Nuvens Dispersas";
-  if (d.includes("nublado") || d.includes("broken clouds") || d.includes("overcast clouds")) return "Nublado";
-  if (d.includes("chuva leve") || d.includes("light rain")) return "Chuva Leve";
-  if (d.includes("chuva") || d.includes("rain")) return "Chuva";
-  if (d.includes("tempestade") || d.includes("thunderstorm")) return "Tempestade";
-  if (d.includes("neve") || d.includes("snow")) return "Neve";
-  if (d.includes("névoa") || d.includes("mist") || d.includes("fog")) return "Névoa";
-  return cond; // Fallback
-};
 
 export function Dashboard() {
   const { todayStats, loadTodayStats, logDrink, settings, loadSettings, weekStats, loadWeekStats, drinkTick } = useAppStore();
@@ -675,7 +638,7 @@ export function Dashboard() {
   return (
     <div className="flex flex-col h-full" style={{ marginLeft: "280px" }}>
       {/* Fixed header */}
-      <header className="flex justify-between items-end px-10 pt-10 pb-6 shrink-0">
+      <header className="flex justify-between items-end px-10 pt-6 pb-4 shrink-0">
         <div>
           <h2 className="text-2xl font-medium mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
             Resumo Diário
@@ -692,109 +655,158 @@ export function Dashboard() {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-10 pb-6">
-
-      {/* Bento grid */}
-      <div className="grid grid-cols-12 gap-5">
-        {/* Left column */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
-          {/* Consumed card */}
-          <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300 relative overflow-hidden"
-            style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#5B6572" }}>
-                    Consumido
-                  </p>
-                  <button
+        <div className="grid grid-cols-12 gap-4 mt-2">
+          {/* Left Side: Cards grid (7 columns) */}
+          <div className="col-span-12 lg:col-span-7 flex flex-col justify-between self-stretch">
+          
+          {/* Row 1: Consumed & Remaining */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Consumed card */}
+            <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300 relative overflow-hidden flex flex-col justify-between"
+              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      Consumido
+                    </p>
+                    <button
+                      onClick={() => setHistoryOpen(true)}
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none"
+                      title="Editar registros de hoje"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">edit</span>
+                    </button>
+                    <button
+                      onClick={() => setSetTotalOpen(true)}
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none"
+                      title="Definir total bebido hoje"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">tune</span>
+                    </button>
+                  </div>
+                  <h3 className="text-4xl font-semibold leading-none cursor-pointer focus:outline-none" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}
                     onClick={() => setHistoryOpen(true)}
-                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
-                    title="Editar registros de hoje"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">edit</span>
-                  </button>
-                  <button
-                    onClick={() => setSetTotalOpen(true)}
-                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
-                    title="Definir total bebido hoje"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">tune</span>
-                  </button>
+                    title="Editar registros de hoje">
+                    {consumed >= 1000 ? (consumed / 1000).toFixed(2).replace(".", ",") : consumed}
+                    <span className="text-xl font-medium text-gray-500">
+                      {consumed >= 1000 ? "L" : "ml"}
+                    </span>
+                  </h3>
                 </div>
-                <h3 className="text-5xl font-semibold leading-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-xl" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}
-                  onClick={() => setHistoryOpen(true)}
-                  onKeyDown={(e) => {
-                    if (e.key === " " || e.key === "Enter") {
-                      e.preventDefault();
-                      setHistoryOpen(true);
-                    }
-                  }}
-                  tabIndex={0}
-                  title="Editar registros de hoje">
-                  {consumed >= 1000 ? (consumed / 1000).toFixed(2).replace(".", ",") : consumed}
-                  <span className="text-2xl font-medium" style={{ color: "#5B6572" }}>
-                    {consumed >= 1000 ? "L" : "ml"}
-                  </span>
-                </h3>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
+                  {settings?.recipiente_configurado ? (
+                    (() => {
+                      const cap = settings.recipiente_capacidade_ml;
+                      if (cap < 350) return <CopoSvg />;
+                      if (cap >= 350 && cap < 1200) return <BottleSvg />;
+                      if (cap >= 1200 && cap < 1800) return <SportsBottleSvg />;
+                      return <JugSvg />;
+                    })()
+                  ) : (
+                    <span className="material-symbols-outlined text-[18px]" style={{ color: "#257ca3" }}>local_drink</span>
+                  )}
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
-                {settings?.recipiente_configurado ? (
-                  (() => {
-                    const cap = settings.recipiente_capacidade_ml;
-                    if (cap < 350) return <CopoSvg />;
-                    if (cap >= 350 && cap < 1200) return <BottleSvg />;
-                    if (cap >= 1200 && cap < 1800) return <SportsBottleSvg />;
-                    return <JugSvg />;
-                  })()
-                ) : (
-                  <span className="material-symbols-outlined" style={{ color: "#257ca3" }}>local_drink</span>
-                )}
+              <div className="flex items-center gap-3 mt-4">
+                <CircularProgress percent={percent} size={48} />
+                <div className="text-xs text-gray-500 leading-tight">
+                  da sua meta de <strong className="text-gray-800">{formatMl(goal)}</strong>
+                  {settings?.recipiente_configurado && (
+                    <span className="block text-[10px] mt-0.5 font-medium text-[#257ca3]">
+                      {getContainerGoalText()}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-4 mt-6">
-              <CircularProgress percent={percent} size={64} />
-              <div className="text-sm" style={{ color: "#5B6572" }}>
-                da sua meta de{" "}
-                <strong style={{ color: "#191c1e" }}>{formatMl(goal)}</strong>
-                {settings?.recipiente_configurado && (
-                  <span className="block text-xs mt-0.5 font-medium text-[#257ca3]">
-                    {getContainerGoalText()}
-                  </span>
-                )}
+
+            {/* Remaining card */}
+            <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between"
+              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Restante</p>
+                  <h3 className="text-4xl font-semibold leading-none text-gray-800" style={{ letterSpacing: "-0.02em" }}>
+                    <AnimatedNumber
+                      value={remaining}
+                      format={(n) => remaining >= 1000 ? (n / 1000).toFixed(2).replace(".", ",") : String(Math.round(n))}
+                    />
+                    <span className="text-xl font-medium text-gray-500">
+                      {remaining >= 1000 ? "L" : "ml"}
+                    </span>
+                  </h3>
+                </div>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: "rgba(224,242,254,0.5)" }}>
+                  <span className="material-symbols-outlined text-[18px] text-[#0284c7]">schedule</span>
+                </div>
+              </div>
+              <div className="mt-4 pt-1">
+                <p className="text-xs text-gray-500 leading-tight">
+                  faltam para você atingir seu objetivo diário de hidratação.
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Remaining card */}
-          <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300"
-            style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#5B6572" }}>Restante</p>
-            <div className="flex items-end gap-2">
-              <h3 className="text-3xl font-semibold leading-none" style={{ color: "#191c1e", letterSpacing: "-0.02em" }}>
-                <AnimatedNumber
-                  value={remaining}
-                  format={(n) => remaining >= 1000 ? (n / 1000).toFixed(2).replace(".", ",") : String(Math.round(n))}
-                />
-                <span className="text-base" style={{ color: "#5B6572" }}>
-                  {remaining >= 1000 ? "L" : "ml"}
-                </span>
-              </h3>
-              <p className="text-base pb-1" style={{ color: "#5B6572" }}>para atingir a meta</p>
+          {/* Row 2: Streak */}
+          <div className="w-full">
+            {/* Streak */}
+            <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between"
+              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: "rgba(201,230,255,0.5)" }}>
+                    <span className="material-symbols-outlined text-[18px]" style={{ color: "#006492" }}>local_fire_department</span>
+                  </div>
+                  <p className="text-xs font-semibold text-gray-500">Streak Atual</p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <h3 className="text-4xl font-semibold leading-none text-gray-800" style={{ letterSpacing: "-0.04em" }}>
+                    <AnimatedNumber value={streak} decimals={0} />
+                  </h3>
+                  <p className="text-xs text-gray-500">dias seguidos</p>
+                </div>
+              </div>
+              {/* Week timeline */}
+              <div className="flex justify-between items-center mt-3 pt-3 border-t" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                {weekTimeline.map((d, i) => (
+                  <div key={i} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold transition-colors"
+                    style={{
+                      backgroundColor: d.reached ? "#257ca3" : "#e0e3e6",
+                      color: d.reached ? "#ffffff" : "#71787c",
+                      outline: d.isToday ? "2px solid #257ca3" : "none",
+                      outlineOffset: "1px",
+                    }}
+                    title={d.isToday ? "Hoje" : undefined}>
+                    {d.label}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Quick action */}
-          <button
-            onClick={() => handleLogDrink(drinkAmount)}
-            className="w-full rounded-xl p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-lg hover:scale-[1.02] mt-auto cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-            style={{ background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)" }}
-          >
-            <div className="text-left">
-              <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#bfe8ff" }}>
-                Registro Rápido
-              </p>
-              <h3 className="text-2xl font-medium text-white" style={{ letterSpacing: "-0.01em" }}>
+          {/* Row 3: Quick Action & Daily Mission */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Quick action */}
+            <button
+              onClick={() => handleLogDrink(drinkAmount)}
+              className="rounded-xl p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer focus:outline-none flex flex-col justify-between text-left h-full"
+              style={{ background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)", boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}
+            >
+              <div className="w-full flex justify-between items-start mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#bfe8ff]">
+                  Registro Rápido
+                </p>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors group-hover:bg-white/30"
+                  style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                  <span className="material-symbols-outlined text-white text-[16px]">add</span>
+                </div>
+              </div>
+              <h3 className="text-lg font-medium text-white leading-tight" style={{ letterSpacing: "-0.01em" }}>
                 {settings?.recipiente_configurado ? (
                   `Beber 1 ${
                     settings.recipiente_capacidade_ml < 350
@@ -807,193 +819,113 @@ export function Dashboard() {
                   `Beber +${drinkAmount}ml`
                 )}
               </h3>
-            </div>
-            <div className="w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors group-hover:bg-white/30"
-              style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-              <span className="material-symbols-outlined text-white">add</span>
-            </div>
-          </button>
-          <div className="h-12 flex items-center justify-center shrink-0 mt-2">
-            {undoVisible && (
+            </button>
+
+            {/* Missão Diária */}
+            {settings?.app_mode === "pro" && todayStats?.daily_mission ? (
+              <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
+                style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
+                    style={{ backgroundColor: todayStats.daily_mission.is_completed ? "#dcfce7" : "rgba(201,230,255,0.5)" }}>
+                    <span className="material-symbols-outlined transition-all duration-300 text-[16px]"
+                      style={{
+                        color: todayStats.daily_mission.is_completed ? "#16a34a" : "#006492",
+                        fontVariationSettings: todayStats.daily_mission.is_completed ? "'FILL' 1" : "'FILL' 0"
+                      }}>
+                      {todayStats.daily_mission.is_completed ? "task_alt" : "target"}
+                    </span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Missão Diária</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <p className={`text-xs font-semibold leading-tight transition-all duration-300 text-left line-clamp-2 ${
+                    todayStats.daily_mission.is_completed ? "line-through text-gray-400" : "text-gray-800"
+                  }`}>
+                    {todayStats.daily_mission.description}
+                  </p>
+
+                  <div className="w-full bg-gray-100 rounded-full h-1 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 rounded-full ${
+                        todayStats.daily_mission.is_completed ? "bg-green-500" : "bg-[#257ca3]"
+                      }`}
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          (todayStats.daily_mission.current_ml / todayStats.daily_mission.target_ml) * 100
+                        )}%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center text-[8px] font-bold text-gray-400 uppercase tracking-wider">
+                    <span>
+                      {todayStats.daily_mission.current_ml}ml / {todayStats.daily_mission.target_ml}ml
+                    </span>
+                    {todayStats.daily_mission.is_completed ? (
+                      <span className="text-green-600 font-bold">Completada!</span>
+                    ) : (
+                      <span>Em progresso</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between"
+                style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: "rgba(236,238,241,0.5)" }}>
+                    <span className="material-symbols-outlined text-[18px] text-gray-400">target</span>
+                  </div>
+                  <p className="text-xs font-semibold text-gray-500">Missão Diária</p>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-3 leading-tight italic">
+                  Nenhuma missão ativa. Complete no Modo Pro.
+                </p>
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* Right Side: Water Glass (5 columns) */}
+        <div className="col-span-12 lg:col-span-5 bg-white rounded-xl border border-white/20 p-5 flex flex-col justify-between items-center self-stretch"
+          style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+          <div className="text-center w-full">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Nível de Hidratação</p>
+            <h3 className="text-3xl font-semibold mt-1 text-[#257ca3]">{Math.round(percent)}%</h3>
+          </div>
+          <div className="flex-1 flex items-center justify-center relative min-h-[280px] w-full py-4">
+            <WaterGlass percent={percent} className="min-h-[280px]" />
+          </div>
+          
+          {undoVisible ? (
+            <div className="w-full shrink-0 animate-fade-in mt-2">
               <UndoChip
                 key={lastAmount + "-dash"}
                 amount={lastAmount}
                 onUndo={handleUndo}
                 onExpire={() => setUndoVisible(false)}
               />
-            )}
-          </div>
-        </div>
-
-        {/* Center: Water glass */}
-        <div className="col-span-12 lg:col-span-5 flex justify-center items-center relative min-h-[420px]">
-          <WaterGlass percent={percent} className="min-h-[420px]" />
-        </div>
-
-        {/* Right column */}
-        <div className="col-span-12 lg:col-span-3 flex flex-col gap-4">
-          {/* Streak */}
-          <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-colors duration-300"
-            style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "rgba(201,230,255,0.5)" }}>
-                <span className="material-symbols-outlined" style={{ color: "#006492" }}>local_fire_department</span>
-              </div>
-              <p className="text-sm font-semibold" style={{ color: "#5B6572" }}>Streak Atual</p>
             </div>
-            <div className="flex items-baseline gap-1">
-              <h3 className="text-5xl font-semibold leading-none" style={{ color: "#191c1e", letterSpacing: "-0.04em" }}>
-                <AnimatedNumber value={streak} decimals={0} />
-              </h3>
-              <p className="text-base" style={{ color: "#5B6572" }}>dias seguidos</p>
-            </div>
-            {/* Week timeline — only days where goal was reached are dark blue */}
-            <div className="flex justify-between items-center mt-4 pt-4 border-t" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-              {weekTimeline.map((d, i) => (
-                <div key={i} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold transition-colors"
-                  style={{
-                    backgroundColor: d.reached ? "#257ca3" : "#e0e3e6",
-                    color: d.reached ? "#ffffff" : "#71787c",
-                    outline: d.isToday ? "2px solid #257ca3" : "none",
-                    outlineOffset: "2px",
-                  }}
-                  title={d.isToday ? "Hoje" : undefined}>
-                  {d.label}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Clima em Tempo Real */}
-          {settings?.app_mode === "pro" && settings?.weather_enabled && todayStats?.weather && (
-            <div className="rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
-              style={{
-                boxShadow: "0 8px 30px rgba(0,0,0,0.04)",
-                background: todayStats.weather.temp >= 30.0 
-                  ? "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,247,237,1) 100%)" 
-                  : "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(240,249,255,1) 100%)"
-              }}>
-              
-              {/* Header do clima */}
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
-                    style={{ 
-                      backgroundColor: todayStats.weather.temp >= 30.0 ? "rgba(255,237,213,0.7)" : "rgba(224,242,254,0.7)" 
-                    }}>
-                    <span className="material-symbols-outlined text-[20px] transition-all duration-300"
-                      style={{
-                        color: todayStats.weather.temp >= 30.0 ? "#f97316" : "#0284c7"
-                      }}>
-                      {getWeatherIcon(todayStats.weather.icon)}
-                    </span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-bold uppercase tracking-wider text-[#5B6572]">Clima Atual</p>
-                    <p className="text-[10px] font-semibold text-gray-800 truncate max-w-[120px]">{settings.weather_city}</p>
-                  </div>
-                </div>
-                
-                {/* Temperatura */}
-                <div className="text-right">
-                  <h4 className="text-2xl font-bold leading-none text-[#191c1e] tracking-tight">
-                    {todayStats.weather.temp.toFixed(1)}°C
-                  </h4>
-                  <p className="text-[10px] font-medium text-gray-500 mt-0.5">
-                    {translateCondition(todayStats.weather.description, todayStats.weather.condition)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Badge de Alerta Térmico se tiver modificador climático ativo */}
-              {todayStats.modifiers?.some((m) => m.motivo === "Calor excessivo") ? (
-                <div className="py-1.5 px-2.5 rounded-lg bg-orange-50 border border-orange-100 flex items-center gap-1.5 animate-pulse mt-1">
-                  <span className="material-symbols-outlined text-[14px] text-orange-600">warning</span>
-                  <span className="text-[9px] font-bold text-orange-700 uppercase tracking-wide">
-                    Alerta de Calor: +500ml de Meta hoje
-                  </span>
-                </div>
-              ) : (
-                <div className="py-1.5 px-2.5 rounded-lg bg-green-50 border border-green-100 flex items-center gap-1.5 mt-1">
-                  <span className="material-symbols-outlined text-[14px] text-green-600">thermostat</span>
-                  <span className="text-[9px] font-bold text-green-700 uppercase tracking-wide">
-                    Temperatura sob controle
-                  </span>
-                </div>
-              )}
-
-              {/* Nota de atualização */}
-              <p className="text-[8px] text-gray-400 mt-3 text-right font-medium">
-                Atualizado às {todayStats.weather.last_updated}
-              </p>
-
-            </div>
-          )}
-
-          {/* Missão Diária */}
-          {settings?.app_mode === "pro" && todayStats?.daily_mission && (
-            <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
-              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
-                  style={{ backgroundColor: todayStats.daily_mission.is_completed ? "#dcfce7" : "rgba(201,230,255,0.5)" }}>
-                  <span className="material-symbols-outlined transition-all duration-300"
-                    style={{
-                      color: todayStats.daily_mission.is_completed ? "#16a34a" : "#006492",
-                      fontVariationSettings: todayStats.daily_mission.is_completed ? "'FILL' 1" : "'FILL' 0"
-                    }}>
-                    {todayStats.daily_mission.is_completed ? "task_alt" : "target"}
-                  </span>
-                </div>
-                <div className="text-left">
-                  <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "#5B6572" }}>Missão Diária</p>
-                  <p className="text-[9px] font-semibold text-[#257ca3] uppercase tracking-widest">Modo Pro</p>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <p className={`text-sm font-semibold leading-relaxed transition-all duration-300 text-left ${
-                  todayStats.daily_mission.is_completed ? "line-through text-gray-400" : "text-[#191c1e]"
-                }`}>
-                  {todayStats.daily_mission.description}
-                </p>
-
-                <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mt-1">
-                  <div
-                    className={`h-full transition-all duration-500 rounded-full ${
-                      todayStats.daily_mission.is_completed ? "bg-green-500" : "bg-[#257ca3]"
-                    }`}
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        (todayStats.daily_mission.current_ml / todayStats.daily_mission.target_ml) * 100
-                      )}%`,
-                    }}
-                  />
-                </div>
-
-                <div className="flex justify-between items-center text-[10px] font-bold text-[#5B6572] mt-1 uppercase tracking-wider">
-                  <span>
-                    {todayStats.daily_mission.current_ml}ml / {todayStats.daily_mission.target_ml}ml
-                  </span>
-                  {todayStats.daily_mission.is_completed ? (
-                    <span className="text-green-600 font-bold flex items-center gap-0.5">
-                      Completada!
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">Em progresso</span>
-                  )}
-                </div>
+          ) : (
+            <div className="w-full shrink-0 flex items-center justify-center mt-2 border-t pt-3" style={{ borderColor: "rgba(44,52,64,0.06)" }}>
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                <span className="material-symbols-outlined text-[14px]">info</span>
+                <span>Registro rápido atualiza a gota em tempo real</span>
               </div>
             </div>
           )}
-
         </div>
       </div>
 
-        {/* Tip card horizontal at the bottom */}
-      <div className="rounded-xl p-5 border shrink-0 transition-all duration-300 mt-2"
+      {/* Tip card horizontal at the bottom */}
+      <div className="rounded-xl p-4 border shrink-0 transition-all duration-300 mt-4"
         style={{
           background: "rgba(255,255,255,0.7)",
           backdropFilter: "blur(20px)",

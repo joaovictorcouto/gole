@@ -206,14 +206,8 @@ export function Settings() {
   const [draftWorkStart, setDraftWorkStart] = useState<string>("");
   const [draftWorkEnd, setDraftWorkEnd] = useState<string>("");
 
-  // Clima Dinâmico
-  const [draftWeatherCity, setDraftWeatherCity] = useState<string>("");
-  const [draftWeatherApiKey, setDraftWeatherApiKey] = useState<string>("");
-  const [showApiKey, setShowApiKey] = useState<boolean>(false);
-  const [showWeatherInfo, setShowWeatherInfo] = useState<boolean>(false);
-  const [weatherSavedAt, setWeatherSavedAt] = useState<number | null>(null);
 
-  // State for phrase manager
+
   const [phrases, setPhrases] = useState<Phrase[]>([]);
   const [filteredPhrases, setFilteredPhrases] = useState<Phrase[]>([]);
   const [phraseFilter, setPhraseFilter] = useState("todas");
@@ -255,16 +249,6 @@ export function Settings() {
     }
   };
 
-  const handleSaveWeather = async () => {
-    if (!settings) return;
-    await saveSettings({
-      weather_city: draftWeatherCity,
-      weather_api_key: draftWeatherApiKey,
-    });
-    setWeatherSavedAt(Date.now());
-    setTimeout(() => setWeatherSavedAt(null), 3000);
-  };
-
   useEffect(() => {
     loadSettings();
   }, []);
@@ -276,8 +260,6 @@ export function Settings() {
       setDraftAge(String(settings.age_years));
       setDraftWorkStart(settings.work_start_hour || "08:00");
       setDraftWorkEnd(settings.work_end_hour || "18:00");
-      setDraftWeatherCity(settings.weather_city || "Sinop");
-      setDraftWeatherApiKey(settings.weather_api_key || "");
     }
   }, [
     settings?.weight_kg,
@@ -285,8 +267,6 @@ export function Settings() {
     settings?.daily_goal_ml,
     settings?.work_start_hour,
     settings?.work_end_hour,
-    settings?.weather_city,
-    settings?.weather_api_key,
   ]);
 
   // Live preview of goal as user types weight (or changes activity/climate)
@@ -451,7 +431,7 @@ export function Settings() {
         <div className="flex border-b border-gray-200 gap-4">
           <button
             onClick={() => setActiveTab("general")}
-            className={`pb-3 font-semibold text-sm transition-all relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg ${
+            className={`pb-3 font-semibold text-sm transition-all relative cursor-pointer focus:outline-none ${
               activeTab === "general" ? "text-[#257ca3]" : "text-gray-400 hover:text-gray-600"
             }`}
           >
@@ -463,7 +443,7 @@ export function Settings() {
           
           <button
             onClick={() => setActiveTab("phrases")}
-            className={`pb-3 font-semibold text-sm transition-all relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg ${
+            className={`pb-3 font-semibold text-sm transition-all relative cursor-pointer focus:outline-none ${
               activeTab === "phrases" ? "text-[#257ca3]" : "text-gray-400 hover:text-gray-600"
             }`}
           >
@@ -479,15 +459,14 @@ export function Settings() {
       <div className="flex-1 overflow-y-auto px-10 py-6">
 
       {activeTab === "general" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left column */}
-          <div className="lg:col-span-7">
+        <div className="flex flex-col gap-6 pb-12 w-full">
             
-            {/* Modo do Aplicativo */}
-            <Section title="Modo do Aplicativo" icon="dashboard">
-              <div className="py-2">
-                <p className="text-xs font-medium mb-3" style={{ color: "#5B6572" }}>
-                  Selecione a modalidade de uso do Gole:
+            {/* 1. Perfil e Hidratação */}
+            <Section title="Perfil e Hidratação" icon="person">
+              {/* Modo do Aplicativo integrado */}
+              <div className="py-2 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                <p className="text-xs font-semibold mb-3 text-gray-500 uppercase tracking-wider">
+                  Modo do Aplicativo
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -531,118 +510,123 @@ export function Settings() {
                   </button>
                 </div>
               </div>
-            </Section>
 
-            {settings.app_mode !== "basic" && (
-              <Section title="Perfil e Medidas" icon="person">
-              {/* Peso + Idade — sliders */}
-              <div className="grid grid-cols-2 gap-4 py-2">
-                <div className="flex flex-col gap-1">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Peso</span>
-                    <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{draftWeight || "—"} <span className="text-[10px] text-gray-400 font-medium">kg</span></span>
+              {settings.app_mode !== "basic" ? (
+                <div className="pt-4 flex flex-col gap-4">
+                  {/* Peso + Idade — sliders */}
+                  <div className="grid grid-cols-2 gap-4 py-2">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Peso</span>
+                        <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{draftWeight || "—"} <span className="text-[10px] text-gray-400 font-medium">kg</span></span>
+                      </div>
+                      <input
+                        type="range"
+                        min={40}
+                        max={150}
+                        value={Math.min(150, Math.max(40, Number(draftWeight) || 70))}
+                        onChange={(e) => setDraftWeight(e.target.value)}
+                        onMouseUp={commitWeight}
+                        onTouchEnd={commitWeight}
+                        className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg mt-1"
+                      />
+                      <div className="flex justify-between px-1">
+                        <span className="text-[10px] font-bold text-gray-400">40kg</span>
+                        <span className="text-[10px] font-bold text-gray-400">150kg</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Idade</span>
+                        <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{draftAge || "—"} <span className="text-[10px] text-gray-400 font-medium">anos</span></span>
+                      </div>
+                      <input
+                        type="range"
+                        min={12}
+                        max={100}
+                        value={Math.min(100, Math.max(12, Number(draftAge) || 25))}
+                        onChange={(e) => setDraftAge(e.target.value)}
+                        onMouseUp={commitAge}
+                        onTouchEnd={commitAge}
+                        className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg mt-1"
+                      />
+                      <div className="flex justify-between px-1">
+                        <span className="text-[10px] font-bold text-gray-400">12</span>
+                        <span className="text-[10px] font-bold text-gray-400">100</span>
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    type="range"
-                    min={40}
-                    max={150}
-                    value={Math.min(150, Math.max(40, Number(draftWeight) || 70))}
-                    onChange={(e) => setDraftWeight(e.target.value)}
-                    onMouseUp={commitWeight}
-                    onTouchEnd={commitWeight}
-                    className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg mt-1"
-                  />
-                  <div className="flex justify-between px-1">
-                    <span className="text-[10px] font-bold text-gray-400">40kg</span>
-                    <span className="text-[10px] font-bold text-gray-400">150kg</span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Idade</span>
-                    <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{draftAge || "—"} <span className="text-[10px] text-gray-400 font-medium">anos</span></span>
-                  </div>
-                  <input
-                    type="range"
-                    min={12}
-                    max={100}
-                    value={Math.min(100, Math.max(12, Number(draftAge) || 25))}
-                    onChange={(e) => setDraftAge(e.target.value)}
-                    onMouseUp={commitAge}
-                    onTouchEnd={commitAge}
-                    className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg mt-1"
-                  />
-                  <div className="flex justify-between px-1">
-                    <span className="text-[10px] font-bold text-gray-400">12</span>
-                    <span className="text-[10px] font-bold text-gray-400">100</span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-                <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Meta diária</span>
-                <span className="text-sm font-semibold flex items-center gap-2" style={{ color: "#257ca3" }}>
-                  {localGoal ? `${(localGoal / 1000).toFixed(2).replace(".", ",")}L` : "—"}
-                  {previewGoal != null && previewGoal !== localGoal && (
-                    <span className="text-xs font-medium" style={{ color: "#0f76a0" }}>
-                      → {(previewGoal / 1000).toFixed(2).replace(".", ",")}L
+                  <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Meta diária calculada</span>
+                    <span className="text-sm font-semibold flex items-center gap-2" style={{ color: "#257ca3" }}>
+                      {localGoal ? `${(localGoal / 1000).toFixed(2).replace(".", ",")}L` : "—"}
+                      {previewGoal != null && previewGoal !== localGoal && (
+                        <span className="text-xs font-medium" style={{ color: "#0f76a0" }}>
+                          → {(previewGoal / 1000).toFixed(2).replace(".", ",")}L
+                        </span>
+                      )}
+                      {profileSavedAt && (
+                        <span className="text-xs animate-fade-in" style={{ color: "#0f76a0" }}>✓</span>
+                      )}
                     </span>
-                  )}
-                  {profileSavedAt && (
-                    <span className="text-xs animate-fade-in" style={{ color: "#0f76a0" }}>✓</span>
-                  )}
-                </span>
-              </div>
+                  </div>
 
-              {/* Atividade — grid 2x2 compacto */}
-              <div className="py-3">
-                <p className="text-xs font-medium mb-2" style={{ color: "#5B6572" }}>Nível de Atividade</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {ACTIVITY_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => saveSettings({ activity_level: opt.id })}
-                      className="text-left px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer truncate focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-                      style={{
-                        backgroundColor: settings.activity_level === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                        color: settings.activity_level === opt.id ? "#257ca3" : "#5B6572",
-                        fontWeight: settings.activity_level === opt.id ? "600" : "400",
-                        border: `1px solid ${settings.activity_level === opt.id ? "#257ca3" : "transparent"}`,
-                      }}
-                      title={opt.label}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                  {/* Atividade — grid 2x2 compacto */}
+                  <div className="py-2 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                    <p className="text-xs font-medium mb-2" style={{ color: "#5B6572" }}>Nível de Atividade</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {ACTIVITY_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => saveSettings({ activity_level: opt.id })}
+                          className="text-left px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer truncate focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                          style={{
+                            backgroundColor: settings.activity_level === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
+                            color: settings.activity_level === opt.id ? "#257ca3" : "#5B6572",
+                            fontWeight: settings.activity_level === opt.id ? "600" : "400",
+                            border: `1px solid ${settings.activity_level === opt.id ? "#257ca3" : "transparent"}`,
+                          }}
+                          title={opt.label}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Clima */}
-              <div className="pt-1 pb-1">
-                <p className="text-xs font-medium mb-2" style={{ color: "#5B6572" }}>Clima</p>
-                <div className="flex gap-2">
-                  {CLIMATE_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => saveSettings({ climate: opt.id })}
-                      className="flex-1 px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-                      style={{
-                        backgroundColor: settings.climate === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                        color: settings.climate === opt.id ? "#257ca3" : "#5B6572",
-                        fontWeight: settings.climate === opt.id ? "600" : "400",
-                        border: `1px solid ${settings.climate === opt.id ? "#257ca3" : "transparent"}`,
-                      }}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                  {/* Clima */}
+                  <div className="pt-1">
+                    <p className="text-xs font-medium mb-2" style={{ color: "#5B6572" }}>Fator Climático Manual</p>
+                    <div className="flex gap-2">
+                      {CLIMATE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => saveSettings({ climate: opt.id })}
+                          className="flex-1 px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                          style={{
+                            backgroundColor: settings.climate === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
+                            color: settings.climate === opt.id ? "#257ca3" : "#5B6572",
+                            fontWeight: settings.climate === opt.id ? "600" : "400",
+                            border: `1px solid ${settings.climate === opt.id ? "#257ca3" : "transparent"}`,
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="pt-4 text-center text-xs text-gray-400 italic">
+                  Perfil e metas personalizadas desativados no modo Básico.
+                </div>
+              )}
             </Section>
-            )}
 
-            <Section title="Lembretes" icon="notifications">
-              <div className="py-4">
+            {/* 2. Lembretes e Rotina */}
+            <Section title="Lembretes e Rotina" icon="notifications">
+              <div className="py-2">
                 <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Intervalo entre lembretes</p>
                 <div className="flex flex-wrap gap-2">
                   {INTERVAL_OPTIONS.map((opt) => (
@@ -661,7 +645,7 @@ export function Settings() {
                 </div>
               </div>
 
-              <SettingRow label="Pausar lembretes">
+              <SettingRow label="Pausar lembretes hoje">
                 <Toggle
                   checked={settings.reminders_paused}
                   onChange={(v) => saveSettings({ reminders_paused: v })}
@@ -673,7 +657,7 @@ export function Settings() {
                 </p>
               )}
 
-              <SettingRow label="Período de atividade no PC">
+              <SettingRow label="Período ativo (notificações apenas neste horário)">
                 <div className="flex items-center gap-2">
                   <input
                     type="time"
@@ -696,114 +680,57 @@ export function Settings() {
               </SettingRow>
             </Section>
 
-            {settings.app_mode !== "basic" && (
-              <Section title="Tamanho do Gole" icon="water_drop">
-                <div className="py-2">
-                  <div className="flex justify-between items-baseline mb-2">
-                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Volume por gole</span>
-                    <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{settings.sip_ml || 20} <span className="text-[10px] text-gray-400 font-medium">ml</span></span>
-                  </div>
-                  <input
-                    type="range"
-                    min={15}
-                    max={30}
-                    step={5}
-                    value={settings.sip_ml || 20}
-                    onChange={(e) => saveSettings({ sip_ml: Number(e.target.value) })}
-                    className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg"
-                  />
-                  <div className="flex justify-between px-1 mt-1">
-                    {[15, 20, 25, 30].map((v) => (
-                      <span
-                        key={v}
-                        className="text-[10px] font-bold"
-                        style={{ color: settings.sip_ml === v ? "#257ca3" : "#9aa0a6" }}
-                      >
-                        {v}ml
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-gray-400 mt-2 italic">
-                    Padrão: 20ml. Usado para calcular quantos goles você deve dar por lembrete.
-                  </p>
-                </div>
-              </Section>
-            )}
-
-            {isDev && (
-              <Section title="Módulo de Testes (Dev)" icon="bug_report">
-                <div className="py-2 flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleTestNotification}
-                      disabled={testingNotif}
-                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer disabled:opacity-50 hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-                      style={{
-                        backgroundColor: "rgba(191,232,255,0.4)",
-                        color: "#257ca3",
-                        border: "1px solid #257ca3",
-                      }}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">notifications_active</span>
-                      {testingNotif ? "Enviando..." : "Disparar notificação"}
-                    </button>
-                    <span className="text-xs" style={{ color: "#71787c" }}>
-                      Forçar lembrete agora.
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={async () => {
-                        await saveSettings({ onboarding_complete: false });
-                        navigate("/onboarding");
-                      }}
-                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-                      style={{
-                        backgroundColor: "rgba(191,232,255,0.4)",
-                        color: "#257ca3",
-                        border: "1px solid #257ca3",
-                      }}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
-                      Testar Onboarding
-                    </button>
-                    <span className="text-xs" style={{ color: "#71787c" }}>
-                      Abre tela de introdução.
-                    </span>
-                  </div>
-
-                </div>
-              </Section>
-            )}
-
-            <Section title="Sistema" icon="settings">
-              <SettingRow label="Iniciar com o sistema">
+            {/* 5. Integrações e Sistema */}
+            <Section title="Integrações e Sistema" icon="sync_alt">
+              {/* Autostart */}
+              <SettingRow label="Iniciar junto com o Windows">
                 <Toggle
                   checked={settings.autostart}
                   onChange={(v) => saveSettings({ autostart: v })}
                 />
               </SettingRow>
-              <SettingRow label="Smart Mode">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ backgroundColor: "#eceef1", color: "#71787c" }}>
-                    Em breve
-                  </span>
-                  <Toggle
-                    checked={false}
-                    onChange={() => {}}
-                    disabled
-                  />
+
+              {/* Exportar */}
+              <div className="py-4 border-t border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold" style={{ color: "#191c1e" }}>Histórico de consumo</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Exporte seus dados no formato de planilha CSV.</p>
+                  </div>
+                  <button
+                    onClick={handleExportCSV}
+                    disabled={exportingCsv}
+                    className="px-4 py-2 rounded-xl font-medium text-xs transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                    style={{
+                      backgroundColor: exportingCsv ? "#71787c" : "#257ca3",
+                      color: "white",
+                      border: "none",
+                      boxShadow: "0 4px 12px rgba(37,124,163,0.25)",
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {exportingCsv ? "hourglass_empty" : "download"}
+                    </span>
+                    {exportingCsv ? "Exportando..." : "Exportar CSV"}
+                  </button>
                 </div>
-              </SettingRow>
+              </div>
+
+              {/* Servidor API */}
+              <div className="py-4 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Servidor de Automação Local (Porta 4000)</h3>
+                <div className="rounded-lg p-3 text-[11px] font-mono" style={{ backgroundColor: "#eceef1", color: "#3a4146" }}>
+                  <p className="font-semibold text-[#006492] mb-1">POST http://127.0.0.1:4000/api/water</p>
+                  <p className="text-gray-400">{"{ \"ml\": 250 }"}</p>
+                </div>
+              </div>
+
+
             </Section>
 
-          </div>
-
-          {/* Right column */}
-          <div className="lg:col-span-5">
+            {/* 3. Equipamentos (Recipiente e Gole) */}
             {settings.app_mode !== "basic" && (
-              <Section title="Recipiente Principal" icon="local_drink">
+              <Section title="Recipiente e Dose" icon="local_drink">
                 <SettingRow label="Habilitar recipiente principal">
                   <Toggle
                     checked={settings.recipiente_configurado}
@@ -812,7 +739,7 @@ export function Settings() {
                 </SettingRow>
 
                 {settings.recipiente_configurado ? (
-                  <div className="py-4 animate-fade-in flex flex-col items-center">
+                  <div className="py-4 animate-fade-in flex flex-col items-center border-b pb-4 mb-4" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
                     <div className="w-full flex justify-between items-center mb-4">
                       <span className="text-sm font-medium text-gray-500 font-semibold">Capacidade do recipiente</span>
                       <div className="flex items-baseline gap-1">
@@ -845,25 +772,10 @@ export function Settings() {
                       <span className="text-xs text-gray-400">200ml</span>
                       <span className="text-xs text-gray-400">2000ml</span>
                     </div>
-                    <span className="text-xs text-gray-400 block mt-2 text-center italic">
-                      Classificação: {
-                        settings.recipiente_capacidade_ml < 350
-                          ? "Copo pequeno"
-                          : settings.recipiente_capacidade_ml < 600
-                          ? "Garrafa pequena"
-                          : settings.recipiente_capacidade_ml < 900
-                          ? "Garrafa média"
-                          : settings.recipiente_capacidade_ml < 1200
-                          ? "Garrafa grande"
-                          : settings.recipiente_capacidade_ml < 1800
-                          ? "Garrafa esportiva"
-                          : "Garrafão"
-                      }
-                    </span>
                   </div>
                 ) : (
                   /* Estado visual quando o recipiente está desativado */
-                  <div className="py-5 flex flex-col items-center gap-3 animate-fade-in">
+                  <div className="py-5 flex flex-col items-center gap-3 animate-fade-in border-b pb-4 mb-4" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
                     <div className="opacity-25 grayscale">
                       <BottleSvg />
                     </div>
@@ -875,34 +787,43 @@ export function Settings() {
                     </p>
                   </div>
                 )}
+
+                <div className="py-2">
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Volume por gole</span>
+                    <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{settings.sip_ml || 20} <span className="text-[10px] text-gray-400 font-medium">ml</span></span>
+                  </div>
+                  <input
+                    type="range"
+                    min={15}
+                    max={30}
+                    step={5}
+                    value={settings.sip_ml || 20}
+                    onChange={(e) => saveSettings({ sip_ml: Number(e.target.value) })}
+                    className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg"
+                  />
+                  <div className="flex justify-between px-1 mt-1">
+                    {[15, 20, 25, 30].map((v) => (
+                      <span
+                        key={v}
+                        className="text-[10px] font-bold"
+                        style={{ color: settings.sip_ml === v ? "#257ca3" : "#9aa0a6" }}
+                      >
+                        {v}ml
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-2 italic">
+                    Usado para calcular a quantidade aproximada de goles a dar por lembrete.
+                  </p>
+                </div>
               </Section>
             )}
 
-            <Section title="Notificações" icon="campaign">
-              <div className="py-4">
-                <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Personalidade das notificações</p>
-                <div className="space-y-2">
-                  {PERSONALITY_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => saveSettings({ notification_personality: opt.id })}
-                      className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-                      style={{
-                        backgroundColor: settings.notification_personality === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                        color: settings.notification_personality === opt.id ? "#257ca3" : "#5B6572",
-                        fontWeight: settings.notification_personality === opt.id ? "600" : "400",
-                        border: `1px solid ${settings.notification_personality === opt.id ? "#257ca3" : "transparent"}`,
-                      }}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </Section>
-
-            <Section title="Som dos Lembretes" icon="volume_up">
-              <div className="py-4">
+            {/* 4. Som e Alertas */}
+            <Section title="Som e Alertas" icon="volume_up">
+              {/* Som */}
+              <div className="py-2 border-b pb-4 mb-4" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
                 <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Alerta sonoro</p>
                 <div className="grid grid-cols-3 gap-2">
                   {SOUND_OPTIONS.map((opt) => (
@@ -925,197 +846,99 @@ export function Settings() {
                     </button>
                   ))}
                 </div>
-              </div>
 
-              {settings.sound_preset !== "none" && (
-                <div className="py-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm font-medium" style={{ color: "#191c1e" }}>Volume</p>
-                    <span className="text-sm font-semibold" style={{ color: "#257ca3" }}>{settings.sound_volume}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={10}
-                    max={100}
-                    step={10}
-                    value={settings.sound_volume}
-                    onChange={(e) => saveSettings({ sound_volume: Number(e.target.value) })}
-                    onMouseUp={(e) => {
-                      const v = Number((e.target as HTMLInputElement).value);
-                      playSound(settings.sound_preset as SoundPreset, v);
-                    }}
-                    className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg"
-                  />
-                </div>
-              )}
-            </Section>
-
-            <Section title="Integração & Automação" icon="sync_alt">
-              <div className="py-4 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-                <h3 className="text-sm font-semibold mb-2" style={{ color: "#191c1e" }}>Exportar Dados</h3>
-                <p className="text-xs mb-3" style={{ color: "#71787c" }}>
-                  Gere uma cópia limpa do seu histórico de consumo de água no formato CSV.
-                </p>
-                <button
-                  onClick={handleExportCSV}
-                  disabled={exportingCsv}
-                  className="px-5 py-2.5 rounded-xl font-medium text-sm transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-                  style={{
-                    backgroundColor: exportingCsv ? "#71787c" : "#257ca3",
-                    color: "white",
-                    border: "none",
-                    boxShadow: "0 4px 12px rgba(37,124,163,0.25)",
-                  }}
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {exportingCsv ? "hourglass_empty" : "download"}
-                  </span>
-                  {exportingCsv ? "Exportando..." : "Exportar Histórico (CSV)"}
-                </button>
-              </div>
-
-              <div className="py-4">
-                <h3 className="text-sm font-semibold mb-2" style={{ color: "#191c1e" }}>Servidor de Automação (n8n)</h3>
-                <p className="text-xs mb-3" style={{ color: "#71787c" }}>
-                  O GOLE roda um micro-servidor local silencioso na porta <strong className="text-[#257ca3]">4000</strong>. Use esta integração para conectar balanças inteligentes, bots do Telegram ou fluxos no n8n.
-                </p>
-                <div className="rounded-lg p-3 text-xs font-mono" style={{ backgroundColor: "#eceef1", color: "#3a4146" }}>
-                  <p className="font-semibold text-[#006492] mb-1">POST http://127.0.0.1:4000/api/water</p>
-                  <p className="text-gray-500">// Payload (JSON):</p>
-                  <p>{"{"}</p>
-                  <p className="pl-4">"ml": 250</p>
-                  <p>{"}"}</p>
-                </div>
-              </div>
-
-              {settings.app_mode === "pro" && (
-                <div className="py-4 border-t" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold" style={{ color: "#191c1e" }}>Clima Dinâmico (OpenWeather)</h3>
-                      <div className="relative flex items-center">
-                        <button
-                          onClick={() => setShowWeatherInfo(!showWeatherInfo)}
-                          className="text-gray-400 hover:text-[#257ca3] transition-colors cursor-pointer flex items-center"
-                          title="Saiba como funciona"
-                          type="button"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">info</span>
-                        </button>
-                        
-                        {showWeatherInfo && (
-                          <div className="absolute left-6 top-0 z-50 w-72 p-4 rounded-xl shadow-2xl border text-xs leading-relaxed animate-fade-in"
-                            style={{
-                              background: "rgba(255, 255, 255, 0.95)",
-                              backdropFilter: "blur(20px)",
-                              borderColor: "rgba(44, 52, 64, 0.1)",
-                              color: "#5B6572"
-                            }}>
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="font-bold text-[#191c1e]">🌤️ Como funciona o Clima Dinâmico?</span>
-                              <button onClick={() => setShowWeatherInfo(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                                <span className="material-symbols-outlined text-[14px]">close</span>
-                              </button>
-                            </div>
-                            O Gole consulta a previsão climática da sua cidade. Se a previsão indicar temperatura de <strong>35°C ou mais</strong> para o dia, o aplicativo adiciona automaticamente <strong>+500ml</strong> à sua meta diária de hidratação para evitar a desidratação em dias muito quentes.
-                            <div className="mt-2 text-[10px] font-semibold text-[#257ca3]">
-                              *Exclusivo do Modo Pro.
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                {settings.sound_preset !== "none" && (
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-xs text-gray-500 font-semibold" style={{ color: "#191c1e" }}>Volume do som</p>
+                      <span className="text-sm font-semibold" style={{ color: "#257ca3" }}>{settings.sound_volume}%</span>
                     </div>
-                    <Toggle
-                      checked={settings.weather_enabled}
-                      onChange={(v) => saveSettings({ weather_enabled: v })}
+                    <input
+                      type="range"
+                      min={10}
+                      max={100}
+                      step={10}
+                      value={settings.sound_volume}
+                      onChange={(e) => saveSettings({ sound_volume: Number(e.target.value) })}
+                      onMouseUp={(e) => {
+                        const v = Number((e.target as HTMLInputElement).value);
+                        playSound(settings.sound_preset as SoundPreset, v);
+                      }}
+                      className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg"
                     />
                   </div>
-                  <p className="text-xs mb-3" style={{ color: "#71787c" }}>
-                    Ajuste automático de meta em dias de calor excessivo usando previsões do OpenWeather.
-                  </p>
+                )}
+              </div>
 
-                  {settings.weather_enabled && (
-                    <div className="mt-3 p-4 rounded-xl border flex flex-col gap-3 animate-slide-in-top bg-white"
-                      style={{ borderColor: "rgba(44,52,64,0.06)" }}>
-                      
-                      {/* Cidade */}
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Cidade para Monitorar</label>
-                        <input
-                          type="text"
-                          value={draftWeatherCity}
-                          onChange={(e) => setDraftWeatherCity(e.target.value)}
-                          placeholder="Ex: Sinop"
-                          className="px-3 py-2 border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#257ca3] bg-white text-[#191c1e]"
-                          style={{ borderColor: "#c1c7cc" }}
-                        />
-                        <p className="text-[9px] text-gray-400 mt-0.5 leading-tight">
-                          💡 Dica: Para evitar ambiguidades, você pode usar o formato <strong>Cidade,País</strong> (ex: <code>Sinop,BR</code> ou <code>Porto,PT</code>).
-                        </p>
-                      </div>
-
-                      {/* API Key */}
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Chave API OpenWeather</label>
-                        <div className="relative flex items-center">
-                          <input
-                            type={showApiKey ? "text" : "password"}
-                            value={draftWeatherApiKey}
-                            onChange={(e) => setDraftWeatherApiKey(e.target.value)}
-                            placeholder="Cole sua OpenWeather API Key"
-                            className="w-full px-3 py-2 pr-10 border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#257ca3] bg-white text-[#191c1e] font-mono"
-                            style={{ borderColor: "#c1c7cc" }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowApiKey(!showApiKey)}
-                            className="absolute right-3 text-gray-400 hover:text-gray-600 cursor-pointer"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">
-                              {showApiKey ? "visibility_off" : "visibility"}
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Botão de Salvar */}
-                      <div className="flex items-center justify-between gap-4 mt-1">
-                        <button
-                          onClick={handleSaveWeather}
-                          className="px-4 py-2 rounded-lg text-white text-xs font-semibold transition-all hover:shadow-md cursor-pointer flex items-center gap-1.5"
-                          style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
-                        >
-                          <span className="material-symbols-outlined text-[14px]">save</span>
-                          {weatherSavedAt ? "Salvo!" : "Salvar Clima"}
-                        </button>
-
-                        {weatherSavedAt && (
-                          <span className="text-[11px] text-green-600 font-semibold animate-fade-in">
-                            ✓ Configurações de clima atualizadas
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Instruções */}
-                      <div className="mt-2 pt-3 border-t text-[10px] text-gray-500 leading-normal flex flex-col gap-1"
-                        style={{ borderColor: "rgba(44,52,64,0.06)" }}>
-                        <p className="font-semibold text-gray-700">🎁 Como conseguir a chave de API (Gratuita)?</p>
-                        <p>1. Crie uma conta no site oficial do <a href="https://openweathermap.org" target="_blank" rel="noreferrer" className="text-[#257ca3] hover:underline font-semibold">OpenWeatherMap</a>.</p>
-                        <p>2. Vá no seu perfil em <strong>"My API Keys"</strong> e copie a chave padrão.</p>
-                        <p>3. Cole a chave acima. <em>Nota: Novas chaves podem levar até 1 hora para serem ativadas pela plataforma deles.</em></p>
-                        <p className="mt-1 text-[#006492] font-medium">💡 Teste Sem Chave: Deixe o campo da chave vazio e defina a cidade como <strong>Sinop</strong> para simular 36°C imediatamente.</p>
-                      </div>
-
-                    </div>
-                  )}
+              {/* Personalidade */}
+              <div className="py-2">
+                <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Tom das notificações</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {PERSONALITY_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => saveSettings({ notification_personality: opt.id })}
+                      className="text-center px-2 py-2.5 rounded-xl text-xs transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                      style={{
+                        backgroundColor: settings.notification_personality === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
+                        color: settings.notification_personality === opt.id ? "#257ca3" : "#5B6572",
+                        fontWeight: settings.notification_personality === opt.id ? "600" : "400",
+                        border: `1px solid ${settings.notification_personality === opt.id ? "#257ca3" : "transparent"}`,
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
             </Section>
-          </div>
+
+            {isDev && (
+              <Section title="Módulo de Testes (Dev)" icon="bug_report">
+                <div className="py-2 flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleTestNotification}
+                      disabled={testingNotif}
+                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer disabled:opacity-50 hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                      style={{
+                        backgroundColor: "rgba(191,232,255,0.4)",
+                        color: "#257ca3",
+                        border: "1px solid #257ca3",
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                      {testingNotif ? "Enviando..." : "Disparar notificação"}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={async () => {
+                        await saveSettings({ onboarding_complete: false });
+                        navigate("/onboarding");
+                      }}
+                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                      style={{
+                        backgroundColor: "rgba(191,232,255,0.4)",
+                        color: "#257ca3",
+                        border: "1px solid #257ca3",
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
+                      Testar Onboarding
+                    </button>
+                    <span className="text-xs" style={{ color: "#71787c" }}>
+                      Abre tela de introdução.
+                    </span>
+                  </div>
+                </div>
+              </Section>
+            )}
         </div>
       ) : (
         /* Frases Management Tab */
-        <div className="flex flex-col w-full max-w-4xl bg-white rounded-xl border border-gray-150 overflow-hidden"
+        <div className="flex flex-col w-full bg-white rounded-xl border border-gray-150 overflow-hidden"
              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.03)", maxHeight: "calc(100vh - 220px)" }}>
           <div className="p-6 pb-0 shrink-0">
             <h2 className="text-2xl font-medium mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
