@@ -12,6 +12,8 @@
     "autostart:allow-is-enabled",
     "sql:allow-execute",
     "sql:allow-select",
-    "sql:allow-load"
+    "sql:allow-load",
+    "dialog:allow-save",
+    "dialog:allow-message"
   ]
 }

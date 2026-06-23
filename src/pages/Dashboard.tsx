@@ -10,6 +10,7 @@ import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 import { UndoChip } from "../components/ui/UndoChip";
 import { api } from "../lib/api";
 import { useIsDev } from "../lib/useIsDev";
+import { Modal, ModalSecondaryButton } from "../components/ui/Modal";
 
 const HYDRATION_TIPS = [
   "Beber água cerca de 30 minutos antes das refeições prepara o sistema digestivo e ajuda na saciedade.",
@@ -204,6 +205,45 @@ function SuccessRateCircle({ rate }: { rate: number }) {
   );
 }
 
+const getWeatherIcon = (iconCode: string) => {
+  switch (iconCode) {
+    case "01d": return "sunny";
+    case "01n": return "clear_night";
+    case "02d": return "partly_cloudy_day";
+    case "02n": return "partly_cloudy_night";
+    case "03d":
+    case "03n":
+    case "04d":
+    case "04n": return "cloud";
+    case "09d":
+    case "09n":
+    case "10d":
+    case "10n": return "rainy";
+    case "11d":
+    case "11n": return "thunderstorm";
+    case "13d":
+    case "13n": return "ac_unit";
+    case "50d":
+    case "50n": return "mist";
+    default: return "device_thermostat";
+  }
+};
+
+const translateCondition = (desc: string, cond: string) => {
+  const d = desc.toLowerCase();
+  if (d.includes("céu limpo") || d.includes("clear sky")) return "Céu Limpo";
+  if (d.includes("calor excessivo")) return "Calor Excessivo";
+  if (d.includes("poucas nuvens") || d.includes("few clouds")) return "Poucas Nuvens";
+  if (d.includes("nuvens dispersas") || d.includes("scattered clouds")) return "Nuvens Dispersas";
+  if (d.includes("nublado") || d.includes("broken clouds") || d.includes("overcast clouds")) return "Nublado";
+  if (d.includes("chuva leve") || d.includes("light rain")) return "Chuva Leve";
+  if (d.includes("chuva") || d.includes("rain")) return "Chuva";
+  if (d.includes("tempestade") || d.includes("thunderstorm")) return "Tempestade";
+  if (d.includes("neve") || d.includes("snow")) return "Neve";
+  if (d.includes("névoa") || d.includes("mist") || d.includes("fog")) return "Névoa";
+  return cond; // Fallback
+};
+
 export function Dashboard() {
   const { todayStats, loadTodayStats, logDrink, settings, loadSettings, weekStats, loadWeekStats, drinkTick } = useAppStore();
   const [undoVisible, setUndoVisible] = useState(false);
@@ -217,7 +257,28 @@ export function Dashboard() {
   const [devInputVisible, setDevInputVisible] = useState(false);
   const [customTipText, setCustomTipText] = useState("");
   const [todayDrinks, setTodayDrinks] = useState<any[]>([]);
+  const [drinkToDeleteBasic, setDrinkToDeleteBasic] = useState<number | null>(null);
   const [successRate, setSuccessRate] = useState<number | null>(null);
+
+  const [climateToastVisible, setClimateToastVisible] = useState(false);
+  const [climateModifierExtra, setClimateModifierExtra] = useState(0);
+  const [climateModifierReason, setClimateModifierReason] = useState("");
+
+  useEffect(() => {
+    if (settings?.app_mode === "pro" && todayStats?.modifiers && todayStats.modifiers.length > 0) {
+      const heatMod = todayStats.modifiers.find((m) => m.motivo === "Calor excessivo");
+      if (heatMod) {
+        const todayStr = new Date().toDateString();
+        const notifiedDate = localStorage.getItem("gole_climate_notified_date");
+        if (notifiedDate !== todayStr) {
+          setClimateModifierExtra(heatMod.ml_extra);
+          setClimateModifierReason(heatMod.motivo);
+          setClimateToastVisible(true);
+          localStorage.setItem("gole_climate_notified_date", todayStr);
+        }
+      }
+    }
+  }, [todayStats?.modifiers, settings?.app_mode]);
 
   const loadSuccessRate = () => {
     api.getDailySuccessRate()
@@ -261,11 +322,15 @@ export function Dashboard() {
     const unlistenStats = listen("stats_changed", () => {
       loadSuccessRate();
     });
+    const unlistenWeather = listen("weather_updated", () => {
+      loadTodayStats();
+    });
 
     return () => {
       unlistenRefresh.then((fn) => fn());
       unlistenSchedule.then((fn) => fn());
       unlistenStats.then((fn) => fn());
+      unlistenWeather.then((fn) => fn());
     };
   }, []);
 
@@ -282,6 +347,15 @@ export function Dashboard() {
     setUndoVisible(false);
     const stats = await api.deleteLastDrink();
     useAppStore.setState({ todayStats: stats });
+  };
+
+  const handleDeleteDrink = async (id: number) => {
+    try {
+      const stats = await api.deleteDrink(id);
+      useAppStore.setState({ todayStats: stats });
+    } catch (e) {
+      console.error("Erro ao deletar gole:", e);
+    }
   };
 
   const stats = todayStats;
@@ -378,7 +452,7 @@ export function Dashboard() {
         <div className="flex-1 overflow-y-auto px-10 pb-6">
           <div className="flex flex-col gap-4 justify-center items-center my-0 max-w-2xl mx-auto w-full pt-2">
             {/* Card Principal de Ação */}
-            <div className="bg-white rounded-[2rem] p-5 border border-white/20 w-full flex flex-col items-center text-center relative overflow-hidden"
+            <div className="bg-white rounded-[2rem] p-6 border border-white/20 w-full flex flex-col items-center relative overflow-hidden"
               style={{
                 boxShadow: "0 10px 40px rgba(0,0,0,0.03)",
                 background: "rgba(255,255,255,0.8)",
@@ -388,33 +462,73 @@ export function Dashboard() {
               <div className="absolute top-0 left-0 w-full h-1"
                 style={{ background: "linear-gradient(90deg, #257ca3, #0f76a0)" }} />
 
-              {/* Status do Dia (Vezes bebido, Ignorados) */}
-              <div className="grid grid-cols-2 gap-4 w-full mb-4">
-                <div 
-                  onClick={() => setHistoryOpen(true)}
-                  className="bg-gray-50/50 border border-gray-100 rounded-2xl py-2 px-4 flex flex-col items-center cursor-pointer hover:bg-gray-100/50 transition-colors duration-200"
-                  title="Clique para ver os registros de hoje"
-                >
-                  <span className="material-symbols-outlined text-[20px] mb-0.5 text-[#257ca3]" style={{ fontVariationSettings: "'FILL' 1" }}>local_drink</span>
-                  <span className="text-[10px] font-bold tracking-widest uppercase text-[#5B6572] mb-0.5">Água bebida</span>
-                  <span className="text-xl font-bold text-[#191c1e]">{timesDrunk} {timesDrunk === 1 ? "vez" : "vezes"}</span>
+              {/* Seção do Botão Principal (Destaque) */}
+              <div className="flex flex-col items-center mb-6 relative">
+                {/* Próximo Alerta Pill */}
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#257ca3]/10 border border-[#257ca3]/20 mb-4 shrink-0">
+                  <span className="material-symbols-outlined text-[14px] text-[#257ca3]">alarm</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#257ca3]">
+                    Próximo Alerta: {nextTime !== "--:--" ? nextTime : "Agendando..."}
+                  </span>
                 </div>
+
+                {/* Botão de Registro Rápido: Grande, Minimalista e Evidenciado */}
+                <button
+                  onClick={() => handleLogDrink(drinkAmount)}
+                  className="w-32 h-32 rounded-full flex flex-col items-center justify-center gap-1 text-white font-medium transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative group focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-4"
+                  style={{
+                    background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)",
+                    boxShadow: "0 12px 30px rgba(37,124,163,0.3)"
+                  }}
+                >
+                  <div className="absolute inset-0 rounded-full border border-white/20 scale-90 group-hover:scale-95 transition-transform duration-300" />
+                  <span className="material-symbols-outlined text-[40px]">water_drop</span>
+                  <span className="text-[11px] font-bold tracking-widest uppercase">Bebi Água</span>
+                </button>
+
+                {/* Undo Action */}
+                <div className="h-8 mt-2 flex items-center justify-center shrink-0">
+                  {undoVisible && (
+                    <UndoChip
+                      key={lastAmount + "-dash"}
+                      amount={lastAmount}
+                      onUndo={handleUndo}
+                      onExpire={() => setUndoVisible(false)}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Grid de Duas Colunas (Lembretes e Lista de Goles) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full border-t pt-5"
+                   style={{ borderColor: "rgba(44,52,64,0.06)" }}>
+                
+                {/* Coluna Esquerda: Lembretes */}
                 <div 
                   onClick={() => setReminderHistoryOpen(true)}
-                  className="bg-gray-50/50 border border-gray-100 rounded-2xl py-2 px-4 flex items-center justify-between w-full gap-4 text-left cursor-pointer hover:bg-gray-100/50 transition-colors duration-200"
+                  onKeyDown={(e) => {
+                    if (e.key === " " || e.key === "Enter") {
+                      e.preventDefault();
+                      setReminderHistoryOpen(true);
+                    }
+                  }}
+                  tabIndex={0}
+                  className="bg-gray-50/50 border border-gray-100/50 rounded-2xl p-4 flex items-center justify-between w-full gap-4 text-left cursor-pointer hover:bg-gray-100/50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
                   title="Clique para ver o histórico de lembretes"
                 >
                   <div className="flex flex-col items-start">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="material-symbols-outlined text-[16px] text-[#5B6572]">notifications</span>
-                      <span className="text-[9px] font-bold tracking-widest uppercase text-[#5B6572]">Lembretes</span>
+                    <div className="flex items-center gap-1 mb-2">
+                      <span className="material-symbols-outlined text-[18px] text-[#257ca3]" style={{ fontVariationSettings: "'FILL' 1" }}>notifications</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-[#5B6572]">Lembretes</span>
                     </div>
-                    <span className="text-xs font-semibold text-[#191c1e]">
-                      Confirmados: <strong className="text-[#257ca3]">{confirmedReminders}</strong>
-                    </span>
-                    <span className="text-xs text-[#5B6572] font-medium mt-0.5">
-                      Ignorados: <strong>{ignoredReminders}</strong>
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-[#191c1e]">
+                        Confirmados: <strong className="text-[#257ca3]">{confirmedReminders}</strong>
+                      </span>
+                      <span className="text-xs text-[#5B6572] font-medium">
+                        Ignorados: <strong>{ignoredReminders}</strong>
+                      </span>
+                    </div>
                   </div>
                   {successRate !== null && (
                     <div className="flex flex-col items-center shrink-0">
@@ -423,47 +537,91 @@ export function Dashboard() {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Próximo Lembrete Indicator */}
-              <div className="flex flex-col items-center mb-4">
-                <span className="text-[10px] font-bold tracking-widest uppercase text-[#5B6572] mb-0.5">
-                  Próximo Alerta
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px]" style={{ color: "#257ca3" }}>alarm</span>
-                  <span className="text-2xl font-extrabold" style={{ color: "#191c1e", letterSpacing: "-0.02em" }}>
-                    {nextTime !== "--:--" ? nextTime : "Agendando..."}
-                  </span>
+                {/* Coluna Direita: Água Bebida */}
+                <div className="bg-gray-50/50 border border-gray-100/50 rounded-2xl p-4 flex flex-col items-stretch text-left self-stretch max-h-[160px]">
+                  <div className="flex items-center gap-1.5 mb-2 shrink-0 justify-between">
+                    <div className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[18px] text-[#257ca3]" style={{ fontVariationSettings: "'FILL' 1" }}>local_drink</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-[#5B6572]">Água Bebida ({timesDrunk})</span>
+                    </div>
+                    {todayDrinks.length > 0 && (
+                      <button
+                        onClick={() => setHistoryOpen(true)}
+                        className="text-[10px] font-semibold text-[#257ca3] hover:underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 rounded-sm"
+                        title="Ver todo o histórico"
+                      >
+                        Ver todos
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="overflow-y-auto flex-1 pr-1 flex flex-col gap-1.5 custom-scrollbar min-h-[50px]">
+                    {todayDrinks.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full min-h-[50px] text-center text-[10px] text-[#71787c] font-medium leading-normal">
+                        Nenhum registro hoje.<br/>Beba água para começar!
+                      </div>
+                    ) : (
+                      todayDrinks.slice(0, 2).map((drink) => (
+                        <div key={drink.id} 
+                             className="flex items-center justify-between p-1.5 rounded-xl bg-white border border-gray-150/30 hover:bg-gray-100/30 transition-all duration-200">
+                          <div className="flex items-center gap-2 pl-1">
+                            <span className="material-symbols-outlined text-[#257ca3] text-[14px]">water_drop</span>
+                            <span className="text-xs font-semibold text-[#191c1e]">{drink.amount_ml}ml</span>
+                            <span className="text-[10px] text-[#71787c]">{formatTime(drink.logged_at)}</span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDrinkToDeleteBasic(drink.id);
+                            }}
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d32f2f] focus:ring-offset-2"
+                            title="Remover este registro"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Botão de Registro Rápido */}
-              <button
-                onClick={() => handleLogDrink(drinkAmount)}
-                className="w-28 h-28 rounded-full flex flex-col items-center justify-center gap-1 text-white font-medium transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative group"
-                style={{
-                  background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)",
-                  boxShadow: "0 12px 30px rgba(37,124,163,0.25)"
-                }}
-              >
-                <div className="absolute inset-0 rounded-full border border-white/20 scale-90 group-hover:scale-95 transition-transform duration-300" />
-                <span className="material-symbols-outlined text-[36px]">water_drop</span>
-                <span className="text-[11px] font-bold tracking-wide uppercase">Bebi Água</span>
-              </button>
-
-              {/* Undo Action */}
-              <div className="h-8 mt-2 flex items-center justify-center">
-                {undoVisible && (
-                  <UndoChip
-                    key={lastAmount + "-dash"}
-                    amount={lastAmount}
-                    onUndo={handleUndo}
-                    onExpire={() => setUndoVisible(false)}
-                  />
-                )}
               </div>
             </div>
+
+            {drinkToDeleteBasic !== null && (
+              <Modal
+                open={true}
+                onClose={() => setDrinkToDeleteBasic(null)}
+                title="Confirmar Exclusão"
+                description="Deseja realmente excluir este registro de água? Isso atualizará seu total diário."
+                icon="warning"
+                iconColor="#bf360c"
+                iconBg="#ffe0b2"
+                maxWidth={380}
+              >
+                <div className="flex gap-3 mt-2">
+                  <ModalSecondaryButton onClick={() => setDrinkToDeleteBasic(null)}>
+                    Cancelar
+                  </ModalSecondaryButton>
+                  <button
+                    onClick={async () => {
+                      const id = drinkToDeleteBasic;
+                      setDrinkToDeleteBasic(null);
+                      await handleDeleteDrink(id);
+                    }}
+                    className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d32f2f] focus:ring-offset-2"
+                    style={{
+                      background: "linear-gradient(180deg, #d32f2f 0%, #c62828 100%)",
+                      boxShadow: "0 8px 20px rgba(211,47,47,0.25)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </Modal>
+            )}
 
 
 
@@ -487,7 +645,7 @@ export function Dashboard() {
                   </div>
                   <button
                     onClick={() => setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length)}
-                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors cursor-pointer text-[#5B6572]"
+                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors cursor-pointer text-[#5B6572] focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
                     title="Nova dica"
                   >
                     <span className="material-symbols-outlined text-[16px]">refresh</span>
@@ -550,21 +708,28 @@ export function Dashboard() {
                   </p>
                   <button
                     onClick={() => setHistoryOpen(true)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
                     title="Editar registros de hoje"
                   >
                     <span className="material-symbols-outlined text-[16px]">edit</span>
                   </button>
                   <button
                     onClick={() => setSetTotalOpen(true)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
                     title="Definir total bebido hoje"
                   >
                     <span className="material-symbols-outlined text-[16px]">tune</span>
                   </button>
                 </div>
-                <h3 className="text-5xl font-semibold leading-none cursor-pointer" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}
+                <h3 className="text-5xl font-semibold leading-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-xl" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}
                   onClick={() => setHistoryOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === " " || e.key === "Enter") {
+                      e.preventDefault();
+                      setHistoryOpen(true);
+                    }
+                  }}
+                  tabIndex={0}
                   title="Editar registros de hoje">
                   {consumed >= 1000 ? (consumed / 1000).toFixed(2).replace(".", ",") : consumed}
                   <span className="text-2xl font-medium" style={{ color: "#5B6572" }}>
@@ -622,7 +787,7 @@ export function Dashboard() {
           {/* Quick action */}
           <button
             onClick={() => handleLogDrink(drinkAmount)}
-            className="w-full rounded-xl p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-lg hover:scale-[1.02] mt-auto cursor-pointer"
+            className="w-full rounded-xl p-5 flex items-center justify-between group transition-all duration-300 hover:shadow-lg hover:scale-[1.02] mt-auto cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
             style={{ background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)" }}
           >
             <div className="text-left">
@@ -699,6 +864,131 @@ export function Dashboard() {
               ))}
             </div>
           </div>
+
+          {/* Clima em Tempo Real */}
+          {settings?.app_mode === "pro" && settings?.weather_enabled && todayStats?.weather && (
+            <div className="rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
+              style={{
+                boxShadow: "0 8px 30px rgba(0,0,0,0.04)",
+                background: todayStats.weather.temp >= 30.0 
+                  ? "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,247,237,1) 100%)" 
+                  : "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(240,249,255,1) 100%)"
+              }}>
+              
+              {/* Header do clima */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
+                    style={{ 
+                      backgroundColor: todayStats.weather.temp >= 30.0 ? "rgba(255,237,213,0.7)" : "rgba(224,242,254,0.7)" 
+                    }}>
+                    <span className="material-symbols-outlined text-[20px] transition-all duration-300"
+                      style={{
+                        color: todayStats.weather.temp >= 30.0 ? "#f97316" : "#0284c7"
+                      }}>
+                      {getWeatherIcon(todayStats.weather.icon)}
+                    </span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[#5B6572]">Clima Atual</p>
+                    <p className="text-[10px] font-semibold text-gray-800 truncate max-w-[120px]">{settings.weather_city}</p>
+                  </div>
+                </div>
+                
+                {/* Temperatura */}
+                <div className="text-right">
+                  <h4 className="text-2xl font-bold leading-none text-[#191c1e] tracking-tight">
+                    {todayStats.weather.temp.toFixed(1)}°C
+                  </h4>
+                  <p className="text-[10px] font-medium text-gray-500 mt-0.5">
+                    {translateCondition(todayStats.weather.description, todayStats.weather.condition)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Badge de Alerta Térmico se tiver modificador climático ativo */}
+              {todayStats.modifiers?.some((m) => m.motivo === "Calor excessivo") ? (
+                <div className="py-1.5 px-2.5 rounded-lg bg-orange-50 border border-orange-100 flex items-center gap-1.5 animate-pulse mt-1">
+                  <span className="material-symbols-outlined text-[14px] text-orange-600">warning</span>
+                  <span className="text-[9px] font-bold text-orange-700 uppercase tracking-wide">
+                    Alerta de Calor: +500ml de Meta hoje
+                  </span>
+                </div>
+              ) : (
+                <div className="py-1.5 px-2.5 rounded-lg bg-green-50 border border-green-100 flex items-center gap-1.5 mt-1">
+                  <span className="material-symbols-outlined text-[14px] text-green-600">thermostat</span>
+                  <span className="text-[9px] font-bold text-green-700 uppercase tracking-wide">
+                    Temperatura sob controle
+                  </span>
+                </div>
+              )}
+
+              {/* Nota de atualização */}
+              <p className="text-[8px] text-gray-400 mt-3 text-right font-medium">
+                Atualizado às {todayStats.weather.last_updated}
+              </p>
+
+            </div>
+          )}
+
+          {/* Missão Diária */}
+          {settings?.app_mode === "pro" && todayStats?.daily_mission && (
+            <div className="bg-white rounded-xl p-5 border border-white/20 group hover:border-[#006492] transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
+              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
+                  style={{ backgroundColor: todayStats.daily_mission.is_completed ? "#dcfce7" : "rgba(201,230,255,0.5)" }}>
+                  <span className="material-symbols-outlined transition-all duration-300"
+                    style={{
+                      color: todayStats.daily_mission.is_completed ? "#16a34a" : "#006492",
+                      fontVariationSettings: todayStats.daily_mission.is_completed ? "'FILL' 1" : "'FILL' 0"
+                    }}>
+                    {todayStats.daily_mission.is_completed ? "task_alt" : "target"}
+                  </span>
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "#5B6572" }}>Missão Diária</p>
+                  <p className="text-[9px] font-semibold text-[#257ca3] uppercase tracking-widest">Modo Pro</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className={`text-sm font-semibold leading-relaxed transition-all duration-300 text-left ${
+                  todayStats.daily_mission.is_completed ? "line-through text-gray-400" : "text-[#191c1e]"
+                }`}>
+                  {todayStats.daily_mission.description}
+                </p>
+
+                <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mt-1">
+                  <div
+                    className={`h-full transition-all duration-500 rounded-full ${
+                      todayStats.daily_mission.is_completed ? "bg-green-500" : "bg-[#257ca3]"
+                    }`}
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        (todayStats.daily_mission.current_ml / todayStats.daily_mission.target_ml) * 100
+                      )}%`,
+                    }}
+                  />
+                </div>
+
+                <div className="flex justify-between items-center text-[10px] font-bold text-[#5B6572] mt-1 uppercase tracking-wider">
+                  <span>
+                    {todayStats.daily_mission.current_ml}ml / {todayStats.daily_mission.target_ml}ml
+                  </span>
+                  {todayStats.daily_mission.is_completed ? (
+                    <span className="text-green-600 font-bold flex items-center gap-0.5">
+                      Completada!
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">Em progresso</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -731,7 +1021,7 @@ export function Dashboard() {
                 <>
                   <button
                     onClick={() => setDevInputVisible(!devInputVisible)}
-                    className={`hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer ${
+                    className={`hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 ${
                       devInputVisible ? "text-[#0f76a0] bg-[#bfe8ff]/30" : "text-[#257ca3]"
                     }`}
                     title="Digitar frase de teste (Dev)"
@@ -743,7 +1033,7 @@ export function Dashboard() {
                       const giantText = "Esta é uma dica de hidratação experimental extremamente longa, projetada especificamente para testar o limite absoluto de quebra de layout no painel lateral direito do aplicativo Gole, contendo mais de duzentos caracteres para fins de testes de interface de usuário.";
                       setCustomTipText(giantText);
                     }}
-                    className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+                    className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
                     title="Inserir frase gigante de teste (Dev)"
                   >
                     <span className="material-symbols-outlined text-[20px]">text_fields</span>
@@ -753,7 +1043,7 @@ export function Dashboard() {
                       setCustomTipText("");
                       setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length);
                     }}
-                    className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+                    className="text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
                     title={`Avançar dica (Dev: ${tipIndex + 1}/${HYDRATION_TIPS.length})`}
                   >
                     <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
@@ -771,7 +1061,7 @@ export function Dashboard() {
                 value={customTipText || HYDRATION_TIPS[tipIndex]}
                 onChange={(e) => setCustomTipText(e.target.value)}
                 placeholder="Escreva sua frase de teste dev..."
-                className="flex-1 px-3 py-1.5 border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#257ca3] bg-white text-[#191c1e]"
+                className="flex-1 px-3 py-1.5 border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 bg-white text-[#191c1e]"
                 style={{ borderColor: "#e0e3e6" }}
               />
               <button
@@ -779,7 +1069,7 @@ export function Dashboard() {
                   setCustomTipText("");
                   setDevInputVisible(false);
                 }}
-                className="px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
                 style={{ backgroundColor: "#eceef1", color: "#5B6572" }}
               >
                 Resetar
@@ -808,6 +1098,59 @@ export function Dashboard() {
         }
         onClose={() => setSetTotalOpen(false)}
       />
+
+      {/* Toast de Clima Dinâmico (Calor Excessivo) */}
+      {climateToastVisible && (
+        <div
+          className="fixed bottom-6 right-6 z-50 max-w-sm w-full animate-slide-in-right"
+          style={{ filter: "drop-shadow(0 12px 40px rgba(0,0,0,0.08))" }}
+        >
+          <div
+            className="relative rounded-2xl overflow-hidden animate-fade-in"
+            style={{
+              background: "rgba(255,255,255,0.85)",
+              backdropFilter: "blur(30px)",
+              WebkitBackdropFilter: "blur(30px)",
+              border: "1px solid rgba(255,255,255,0.9)",
+              borderLeft: "4px solid #ea580c",
+            }}
+          >
+            <div className="p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: "#ffedd5" }}>
+                  <span className="material-symbols-outlined" style={{ color: "#ea580c", fontVariationSettings: "'FILL' 1" }}>
+                    thermostat
+                  </span>
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold mb-0.5 text-[#191c1e]">
+                    🌡️ Meta Ajustada: {climateModifierReason}
+                  </p>
+                  <p className="text-xs text-[#5B6572] leading-relaxed">
+                    Detectamos uma anomalia de temperatura na sua região. Sua meta diária foi acrescida de <strong className="text-[#ea580c]">+{climateModifierExtra}ml</strong> hoje para manter seu corpo devidamente hidratado!
+                  </p>
+                </div>
+                <button
+                  onClick={() => setClimateToastVisible(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+              <div className="flex justify-end mt-3">
+                <button
+                  onClick={() => setClimateToastVisible(false)}
+                  className="px-4 py-1.5 rounded-lg text-white text-xs font-semibold transition-all duration-200 hover:shadow-md cursor-pointer"
+                  style={{ background: "linear-gradient(180deg, #ea580c 0%, #c2410c 100%)" }}
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

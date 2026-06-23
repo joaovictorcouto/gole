@@ -23,6 +23,9 @@ export interface Settings {
   next_override_at: string;
   next_override_ml: number;
   app_mode: string;
+  weather_enabled: boolean;
+  weather_city: string;
+  weather_api_key: string;
 }
 
 export interface ScheduleEntry {
@@ -47,6 +50,21 @@ export interface ScheduleData {
   override_ml: number;
 }
 
+export interface DailyModifier {
+  ml_extra: number;
+  motivo: string;
+}
+
+export interface DailyMission {
+  id: number;
+  date: string;
+  description: string;
+  target_ml: number;
+  current_ml: number;
+  is_completed: boolean;
+  mission_type: string;
+}
+
 export interface TodayStats {
   date: string;
   goal_ml: number;
@@ -58,6 +76,17 @@ export interface TodayStats {
   reminders_confirmed: number;
   suggested_per_reminder: number;
   next_reminder_at?: string;
+  modifiers?: DailyModifier[];
+  daily_mission?: DailyMission | null;
+  weather?: WeatherInfo | null;
+}
+
+export interface WeatherInfo {
+  temp: number;
+  condition: string;
+  description: string;
+  icon: string;
+  last_updated: string;
 }
 
 export interface DayStats {
@@ -102,6 +131,9 @@ export const api = {
     work_end_hour: string;
     sip_ml: number;
     app_mode: string;
+    weather_enabled: boolean;
+    weather_city: string;
+    weather_api_key: string;
   }) => invoke<number>("save_settings", {
     weightKg: params.weight_kg,
     ageYears: params.age_years,
@@ -120,6 +152,9 @@ export const api = {
     workEndHour: params.work_end_hour,
     sipMl: params.sip_ml,
     appMode: params.app_mode,
+    weatherEnabled: params.weather_enabled,
+    weatherCity: params.weather_city,
+    weatherApiKey: params.weather_api_key,
   }),
 
   completeOnboarding: (params: {
@@ -230,6 +265,9 @@ export const api = {
 
   setTodayTotal: (target_ml: number) =>
     invoke<TodayStats>("set_today_total", { targetMl: target_ml }),
+
+  exportHistoryCsv: (filepath: string) =>
+    invoke<void>("export_history_csv", { filepath }),
 };
 
 export interface DrinkLog {

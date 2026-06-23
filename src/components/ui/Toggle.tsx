@@ -23,10 +23,20 @@ export function Toggle({ checked, onChange, disabled = false }: ToggleProps) {
     onChange(next);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <div
-      className="toggle-switch select-none"
+      className="toggle-switch select-none focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-full"
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={disabled ? -1 : 0}
       style={{ opacity: disabled ? 0.4 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
     >
       <input
@@ -34,6 +44,7 @@ export function Toggle({ checked, onChange, disabled = false }: ToggleProps) {
         className="toggle-input"
         checked={localChecked}
         readOnly
+        tabIndex={-1}
       />
       <div className="toggle-track" />
       <div

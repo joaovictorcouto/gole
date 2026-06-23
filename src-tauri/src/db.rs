@@ -1,6 +1,13 @@
 use rusqlite::{Connection, Result, params};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use base64::{Engine as _, engine::general_purpose::STANDARD};
+use aes_gcm::{
+    aead::{Aead, KeyInit},
+    Aes256Gcm, Nonce
+};
+use rand::RngCore;
+use keyring::Entry;
 
 pub fn get_db_path(app_data_dir: &PathBuf) -> PathBuf {
     app_data_dir.join("gole.db")
@@ -50,6 +57,23 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             displayed INTEGER NOT NULL DEFAULT 0
         );
 
+        CREATE TABLE IF NOT EXISTS daily_modifiers (
+            date TEXT NOT NULL,
+            ml_extra INTEGER NOT NULL,
+            motivo TEXT NOT NULL,
+            PRIMARY KEY (date, motivo)
+        );
+
+        CREATE TABLE IF NOT EXISTS daily_missions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            description TEXT NOT NULL,
+            target_ml INTEGER NOT NULL,
+            current_ml INTEGER NOT NULL DEFAULT 0,
+            is_completed INTEGER NOT NULL DEFAULT 0,
+            mission_type TEXT NOT NULL
+        );
+
         INSERT OR IGNORE INTO settings (key, value) VALUES ('onboarding_complete', 'false');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('weight_kg', '70');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('age_years', '25');
@@ -72,6 +96,9 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         INSERT OR IGNORE INTO settings (key, value) VALUES ('next_override_at', '');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('next_override_ml', '0');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('app_mode', 'pro');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('weather_enabled', 'true');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('weather_city', 'Sinop');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('weather_api_key', '');
 
         -- Profissional
         INSERT OR IGNORE INTO phrases (text, category) VALUES ('💧 Hora da água.', 'profissional');
@@ -217,6 +244,9 @@ pub struct Settings {
     pub next_override_at: String,
     pub next_override_ml: i64,
     pub app_mode: String,
+    pub weather_enabled: bool,
+    pub weather_city: String,
+    pub weather_api_key: String,
 }
 
 pub fn get_settings(conn: &Connection) -> Result<Settings> {
@@ -232,6 +262,14 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
     let personality = map.get("notification_personality").cloned().unwrap_or_else(|| "tudo".into());
     let personality = if personality == "mixed" { "tudo".to_string() } else { personality };
     let app_mode = map.get("app_mode").cloned().unwrap_or_else(|| "pro".into());
+
+    let raw_key = map.get("weather_api_key").cloned().unwrap_or_default();
+    let decrypted_key = if !raw_key.is_empty() {
+        let dec = decrypt_key(&raw_key);
+        if dec.is_empty() { raw_key } else { dec }
+    } else {
+        raw_key
+    };
 
     Ok(Settings {
         onboarding_complete: map.get("onboarding_complete").map(|v| v == "true").unwrap_or(false),
@@ -256,6 +294,9 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
         next_override_at: map.get("next_override_at").cloned().unwrap_or_default(),
         next_override_ml: map.get("next_override_ml").and_then(|v| v.parse().ok()).unwrap_or(0),
         app_mode,
+        weather_enabled: map.get("weather_enabled").map(|v| v == "true").unwrap_or(true),
+        weather_city: map.get("weather_city").cloned().unwrap_or_else(|| "Sinop".into()),
+        weather_api_key: decrypted_key,
     })
 }
 
@@ -655,3 +696,316 @@ pub fn has_overflow_day(conn: &Connection, goal_ml: i64) -> Result<bool> {
     )?;
     Ok(count > 0)
 }
+
+// --- Criptografia de API Key (AES-256-GCM + Windows Credential Manager) ---
+
+fn get_or_create_master_key() -> Vec<u8> {
+    let service = "GoleApp";
+    let username = "gole-db-encryption-key";
+    
+    if let Ok(entry) = Entry::new(service, username) {
+        if let Ok(pwd_b64) = entry.get_password() {
+            if let Ok(key) = STANDARD.decode(&pwd_b64) {
+                if key.len() == 32 {
+                    return key;
+                }
+            }
+        }
+    }
+    
+    // Se falhar ou não existir, gera nova chave
+    let mut key = vec![0u8; 32];
+    rand::thread_rng().fill_bytes(&mut key);
+    let pwd_b64 = STANDARD.encode(&key);
+    
+    if let Ok(entry) = Entry::new(service, username) {
+        let _ = entry.set_password(&pwd_b64);
+    }
+    
+    key
+}
+
+pub fn encrypt_key(plain_text: &str) -> String {
+    if plain_text.is_empty() {
+        return String::new();
+    }
+    let key_bytes = get_or_create_master_key();
+    let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
+    let cipher = Aes256Gcm::new(key);
+    
+    let mut nonce_bytes = [0u8; 12];
+    rand::thread_rng().fill_bytes(&mut nonce_bytes);
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    if let Ok(ciphertext) = cipher.encrypt(nonce, plain_text.as_bytes()) {
+        let mut combined = nonce_bytes.to_vec();
+        combined.extend_from_slice(&ciphertext);
+        STANDARD.encode(&combined)
+    } else {
+        String::new()
+    }
+}
+
+pub fn decrypt_key(cipher_b64: &str) -> String {
+    if cipher_b64.is_empty() {
+        return String::new();
+    }
+    let key_bytes = get_or_create_master_key();
+    let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
+    let cipher = Aes256Gcm::new(key);
+    
+    if let Ok(combined) = STANDARD.decode(cipher_b64) {
+        if combined.len() < 12 {
+            return String::new();
+        }
+        let (nonce_bytes, ciphertext) = combined.split_at(12);
+        let nonce = Nonce::from_slice(nonce_bytes);
+        if let Ok(plaintext_bytes) = cipher.decrypt(nonce, ciphertext) {
+            if let Ok(plain_text) = String::from_utf8(plaintext_bytes) {
+                return plain_text;
+            }
+        }
+    }
+    
+    String::new()
+}
+
+// --- Modificadores Climáticos e Missões Diárias (Inteligência Dinâmica) ---
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DailyModifier {
+    pub ml_extra: i64,
+    pub motivo: String,
+}
+
+pub fn add_daily_modifier(conn: &Connection, date: &str, ml_extra: i64, motivo: &str) -> Result<()> {
+    conn.execute(
+        "INSERT OR IGNORE INTO daily_modifiers (date, ml_extra, motivo) VALUES (?1, ?2, ?3)",
+        params![date, ml_extra, motivo],
+    )?;
+    Ok(())
+}
+
+pub fn get_today_modifiers(conn: &Connection, date: &str) -> Result<Vec<DailyModifier>> {
+    let mut stmt = conn.prepare("SELECT ml_extra, motivo FROM daily_modifiers WHERE date = ?1")?;
+    let rows = stmt.query_map(params![date], |row| {
+        Ok(DailyModifier {
+            ml_extra: row.get(0)?,
+            motivo: row.get(1)?,
+        })
+    })?;
+    let mut out = Vec::new();
+    for r in rows {
+        out.push(r?);
+    }
+    Ok(out)
+}
+
+pub fn get_today_modifiers_sum(conn: &Connection, date: &str) -> Result<i64> {
+    let sum: i64 = conn.query_row(
+        "SELECT COALESCE(SUM(ml_extra), 0) FROM daily_modifiers WHERE date = ?1",
+        params![date],
+        |row| row.get(0),
+    )?;
+    Ok(sum)
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DailyMission {
+    pub id: i64,
+    pub date: String,
+    pub description: String,
+    pub target_ml: i64,
+    pub current_ml: i64,
+    pub is_completed: bool,
+    pub mission_type: String,
+}
+
+pub fn get_daily_mission(conn: &Connection, date: &str) -> Result<Option<DailyMission>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, date, description, target_ml, current_ml, is_completed, mission_type 
+         FROM daily_missions WHERE date = ?1 LIMIT 1"
+    )?;
+    let mut rows = stmt.query_map(params![date], |row| {
+        Ok(DailyMission {
+            id: row.get(0)?,
+            date: row.get(1)?,
+            description: row.get(2)?,
+            target_ml: row.get(3)?,
+            current_ml: row.get(4)?,
+            is_completed: row.get::<_, i64>(5)? == 1,
+            mission_type: row.get(6)?,
+        })
+    })?;
+    
+    if let Some(r) = rows.next() {
+        Ok(Some(r?))
+    } else {
+        Ok(None)
+    }
+}
+
+pub fn create_daily_mission(
+    conn: &Connection, 
+    date: &str, 
+    description: &str, 
+    target_ml: i64, 
+    mission_type: &str
+) -> Result<()> {
+    conn.execute(
+        "INSERT INTO daily_missions (date, description, target_ml, current_ml, is_completed, mission_type) 
+         VALUES (?1, ?2, ?3, 0, 0, ?4)",
+        params![date, description, target_ml, mission_type],
+    )?;
+    Ok(())
+}
+
+pub fn update_daily_mission_progress(
+    conn: &Connection, 
+    date: &str, 
+    amount_ml: i64, 
+    hour: u32
+) -> Result<()> {
+    if let Some(mission) = get_daily_mission(conn, date)? {
+        if mission.is_completed {
+            return Ok(());
+        }
+
+        let mut applies = false;
+        if mission.mission_type == "morning_hydration" {
+            if hour < 10 {
+                applies = true;
+            }
+        } else {
+            applies = true;
+        }
+
+        if applies {
+            let next_ml = (mission.current_ml + amount_ml).min(mission.target_ml);
+            let completed = if next_ml >= mission.target_ml { 1 } else { 0 };
+            conn.execute(
+                "UPDATE daily_missions SET current_ml = ?1, is_completed = ?2 WHERE id = ?3",
+                params![next_ml, completed, mission.id],
+            )?;
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    #[test]
+    fn test_encrypt_decrypt() {
+        let original = "minha-chave-secreta-do-openweather-12345";
+        let encrypted = encrypt_key(original);
+        assert!(!encrypted.is_empty());
+        assert_ne!(original, encrypted);
+
+        let decrypted = decrypt_key(&encrypted);
+        assert_eq!(original, decrypted);
+    }
+
+    #[test]
+    fn test_daily_modifiers() {
+        let conn = Connection::open_in_memory().unwrap();
+        init_db(&conn).unwrap();
+
+        let date = "2026-06-19";
+        let ml_extra = 500;
+        let motivo = "Calor excessivo";
+
+        add_daily_modifier(&conn, date, ml_extra, motivo).unwrap();
+
+        // Tentar adicionar duplicado (deve ignorar devido a PK composta)
+        add_daily_modifier(&conn, date, 300, motivo).unwrap();
+
+        let mods = get_today_modifiers(&conn, date).unwrap();
+        assert_eq!(mods.len(), 1);
+        assert_eq!(mods[0].ml_extra, 500);
+        assert_eq!(mods[0].motivo, motivo);
+
+        let sum = get_today_modifiers_sum(&conn, date).unwrap();
+        assert_eq!(sum, 500);
+    }
+
+    #[test]
+    fn test_daily_missions() {
+        let conn = Connection::open_in_memory().unwrap();
+        init_db(&conn).unwrap();
+
+        let date = "2026-06-19";
+        let desc = "Despertar Hidratado: Beba 500ml antes das 10h";
+        let target = 500;
+        let m_type = "morning_hydration";
+
+        // Verifica que não existe missão inicialmente
+        let mission = get_daily_mission(&conn, date).unwrap();
+        assert!(mission.is_none());
+
+        // Cria missão
+        create_daily_mission(&conn, date, desc, target, m_type).unwrap();
+
+        let mission = get_daily_mission(&conn, date).unwrap().unwrap();
+        assert_eq!(mission.description, desc);
+        assert_eq!(mission.target_ml, target);
+        assert_eq!(mission.current_ml, 0);
+        assert!(!mission.is_completed);
+
+        // Atualiza progresso da missão de manhã (hora < 10)
+        update_daily_mission_progress(&conn, date, 200, 8).unwrap();
+        let mission = get_daily_mission(&conn, date).unwrap().unwrap();
+        assert_eq!(mission.current_ml, 200);
+        assert!(!mission.is_completed);
+
+        // Atualiza progresso fora do horário (hora >= 10) para morning_hydration
+        update_daily_mission_progress(&conn, date, 200, 11).unwrap();
+        let mission = get_daily_mission(&conn, date).unwrap().unwrap();
+        assert_eq!(mission.current_ml, 200); // não deve ter incrementado
+
+        // Completa a missão
+        update_daily_mission_progress(&conn, date, 300, 9).unwrap();
+        let mission = get_daily_mission(&conn, date).unwrap().unwrap();
+        assert_eq!(mission.current_ml, 500);
+        assert!(mission.is_completed);
+    }
+
+    #[test]
+    fn test_weather_cache() {
+        let conn = Connection::open_in_memory().unwrap();
+        init_db(&conn).unwrap();
+
+        // Inicialmente as chaves devem estar vazias ou inexistentes
+        let raw_temp = conn.query_row(
+            "SELECT value FROM settings WHERE key = 'weather_current_temp'",
+            [],
+            |row| row.get::<_, String>(0)
+        ).unwrap_or_default();
+        assert!(raw_temp.is_empty());
+
+        // Salvar dados de clima
+        set_setting(&conn, "weather_current_temp", "36.0").unwrap();
+        set_setting(&conn, "weather_current_condition", "Clear").unwrap();
+        set_setting(&conn, "weather_current_description", "calor excessivo").unwrap();
+        set_setting(&conn, "weather_current_icon", "01d").unwrap();
+        set_setting(&conn, "weather_last_updated", "16:30").unwrap();
+
+        // Recuperar e validar
+        let temp: String = conn.query_row(
+            "SELECT value FROM settings WHERE key = 'weather_current_temp'",
+            [],
+            |row| row.get(0)
+        ).unwrap();
+        let cond: String = conn.query_row(
+            "SELECT value FROM settings WHERE key = 'weather_current_condition'",
+            [],
+            |row| row.get(0)
+        ).unwrap();
+
+        assert_eq!(temp, "36.0");
+        assert_eq!(cond, "Clear");
+    }
+}
+

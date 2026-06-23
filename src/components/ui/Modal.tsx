@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 interface ModalProps {
@@ -30,13 +30,83 @@ export function Modal({
   accent = false,
   closeOnBackdrop = true,
 }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+
+    const getFocusableElements = () => {
+      if (!modalRef.current) return [];
+      const els = Array.from(
+        modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ) as HTMLElement[];
+      
+      const closeBtn = els.find(el => el.getAttribute("aria-label") === "Fechar");
+      if (closeBtn) {
+        const others = els.filter(el => el !== closeBtn);
+        return [...others, closeBtn];
+      }
+      return els;
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    const focusFirst = () => {
+      const focusables = getFocusableElements();
+      if (focusables.length > 0) {
+        // Tenta focar o primeiro botão que não seja o de fechar (ex: botão Cancelar)
+        const actionButton = focusables.find(
+          (el) => el.getAttribute("aria-label") !== "Fechar"
+        );
+        if (actionButton) {
+          actionButton.focus();
+        } else {
+          focusables[0].focus();
+        }
+      }
+    };
+
+    const timer = setTimeout(focusFirst, 50);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      const focusables = getFocusableElements();
+      if (focusables.length === 0) return;
+
+      const activeEl = document.activeElement as HTMLElement;
+      let currentIndex = focusables.indexOf(activeEl);
+
+      const moveTo = (index: number) => {
+        e.preventDefault();
+        focusables[index].focus();
+      };
+
+      if (e.key === "Tab") {
+        if (e.shiftKey) {
+          const prevIndex = currentIndex <= 0 ? focusables.length - 1 : currentIndex - 1;
+          moveTo(prevIndex);
+        } else {
+          const nextIndex = currentIndex === focusables.length - 1 ? 0 : currentIndex + 1;
+          moveTo(nextIndex);
+        }
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        const nextIndex = currentIndex === focusables.length - 1 ? 0 : currentIndex + 1;
+        moveTo(nextIndex);
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        const prevIndex = currentIndex <= 0 ? focusables.length - 1 : currentIndex - 1;
+        moveTo(prevIndex);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -50,6 +120,7 @@ export function Modal({
       }}
     >
       <div
+        ref={modalRef}
         className="w-full rounded-[1.5rem] relative overflow-hidden"
         style={{
           maxWidth: `${maxWidth}px`,
@@ -68,7 +139,7 @@ export function Modal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-[#eceef1]"
+          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-[#eceef1] focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
           style={{ color: "#71787c" }}
           aria-label="Fechar"
         >
@@ -117,7 +188,7 @@ export function ModalPrimaryButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300"
+      className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
       style={{
         background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
         boxShadow: disabled ? "none" : "0 8px 20px rgba(59,99,119,0.25)",
@@ -137,7 +208,7 @@ export function ModalSecondaryButton({
   return (
     <button
       onClick={onClick}
-      className="w-full py-3 rounded-xl font-medium text-sm border transition-all duration-200 hover:bg-[#f2f4f7]"
+      className="w-full py-3 rounded-xl font-medium text-sm border transition-all duration-200 hover:bg-[#f2f4f7] focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
       style={{ color: "#5B6572", borderColor: "#e0e3e6", letterSpacing: "0.02em" }}
     >
       {children}

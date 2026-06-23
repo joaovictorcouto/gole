@@ -76,7 +76,7 @@ export function SetTotalModal({ open, currentMl, containerMl, containerName, onC
           <div className="flex gap-2 mb-4">
             <button
               onClick={() => setMode("ml")}
-              className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
+              className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
               style={{
                 background: mode === "ml" ? "rgba(191,232,255,0.5)" : "rgba(236,238,241,0.7)",
                 color: mode === "ml" ? "#257ca3" : "#5B6572",
@@ -85,7 +85,7 @@ export function SetTotalModal({ open, currentMl, containerMl, containerName, onC
             >Em ml</button>
             <button
               onClick={() => setMode("containers")}
-              className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
+              className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
               style={{
                 background: mode === "containers" ? "rgba(191,232,255,0.5)" : "rgba(236,238,241,0.7)",
                 color: mode === "containers" ? "#257ca3" : "#5B6572",
@@ -106,7 +106,7 @@ export function SetTotalModal({ open, currentMl, containerMl, containerName, onC
               onChange={(e) => setMlInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
               autoFocus
-              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#257ca3]/30"
+              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
               style={{ borderColor: "#e0e3e6" }}
             />
           </label>
@@ -123,7 +123,7 @@ export function SetTotalModal({ open, currentMl, containerMl, containerName, onC
               onChange={(e) => setContainerCount(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
               autoFocus
-              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#257ca3]/30"
+              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
               style={{ borderColor: "#e0e3e6" }}
             />
             <p className="text-[11px] mt-1" style={{ color: "#71787c" }}>= {computedMl}ml</p>
@@ -153,13 +153,13 @@ export function SetTotalModal({ open, currentMl, containerMl, containerName, onC
           <button
             onClick={onClose}
             disabled={busy}
-            className="flex-1 px-4 py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+            className="flex-1 px-4 py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
             style={{ backgroundColor: "rgba(236,238,241,0.7)", color: "#5B6572" }}
           >Cancelar</button>
           <button
             onClick={submit}
             disabled={busy || diff < 0}
-            className="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer disabled:opacity-50"
+            className="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
             style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
           >{busy ? "Salvando..." : "Confirmar"}</button>
         </div>

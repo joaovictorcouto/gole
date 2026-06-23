@@ -133,7 +133,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
         remaining > 0 ? (
           <button
             onClick={handleCompleteGoal}
-            className="w-full mb-3 py-2.5 rounded-xl border text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] text-white"
+            className="w-full mb-3 py-2.5 rounded-xl border text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] text-white focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
             style={{
               background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)",
               border: "none",
@@ -164,7 +164,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                 min={1}
                 max={5000}
                 onChange={(e) => setNewAmount(e.target.value)}
-                className="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#257ca3]"
+                className="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
                 style={{ backgroundColor: "white", borderColor: "#e0e3e6" }}
               />
             )}
@@ -173,7 +173,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
               autoFocus={isBasicMode}
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              className="px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#257ca3] flex-1"
+              className="px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 flex-1"
               style={{ backgroundColor: "white", borderColor: "#e0e3e6" }}
               title="Horário"
             />
@@ -181,14 +181,14 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
           <div className="flex gap-2">
             <button
               onClick={handleAdd}
-              className="flex-1 px-4 py-2 rounded-xl text-white font-medium text-xs cursor-pointer"
+              className="flex-1 px-4 py-2 rounded-xl text-white font-medium text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
               style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
             >
               Adicionar
             </button>
             <button
               onClick={() => { setAdding(false); setNewAmount(""); }}
-              className="px-4 py-2 rounded-xl font-medium text-xs cursor-pointer"
+              className="px-4 py-2 rounded-xl font-medium text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
               style={{ color: "#5B6572", backgroundColor: "#eceef1" }}
             >
               Cancelar
@@ -198,7 +198,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="w-full mb-4 py-2.5 rounded-xl border text-sm font-medium cursor-pointer flex items-center justify-center gap-2 transition-colors hover:bg-[#f7f9fc]"
+          className="w-full mb-4 py-2.5 rounded-xl border text-sm font-medium cursor-pointer flex items-center justify-center gap-2 transition-colors hover:bg-[#f7f9fc] focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
           style={{ borderColor: "#e0e3e6", color: "#257ca3", borderStyle: "dashed" }}
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
@@ -234,7 +234,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                         max={5000}
                         onChange={(e) => setEditValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(d.id); if (e.key === "Escape") setEditingId(null); }}
-                        className="w-24 px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#257ca3]"
+                        className="w-24 px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
                         style={{ borderColor: "#e0e3e6", backgroundColor: "white" }}
                         title="Quantidade (ml)"
                       />
@@ -245,7 +245,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                       value={editTime}
                       onChange={(e) => setEditTime(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(d.id); if (e.key === "Escape") setEditingId(null); }}
-                      className="px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#257ca3] flex-grow"
+                      className="px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 flex-grow"
                       style={{ borderColor: "#e0e3e6", backgroundColor: "white" }}
                       title="Horário"
                     />
@@ -266,13 +266,13 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                   <>
                     <button
                       onClick={() => handleSaveEdit(d.id)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-emerald-500 hover:bg-emerald-50 cursor-pointer"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-emerald-500 hover:bg-emerald-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
                     >
                       <span className="material-symbols-outlined text-[20px]">check</span>
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
                     >
                       <span className="material-symbols-outlined text-[20px]">close</span>
                     </button>
@@ -288,13 +288,13 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                         const mm = String(dTime.getMinutes()).padStart(2, "0");
                         setEditTime(`${hh}:${mm}`);
                       }}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 cursor-pointer"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
                     >
                       <span className="material-symbols-outlined text-[18px]">edit</span>
                     </button>
                     <button
                       onClick={() => setDrinkToDelete(d.id)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
                       title="Excluir registro"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -328,7 +328,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                 setDrinkToDelete(null);
                 await handleDelete(id);
               }}
-              className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer"
+              className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d32f2f] focus:ring-offset-2"
               style={{
                 background: "linear-gradient(180deg, #d32f2f 0%, #c62828 100%)",
                 boxShadow: "0 8px 20px rgba(211,47,47,0.25)",

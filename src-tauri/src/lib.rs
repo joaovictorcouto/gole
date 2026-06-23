@@ -253,6 +253,15 @@ fn refresh_tray_drink_label(app: &AppHandle) {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct WeatherInfo {
+    temp: f64,
+    condition: String,
+    description: String,
+    icon: String,
+    last_updated: String,
+}
+
 #[derive(Serialize, Deserialize)]
 struct TodayStats {
     date: String,
@@ -265,6 +274,9 @@ struct TodayStats {
     reminders_confirmed: i64,
     suggested_per_reminder: i64,
     next_reminder_at: Option<String>,
+    modifiers: Option<Vec<db::DailyModifier>>,
+    daily_mission: Option<db::DailyMission>,
+    weather: Option<WeatherInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -309,6 +321,9 @@ fn save_settings(
     work_end_hour: String,
     sip_ml: i64,
     app_mode: String,
+    weather_enabled: bool,
+    weather_city: String,
+    weather_api_key: String,
 ) -> Result<i64, String> {
     let conn = state.conn.lock().unwrap();
     let goal = if app_mode == "basic" { 0 } else { hydration::calculate_goal(weight_kg, &activity_level, &climate) };
@@ -331,6 +346,12 @@ fn save_settings(
     db::set_setting(&conn, "work_end_hour", &work_end_hour).map_err(|e| e.to_string())?;
     let sip_ml = if sip_ml > 0 { sip_ml } else { 20 };
     db::set_setting(&conn, "sip_ml", &sip_ml.to_string()).map_err(|e| e.to_string())?;
+
+    // Criptografa a chave da API do OpenWeather antes de salvar
+    let encrypted_key = db::encrypt_key(&weather_api_key);
+    db::set_setting(&conn, "weather_enabled", if weather_enabled { "true" } else { "false" }).map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "weather_city", &weather_city).map_err(|e| e.to_string())?;
+    db::set_setting(&conn, "weather_api_key", &encrypted_key).map_err(|e| e.to_string())?;
 
     // Configura o sistema operacional para iniciar com o Windows ou não
     use tauri_plugin_autostart::ManagerExt;
@@ -366,6 +387,17 @@ fn log_drink_at(state: State<AppState>, app: AppHandle, amount_ml: i64, logged_a
     {
         let conn = state.conn.lock().unwrap();
         db::log_drink(&conn, &date, amount_ml, &logged_at).map_err(|e| e.to_string())?;
+        
+        let today = Local::now().format("%Y-%m-%d").to_string();
+        if date == today {
+            if let Some(time_part) = logged_at.split('T').nth(1) {
+                if let Some(hour_str) = time_part.split(':').next() {
+                    if let Ok(hour) = hour_str.parse::<u32>() {
+                        db::update_daily_mission_progress(&conn, &date, amount_ml, hour).ok();
+                    }
+                }
+            }
+        }
     }
     check_achievements_internal(&state)?;
     emit_schedule_changed(&app);
@@ -488,15 +520,68 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
     }
 
     let consumed = db::get_today_consumed(&conn, &date).map_err(|e| e.to_string())?;
-    let goal = settings.daily_goal_ml;
+    
+    let pro_mode = settings.app_mode == "pro";
+    let modifiers_sum = if pro_mode {
+        db::get_today_modifiers_sum(&conn, &date).unwrap_or(0)
+    } else {
+        0
+    };
+    let goal = settings.daily_goal_ml + modifiers_sum;
+
     let remaining = (goal - consumed).max(0);
     let percent = if goal > 0 { consumed as f64 / goal as f64 * 100.0 } else { 0.0 };
     let streak = db::get_streak(&conn, goal).map_err(|e| e.to_string())?;
     let (sent, confirmed) = db::get_today_reminders(&conn, &date).map_err(|e| e.to_string())?;
-    // Dynamic suggested: reflect what the user should drink right now to
-    // hit the meta exactly, distributing remaining ml across remaining slots.
     let suggested = current_suggested_amount(&conn);
     let next_reminder_at = compute_next_slot(&conn).map(|t| t.format("%Y-%m-%dT%H:%M:%S").to_string());
+
+    let modifiers = if pro_mode {
+        db::get_today_modifiers(&conn, &date).ok()
+    } else {
+        None
+    };
+
+    let daily_mission = if pro_mode {
+        db::get_daily_mission(&conn, &date).ok().flatten()
+    } else {
+        None
+    };
+
+    let get_setting = |key: &str| -> String {
+        conn.query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            [key],
+            |row| row.get::<_, String>(0)
+        ).unwrap_or_default()
+    };
+
+    let weather = if pro_mode && settings.weather_enabled {
+        let temp_str = get_setting("weather_current_temp");
+        let cond = get_setting("weather_current_condition");
+        let desc = get_setting("weather_current_description");
+        let icon = get_setting("weather_current_icon");
+        let updated = get_setting("weather_last_updated");
+        
+        if !temp_str.is_empty() {
+            if let Ok(temp) = temp_str.parse::<f64>() {
+                Some(WeatherInfo {
+                    temp,
+                    condition: cond,
+                    description: desc,
+                    icon,
+                    last_updated: updated,
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     Ok(TodayStats {
         date,
         goal_ml: goal,
@@ -508,6 +593,9 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
         reminders_confirmed: confirmed,
         suggested_per_reminder: suggested,
         next_reminder_at,
+        modifiers,
+        daily_mission,
+        weather,
     })
 }
 
@@ -519,9 +607,11 @@ fn log_drink(state: State<AppState>, app: AppHandle, amount_ml: i64) -> Result<T
     {
         let conn = state.conn.lock().unwrap();
         db::log_drink(&conn, &date, amount_ml, &logged_at).map_err(|e| e.to_string())?;
-        // Drink-window: if there's an upcoming slot within interval/2, mark it confirmed
-        // without firing a popup. Avoids double-reminding when user drinks proactively.
         try_consume_next_slot(&conn, &now.naive_local());
+        
+        use chrono::Timelike;
+        let hour = now.hour();
+        db::update_daily_mission_progress(&conn, &date, amount_ml, hour).ok();
     }
     {
         let mut count = state.snooze_count.lock().unwrap();
@@ -567,6 +657,10 @@ fn confirm_reminder(state: State<AppState>, app: AppHandle, reminder_id: i64, am
         let conn = state.conn.lock().unwrap();
         db::confirm_reminder(&conn, reminder_id).map_err(|e| e.to_string())?;
         db::log_drink(&conn, &date, amount_ml, &logged_at).map_err(|e| e.to_string())?;
+        
+        use chrono::Timelike;
+        let hour = now.hour();
+        db::update_daily_mission_progress(&conn, &date, amount_ml, hour).ok();
     }
     {
         let mut count = state.snooze_count.lock().unwrap();
@@ -1250,6 +1344,86 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
     Ok(())
 }
 
+#[tauri::command]
+fn export_history_csv(state: State<AppState>, filepath: String) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    let mut stmt = conn
+        .prepare("SELECT id, date, amount_ml, logged_at FROM daily_logs ORDER BY logged_at ASC")
+        .map_err(|e| e.to_string())?;
+
+    let mut csv_content = String::from("id,date,amount_ml,logged_at\n");
+    let rows = stmt
+        .query_map([], |row| {
+            let id: i64 = row.get(0)?;
+            let date: String = row.get(1)?;
+            let amount_ml: i64 = row.get(2)?;
+            let logged_at: String = row.get(3)?;
+            Ok((id, date, amount_ml, logged_at))
+        })
+        .map_err(|e| e.to_string())?;
+
+    for row in rows {
+        let (id, date, amount_ml, logged_at) = row.map_err(|e| e.to_string())?;
+        csv_content.push_str(&format!("{},{},{},{}\n", id, date, amount_ml, logged_at));
+    }
+
+    std::fs::write(&filepath, csv_content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[derive(serde::Deserialize)]
+struct WaterPayload {
+    ml: i64,
+}
+
+async fn add_water_handler(
+    axum::extract::State(app_handle): axum::extract::State<tauri::AppHandle>,
+    axum::Json(payload): axum::Json<WaterPayload>,
+) -> impl axum::response::IntoResponse {
+    use tauri::{Manager, Emitter};
+    use axum::response::IntoResponse;
+    
+    if payload.ml <= 0 {
+        return (axum::http::StatusCode::BAD_REQUEST, "Quantidade de água inválida").into_response();
+    }
+
+    let state = match app_handle.try_state::<AppState>() {
+        Some(s) => s,
+        None => return (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Estado do aplicativo não encontrado").into_response(),
+    };
+
+    let now = chrono::Local::now();
+    let date = now.format("%Y-%m-%d").to_string();
+    let logged_at = now.format("%Y-%m-%dT%H:%M:%S").to_string();
+
+    let result = {
+        let conn = state.conn.lock().unwrap();
+        db::log_drink(&conn, &date, payload.ml, &logged_at).map(|_| {
+            try_consume_next_slot(&conn, &now.naive_local());
+        })
+    };
+
+    match result {
+        Ok(_) => {
+            if let Ok(mut count) = state.snooze_count.lock() {
+                *count = 0;
+            }
+            if let Err(e) = check_achievements_internal(&state) {
+                eprintln!("Erro ao verificar conquistas: {:?}", e);
+            }
+
+            let _ = app_handle.emit("quick-drink", payload.ml);
+            let _ = app_handle.emit("schedule_changed", ());
+            let _ = app_handle.emit("refresh_data", ());
+
+            (axum::http::StatusCode::OK, "Log de água inserido com sucesso").into_response()
+        }
+        Err(e) => {
+            (axum::http::StatusCode::INTERNAL_SERVER_ERROR, format!("Erro ao gravar no banco: {}", e)).into_response()
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -1294,6 +1468,7 @@ pub fn run() {
             .build()
         )
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -1368,6 +1543,36 @@ pub fn run() {
             app.manage(queue.clone());
 
             let app_handle = app.handle().clone();
+
+            let app_handle_axum = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let router = axum::Router::new()
+                    .route("/api/water", axum::routing::post(add_water_handler))
+                    .with_state(app_handle_axum);
+
+                let listener = match tokio::net::TcpListener::bind("127.0.0.1:4000").await {
+                    Ok(l) => l,
+                    Err(e) => {
+                        eprintln!("Falha ao iniciar listener do Axum na porta 4000: {:?}", e);
+                        return;
+                    }
+                };
+
+                if let Err(e) = axum::serve(listener, router).await {
+                    eprintln!("Erro no servidor Axum: {:?}", e);
+                }
+            });
+
+            let app_handle_weather = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                run_weather_worker(app_handle_weather).await;
+            });
+
+            let app_handle_missions = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                run_missions_worker(app_handle_missions).await;
+            });
+
             tauri::async_runtime::spawn(async move {
                 let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
                 loop {
@@ -1606,7 +1811,201 @@ pub fn run() {
             dev_gate::compute_dev_password_hash,
             dev_gate::dev_gate_available,
             set_today_total,
+            export_history_csv,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+// --- OpenWeather API Integration Structs ---
+
+#[derive(Deserialize, Debug, Clone)]
+struct ForecastResponse {
+    list: Vec<ForecastItem>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct ForecastItem {
+    main: ForecastMain,
+    weather: Vec<ForecastWeather>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct ForecastMain {
+    temp: f64,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct ForecastWeather {
+    main: String,
+    description: String,
+    icon: String,
+}
+
+// --- Background Workers (Clima e Missões) ---
+
+async fn run_weather_worker(app: tauri::AppHandle) {
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(60 * 60));
+    loop {
+        interval.tick().await;
+        
+        let state = match app.try_state::<AppState>() {
+            Some(s) => s,
+            None => continue,
+        };
+        
+        let (enabled, city, key) = {
+            let conn = state.conn.lock().unwrap();
+            match db::get_settings(&conn) {
+                Ok(s) => (s.weather_enabled, s.weather_city, s.weather_api_key),
+                Err(_) => (false, String::new(), String::new()),
+            }
+        };
+        
+        if !enabled {
+            continue;
+        }
+        
+        let date = Local::now().format("%Y-%m-%d").to_string();
+        let mut heat_anomaly = false;
+        
+        if key.is_empty() && city.to_lowercase() == "sinop" {
+            heat_anomaly = true;
+            println!("[Weather Worker Mock] Simulando calor excessivo (36°C) para Sinop.");
+            let conn = state.conn.lock().unwrap();
+            let _ = db::set_setting(&conn, "weather_current_temp", "36.0");
+            let _ = db::set_setting(&conn, "weather_current_condition", "Clear");
+            let _ = db::set_setting(&conn, "weather_current_description", "calor excessivo");
+            let _ = db::set_setting(&conn, "weather_current_icon", "01d");
+            let _ = db::set_setting(&conn, "weather_last_updated", &Local::now().format("%H:%M").to_string());
+            let _ = app.emit("weather_updated", ());
+        } else if !key.is_empty() {
+            let url = format!(
+                "https://api.openweathermap.org/data/2.5/forecast?q={}&appid={}&units=metric&cnt=8",
+                city, key
+            );
+            match reqwest::get(&url).await {
+                Ok(res) => {
+                    if res.status().is_success() {
+                        if let Ok(forecast) = res.json::<ForecastResponse>().await {
+                            // Extrair o clima atual do primeiro item do forecast
+                            if let Some(current_item) = forecast.list.first() {
+                                let current_temp = current_item.main.temp;
+                                let current_cond = current_item.weather.first().map(|w| w.main.clone()).unwrap_or_else(|| "Clear".to_string());
+                                let current_desc = current_item.weather.first().map(|w| w.description.clone()).unwrap_or_else(|| "clear sky".to_string());
+                                let current_icon = current_item.weather.first().map(|w| w.icon.clone()).unwrap_or_else(|| "01d".to_string());
+                                
+                                let conn = state.conn.lock().unwrap();
+                                let _ = db::set_setting(&conn, "weather_current_temp", &current_temp.to_string());
+                                let _ = db::set_setting(&conn, "weather_current_condition", &current_cond);
+                                let _ = db::set_setting(&conn, "weather_current_description", &current_desc);
+                                let _ = db::set_setting(&conn, "weather_current_icon", &current_icon);
+                                let _ = db::set_setting(&conn, "weather_last_updated", &Local::now().format("%H:%M").to_string());
+                                let _ = app.emit("weather_updated", ());
+                            }
+
+                            for item in &forecast.list {
+                                if item.main.temp >= 35.0 {
+                                    heat_anomaly = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Erro ao chamar a API do OpenWeather: {:?}", e);
+                }
+            }
+        }
+        
+        if heat_anomaly {
+            let conn = state.conn.lock().unwrap();
+            if let Err(e) = db::add_daily_modifier(&conn, &date, 500, "Calor excessivo") {
+                eprintln!("Erro ao adicionar modificador de clima: {:?}", e);
+            } else {
+                let _ = app.emit("modifiers_updated", ());
+                let _ = app.emit("schedule_changed", ());
+            }
+        }
+    }
+}
+
+async fn run_missions_worker(app: tauri::AppHandle) {
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(15 * 60));
+    loop {
+        interval.tick().await;
+        
+        let state = match app.try_state::<AppState>() {
+            Some(s) => s,
+            None => continue,
+        };
+        
+        let conn = state.conn.lock().unwrap();
+        let date = Local::now().format("%Y-%m-%d").to_string();
+        
+        if let Ok(Some(_)) = db::get_daily_mission(&conn, &date) {
+            continue;
+        }
+        
+        let logs_result = conn.prepare(
+            "SELECT logged_at, amount_ml FROM daily_logs WHERE date >= date('now', '-3 days') AND date < date('now')"
+        );
+        
+        if let Ok(mut stmt) = logs_result {
+            let logs_rows = stmt.query_map([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+            });
+            
+            if let Ok(rows) = logs_rows {
+                let mut morning_totals = std::collections::HashMap::new();
+                let mut days_tracked = std::collections::HashSet::new();
+                
+                for r in rows {
+                    if let Ok((logged_at, amount_ml)) = r {
+                        if let Some(date_part) = logged_at.split('T').next() {
+                            let day = date_part.to_string();
+                            days_tracked.insert(day.clone());
+                            
+                            if let Some(time_part) = logged_at.split('T').nth(1) {
+                                if let Some(hour_str) = time_part.split(':').next() {
+                                    if let Ok(hour) = hour_str.parse::<u32>() {
+                                        if hour < 12 {
+                                            let current = morning_totals.entry(day).or_insert(0i64);
+                                            *current += amount_ml;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                let mut morning_failure = false;
+                if !days_tracked.is_empty() {
+                    let mut all_failed = true;
+                    for d in &days_tracked {
+                        let morning_consumed = morning_totals.get(d).cloned().unwrap_or(0);
+                        if morning_consumed >= 300 {
+                            all_failed = false;
+                            break;
+                        }
+                    }
+                    morning_failure = all_failed;
+                }
+                
+                let (description, target, m_type) = if morning_failure {
+                    ("Despertar Hidratado: Beba 500ml antes das 10h", 500, "morning_hydration")
+                } else {
+                    ("Meta de Foco: Beba 600ml de água para iniciar bem", 600, "regular_hydration")
+                };
+                
+                if let Err(e) = db::create_daily_mission(&conn, &date, description, target, m_type) {
+                    eprintln!("Erro ao criar missão diária: {:?}", e);
+                } else {
+                    let _ = app.emit("mission_updated", ());
+                }
+            }
+        }
+    }
 }

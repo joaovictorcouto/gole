@@ -124,7 +124,7 @@ export function ReminderHistoryModal({ open, onClose }: Props) {
                 setNewConfirmed(true);
                 setAdding(true);
               }}
-              className="w-full py-2 border border-dashed border-[#257ca3]/40 rounded-xl text-xs font-semibold text-[#257ca3] hover:bg-[#257ca3]/5 flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+              className="w-full py-2 border border-dashed border-[#257ca3]/40 rounded-xl text-xs font-semibold text-[#257ca3] hover:bg-[#257ca3]/5 flex items-center justify-center gap-1.5 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
               Adicionar Lembrete Personalizado
@@ -139,7 +139,7 @@ export function ReminderHistoryModal({ open, onClose }: Props) {
                     type="time"
                     value={newTime}
                     onChange={(e) => setNewTime(e.target.value)}
-                    className="w-full px-2 py-1.5 border rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#257ca3] bg-white text-[#191c1e]"
+                    className="w-full px-2 py-1.5 border rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 bg-white text-[#191c1e]"
                     style={{ borderColor: "#e0e3e6" }}
                   />
                 </div>
@@ -148,7 +148,7 @@ export function ReminderHistoryModal({ open, onClose }: Props) {
                   <button
                     type="button"
                     onClick={() => setNewConfirmed(!newConfirmed)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 ${
                       newConfirmed 
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
                         : "bg-orange-50 text-orange-700 border border-orange-200"
@@ -162,14 +162,14 @@ export function ReminderHistoryModal({ open, onClose }: Props) {
                 <button
                   type="button"
                   onClick={() => setAdding(false)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={handleAddReminder}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
                   style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
                 >
                   Salvar
@@ -190,8 +190,15 @@ export function ReminderHistoryModal({ open, onClose }: Props) {
             <div
               key={r.id}
               onClick={() => handleToggleStatus(r.id)}
+              onKeyDown={(e) => {
+                if (isDev && (e.key === " " || e.key === "Enter")) {
+                  e.preventDefault();
+                  handleToggleStatus(r.id);
+                }
+              }}
+              tabIndex={isDev ? 0 : -1}
               className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 ${
-                isDev ? "cursor-pointer hover:border-[#257ca3]/50 hover:bg-gray-50" : ""
+                isDev ? "cursor-pointer hover:border-[#257ca3]/50 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2" : ""
               }`}
               style={{ borderColor: "rgba(44,52,64,0.08)" }}
               title={isDev ? "Modo Dev: Clique para alternar status" : undefined}
@@ -220,7 +227,7 @@ export function ReminderHistoryModal({ open, onClose }: Props) {
                       e.stopPropagation();
                       setReminderToDelete(r.id);
                     }}
-                    className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 flex items-center justify-center cursor-pointer transition-colors"
+                    className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 flex items-center justify-center cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-[#d32f2f] focus:ring-offset-2"
                     title="Excluir lembrete"
                   >
                     <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -262,7 +269,7 @@ export function ReminderHistoryModal({ open, onClose }: Props) {
                 setReminderToDelete(null);
                 await handleDeleteReminder(id);
               }}
-              className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer"
+              className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d32f2f] focus:ring-offset-2"
               style={{
                 background: "linear-gradient(180deg, #d32f2f 0%, #c62828 100%)",
                 boxShadow: "0 8px 20px rgba(211,47,47,0.25)",
