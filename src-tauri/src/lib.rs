@@ -64,7 +64,7 @@ fn drink_label(amount: i64) -> String {
 /// Primary monitor work area (screen minus taskbars / docked appbars / palettes).
 /// Returns physical-pixel rect (left, top, right, bottom) or None on failure.
 #[cfg(windows)]
-fn get_work_area_rect(scale: f64) -> Option<(i32, i32, i32, i32)> {
+fn get_work_area_rect(_scale: f64) -> Option<(i32, i32, i32, i32)> {
     #[repr(C)]
     #[derive(Default, Copy, Clone)]
     struct RECT { left: i32, top: i32, right: i32, bottom: i32 }
@@ -87,10 +87,10 @@ fn get_work_area_rect(scale: f64) -> Option<(i32, i32, i32, i32)> {
         // SPI_GETWORKAREA returns logical (DIP) units relative to the primary monitor.
         // Convert to physical pixels.
         Some((
-            (rect.left   as f64 * scale) as i32,
-            (rect.top    as f64 * scale) as i32,
-            (rect.right  as f64 * scale) as i32,
-            (rect.bottom as f64 * scale) as i32,
+            rect.left,
+            rect.top,
+            rect.right,
+            rect.bottom,
         ))
     }
 }
@@ -1250,13 +1250,12 @@ fn trigger_queued_reminder(app: &AppHandle, reminder: Reminder) {
     }
 }
 
-#[tauri::command]
-fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) -> Result<(), String> {
+fn send_reminder_impl(app: &AppHandle, is_forced: bool) -> Result<(), String> {
+    let state: State<AppState> = app.state();
     let settings;
     let suggested;
     let consumed;
     let phrase;
-    let is_forced = force.unwrap_or(false);
     {
         let conn = state.conn.lock().unwrap();
         settings = db::get_settings(&conn).map_err(|e| e.to_string())?;
@@ -1335,15 +1334,50 @@ fn send_reminder(state: State<AppState>, app: AppHandle, force: Option<bool>) ->
         snooze_count,
     };
 
-    if is_fullscreen(&app) {
+    if is_fullscreen(app) {
         if let Some(queue) = app.try_state::<Arc<Mutex<Vec<Reminder>>>>() {
             let mut q = queue.lock().unwrap();
             q.push(reminder);
         }
     } else {
-        trigger_queued_reminder(&app, reminder);
+        trigger_queued_reminder(app, reminder);
     }
 
+    Ok(())
+}
+
+#[tauri::command]
+fn send_reminder(_state: State<AppState>, app: AppHandle, force: Option<bool>) -> Result<(), String> {
+    send_reminder_impl(&app, force.unwrap_or(false))
+}
+
+fn tick_reminder_scheduler(app: &AppHandle) -> Result<(), String> {
+    let state: State<AppState> = app.state();
+    
+    // Verifica se os lembretes estão pausados ou se o onboarding não está concluído
+    let (is_paused, onboarding_complete) = {
+        let conn = state.conn.lock().unwrap();
+        let settings = db::get_settings(&conn).map_err(|e| e.to_string())?;
+        (settings.reminders_paused, settings.onboarding_complete)
+    };
+    
+    if is_paused || !onboarding_complete {
+        return Ok(());
+    }
+
+    // Calcula se é hora do próximo lembrete
+    let next_slot = {
+        let conn = state.conn.lock().unwrap();
+        compute_next_slot(&conn)
+    };
+
+    if let Some(slot_time) = next_slot {
+        let now = Local::now().naive_local();
+        if now >= slot_time {
+            // É hora de disparar o lembrete!
+            send_reminder_impl(app, false)?;
+        }
+    }
     Ok(())
 }
 
@@ -1574,9 +1608,12 @@ pub fn run() {
             });
 
             tauri::async_runtime::spawn(async move {
-                let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
                 loop {
                     interval.tick().await;
+
+                    // Executa a checagem periódica do agendador de lembretes no backend
+                    let _ = tick_reminder_scheduler(&app_handle);
 
                     if let Some(q_state) = app_handle.try_state::<Arc<Mutex<Vec<Reminder>>>>() {
                         let has_items = {

@@ -62,7 +62,7 @@ function NavigationListener() {
 }
 
 export default function App() {
-  const { settings, loadSettings, todayStats, drinkTick } = useAppStore();
+  const { settings, loadSettings } = useAppStore();
   const [ready, setReady] = useState(false);
 
   // Block devtools / inspect access in production builds. Tauri release
@@ -90,7 +90,7 @@ export default function App() {
       window.removeEventListener("contextmenu", blockCtx, true);
     };
   }, []);
-  const reminderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [pauseToast, setPauseToast] = useState<"paused" | "resumed" | null>(null);
   const pauseToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevPausedRef = useRef<boolean | null>(null);
@@ -185,43 +185,7 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!settings) return;
-    const intervalMs = settings.reminder_interval_min * 60 * 1000;
 
-    const nextDelayMs = (): number => {
-      if (settings.next_override_at) {
-        const target = new Date(settings.next_override_at).getTime();
-        const delta = target - Date.now();
-        if (delta > 0) return delta;
-      }
-      if (todayStats?.next_reminder_at) {
-        const target = new Date(todayStats.next_reminder_at).getTime();
-        const delta = target - Date.now();
-        if (delta > 0) return delta;
-      }
-      return intervalMs;
-    };
-
-    const schedule = () => {
-      reminderTimerRef.current = setTimeout(async () => {
-        if (!settings.reminders_paused) {
-          await api.sendReminder(false);
-        }
-        // After firing, reload settings and stats so override/next schedule is cleared/updated
-        await Promise.all([
-          useAppStore.getState().loadSettings(),
-          useAppStore.getState().loadTodayStats(),
-        ]);
-        schedule();
-      }, nextDelayMs());
-    };
-
-    schedule();
-    return () => {
-      if (reminderTimerRef.current) clearTimeout(reminderTimerRef.current);
-    };
-  }, [settings?.reminder_interval_min, settings?.reminders_paused, settings?.next_override_at, todayStats?.next_reminder_at, drinkTick]);
 
   if (!ready) {
     return (
