@@ -12,5 +12,19 @@ fn main() {
     println!("cargo:rerun-if-changed=../.gole-dev-password-hash");
     println!("cargo:rustc-env=GOLE_DEV_PWD_HASH={}", hash);
 
+    // Configuração de Recursos para Windows
+    #[cfg(target_os = "windows")]
+    {
+        let mut windows = tauri_build::WindowsAttributes::new();
+        // Define o idioma do recurso compilado (.rc) para Português (Brasil)
+        windows = windows.append_rc_content("LANGUAGE 0x16, 0x01");
+
+        tauri_build::try_build(
+            tauri_build::Attributes::new().windows_attributes(windows)
+        ).expect("failed to run tauri-build");
+    }
+
+    // Configuração para outros sistemas operacionais
+    #[cfg(not(target_os = "windows"))]
     tauri_build::build()
 }

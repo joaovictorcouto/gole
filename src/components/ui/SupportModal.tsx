@@ -7,7 +7,7 @@ interface Props {
   onClose: () => void;
 }
 
-const SUPPORT_EMAIL = "jv.santos.couto@gmail.com";
+const SUPPORT_EMAIL = "suportegole@gmail.com";
 
 export function SupportModal({ open, onClose }: Props) {
   const [copied, setCopied] = useState(false);

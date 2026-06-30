@@ -223,25 +223,7 @@ export function Dashboard() {
   const [drinkToDeleteBasic, setDrinkToDeleteBasic] = useState<number | null>(null);
   const [successRate, setSuccessRate] = useState<number | null>(null);
 
-  const [climateToastVisible, setClimateToastVisible] = useState(false);
-  const [climateModifierExtra, setClimateModifierExtra] = useState(0);
-  const [climateModifierReason, setClimateModifierReason] = useState("");
 
-  useEffect(() => {
-    if (settings?.app_mode === "pro" && todayStats?.modifiers && todayStats.modifiers.length > 0) {
-      const heatMod = todayStats.modifiers.find((m) => m.motivo === "Calor excessivo");
-      if (heatMod) {
-        const todayStr = new Date().toDateString();
-        const notifiedDate = localStorage.getItem("gole_climate_notified_date");
-        if (notifiedDate !== todayStr) {
-          setClimateModifierExtra(heatMod.ml_extra);
-          setClimateModifierReason(heatMod.motivo);
-          setClimateToastVisible(true);
-          localStorage.setItem("gole_climate_notified_date", todayStr);
-        }
-      }
-    }
-  }, [todayStats?.modifiers, settings?.app_mode]);
 
   const loadSuccessRate = () => {
     api.getDailySuccessRate()
@@ -1030,59 +1012,6 @@ export function Dashboard() {
         }
         onClose={() => setSetTotalOpen(false)}
       />
-
-      {/* Toast de Clima Dinâmico (Calor Excessivo) */}
-      {climateToastVisible && (
-        <div
-          className="fixed bottom-6 right-6 z-50 max-w-sm w-full animate-slide-in-right"
-          style={{ filter: "drop-shadow(0 12px 40px rgba(0,0,0,0.08))" }}
-        >
-          <div
-            className="relative rounded-2xl overflow-hidden animate-fade-in"
-            style={{
-              background: "rgba(255,255,255,0.85)",
-              backdropFilter: "blur(30px)",
-              WebkitBackdropFilter: "blur(30px)",
-              border: "1px solid rgba(255,255,255,0.9)",
-              borderLeft: "4px solid #ea580c",
-            }}
-          >
-            <div className="p-5">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: "#ffedd5" }}>
-                  <span className="material-symbols-outlined" style={{ color: "#ea580c", fontVariationSettings: "'FILL' 1" }}>
-                    thermostat
-                  </span>
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-semibold mb-0.5 text-[#191c1e]">
-                    🌡️ Meta Ajustada: {climateModifierReason}
-                  </p>
-                  <p className="text-xs text-[#5B6572] leading-relaxed">
-                    Detectamos uma anomalia de temperatura na sua região. Sua meta diária foi acrescida de <strong className="text-[#ea580c]">+{climateModifierExtra}ml</strong> hoje para manter seu corpo devidamente hidratado!
-                  </p>
-                </div>
-                <button
-                  onClick={() => setClimateToastVisible(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
-                </button>
-              </div>
-              <div className="flex justify-end mt-3">
-                <button
-                  onClick={() => setClimateToastVisible(false)}
-                  className="px-4 py-1.5 rounded-lg text-white text-xs font-semibold transition-all duration-200 hover:shadow-md cursor-pointer"
-                  style={{ background: "linear-gradient(180deg, #ea580c 0%, #c2410c 100%)" }}
-                >
-                  Entendido
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
