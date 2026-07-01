@@ -15,9 +15,8 @@
         "title": "Gole",
         "width": 1280,
         "height": 800,
-        "resizable": true,
-        "maximizable": true,
-        "maximized": true,
+        "resizable": false,
+        "maximizable": false,
         "decorations": true,
         "center": true,
         "visible": false
