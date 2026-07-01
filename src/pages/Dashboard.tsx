@@ -399,103 +399,234 @@ export function Dashboard() {
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-10 pb-6">
-          <div className="flex flex-col gap-4 justify-center items-center my-0 max-w-2xl mx-auto w-full pt-2">
-            {/* Card Principal de Ação */}
-            <div className="glass-surface rounded-[2rem] p-6 w-full flex flex-col items-center relative overflow-hidden"
-              style={{
-                boxShadow: "0 10px 40px rgba(0,0,0,0.03)",
-              }}>
-              
-              <div className="absolute top-0 left-0 w-full h-1"
-                style={{ background: "linear-gradient(90deg, #257ca3, #0f76a0)" }} />
+          {dashboardStyle === "dashboard1" ? (
+            <div className="flex flex-col gap-4 justify-center items-center my-0 max-w-2xl mx-auto w-full pt-2">
+              {/* Card Principal de Ação */}
+              <div className="glass-surface rounded-[2rem] p-6 w-full flex flex-col items-center relative overflow-hidden"
+                style={{
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.03)",
+                }}>
+                
+                <div className="absolute top-0 left-0 w-full h-1"
+                  style={{ background: "linear-gradient(90deg, var(--color-primary, #257ca3), var(--color-secondary, #0f76a0))" }} />
 
-              {/* Seção do Botão Principal (Destaque) */}
-              <div className="flex flex-col items-center mb-6 relative">
-                {/* Próximo Alerta Pill */}
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4 shrink-0">
-                  <span className="material-symbols-outlined text-[14px] text-primary">alarm</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                    Próximo Alerta: {nextTime !== "--:--" ? nextTime : "Agendando..."}
-                  </span>
+                {/* Seção do Botão Principal (Destaque) */}
+                <div className="flex flex-col items-center mb-6 relative">
+                  {/* Próximo Alerta Pill */}
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4 shrink-0">
+                    <span className="material-symbols-outlined text-[14px] text-primary">alarm</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                      Próximo Alerta: {nextTime !== "--:--" ? nextTime : "Agendando..."}
+                    </span>
+                  </div>
+
+                  {/* Botão de Registro Rápido: Grande, Minimalista e Evidenciado */}
+                  <button
+                    onClick={() => handleLogDrink(drinkAmount)}
+                    className="w-32 h-32 rounded-full flex flex-col items-center justify-center gap-1 text-white font-medium transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-4"
+                    style={{
+                      background: "linear-gradient(135deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
+                      boxShadow: "0 12px 30px rgba(37,124,163,0.3)"
+                    }}
+                  >
+                    <div className="absolute inset-0 rounded-full border border-white/20 scale-90 group-hover:scale-95 transition-transform duration-300" />
+                    <span className="material-symbols-outlined text-[40px]">water_drop</span>
+                    <span className="text-[11px] font-bold tracking-widest uppercase">Bebi Água</span>
+                  </button>
+
+                  {/* Undo Action */}
+                  <div className="h-8 mt-2 flex items-center justify-center shrink-0">
+                    {undoVisible && (
+                      <UndoChip
+                        key={lastAmount + "-dash"}
+                        amount={lastAmount}
+                        onUndo={handleUndo}
+                        onExpire={() => setUndoVisible(false)}
+                      />
+                    )}
+                  </div>
                 </div>
 
-                {/* Botão de Registro Rápido: Grande, Minimalista e Evidenciado */}
-                <button
-                  onClick={() => handleLogDrink(drinkAmount)}
-                  className="w-32 h-32 rounded-full flex flex-col items-center justify-center gap-1 text-white font-medium transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-4"
-                  style={{
-                    background: "linear-gradient(135deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
-                    boxShadow: "0 12px 30px rgba(37,124,163,0.3)"
-                  }}
-                >
-                  <div className="absolute inset-0 rounded-full border border-white/20 scale-90 group-hover:scale-95 transition-transform duration-300" />
-                  <span className="material-symbols-outlined text-[40px]">water_drop</span>
-                  <span className="text-[11px] font-bold tracking-widest uppercase">Bebi Água</span>
-                </button>
+                {/* Grid de Duas Colunas (Lembretes e Lista de Goles) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full border-t pt-5"
+                     style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.06))" }}>
+                  
+                  {/* Coluna Esquerda: Lembretes */}
+                  <div 
+                    onClick={() => setReminderHistoryOpen(true)}
+                    onKeyDown={(e) => {
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        setReminderHistoryOpen(true);
+                      }
+                    }}
+                    tabIndex={0}
+                    className="bg-surface-container-low border border-border-subtle rounded-2xl p-4 flex items-center justify-between w-full gap-4 text-left cursor-pointer hover:bg-surface-container-high transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    title="Clique para ver o histórico de lembretes"
+                  >
+                    <div className="flex flex-col items-start">
+                      <div className="flex items-center gap-1 mb-2">
+                        <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>notifications</span>
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-text-main">Lembretes</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>
+                          Confirmados: <strong className="text-primary">{confirmedReminders}</strong>
+                        </span>
+                        <span className="text-xs font-medium" style={{ color: "var(--color-text-main, #5B6572)" }}>
+                          Ignorados: <strong style={{ color: "var(--color-on-surface)" }}>{ignoredReminders}</strong>
+                        </span>
+                      </div>
+                    </div>
+                    {successRate !== null && (
+                      <div className="flex flex-col items-center shrink-0">
+                        <SuccessRateCircle rate={successRate} />
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-text-main mt-1">Sucesso</span>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Undo Action */}
-                <div className="h-8 mt-2 flex items-center justify-center shrink-0">
-                  {undoVisible && (
-                    <UndoChip
-                      key={lastAmount + "-dash"}
-                      amount={lastAmount}
-                      onUndo={handleUndo}
-                      onExpire={() => setUndoVisible(false)}
-                    />
-                  )}
+                  {/* Coluna Direita: Água Bebida */}
+                  <div className="bg-surface-container-low border border-border-subtle rounded-2xl p-4 flex flex-col items-stretch text-left self-stretch max-h-[160px]">
+                    <div className="flex items-center gap-1.5 mb-2 shrink-0 justify-between">
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>local_drink</span>
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-text-main">Água Bebida ({timesDrunk})</span>
+                      </div>
+                      {todayDrinks.length > 0 && (
+                        <button
+                          onClick={() => setHistoryOpen(true)}
+                          className="text-[10px] font-semibold text-primary hover:underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded-sm"
+                          title="Ver todo o histórico"
+                        >
+                          Ver todos
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="overflow-y-auto flex-1 pr-1 flex flex-col gap-1.5 custom-scrollbar min-h-[50px]">
+                      {todayDrinks.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full min-h-[50px] text-center text-[10px] text-outline font-medium leading-normal">
+                          Nenhum registro hoje.<br/>Beba água para começar!
+                        </div>
+                      ) : (
+                        todayDrinks.slice(0, 2).map((drink) => (
+                          <div key={drink.id} 
+                               className="flex items-center justify-between p-1.5 rounded-xl bg-surface-container-lowest border border-border-subtle hover:bg-surface-container-high transition-all duration-200">
+                            <div className="flex items-center gap-2 pl-1">
+                              <span className="material-symbols-outlined text-primary text-[14px]">water_drop</span>
+                              <span className="text-xs font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>{drink.amount_ml}ml</span>
+                              <span className="text-[10px] text-outline">{formatTime(drink.logged_at)}</span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDrinkToDeleteBasic(drink.id);
+                              }}
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-error hover:text-error-container hover:bg-error-container/20 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-2"
+                              title="Remover este registro"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">delete</span>
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
-              {/* Grid de Duas Colunas (Lembretes e Lista de Goles) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full border-t pt-5"
-                   style={{ borderColor: "rgba(44,52,64,0.06)" }}>
-                
-                {/* Coluna Esquerda: Lembretes */}
-                <div 
-                  onClick={() => setReminderHistoryOpen(true)}
-                  onKeyDown={(e) => {
-                    if (e.key === " " || e.key === "Enter") {
-                      e.preventDefault();
-                      setReminderHistoryOpen(true);
-                    }
-                  }}
-                  tabIndex={0}
-                  className="bg-gray-50/50 border border-gray-100/50 rounded-2xl p-4 flex items-center justify-between w-full gap-4 text-left cursor-pointer hover:bg-gray-100/50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-                  title="Clique para ver o histórico de lembretes"
-                >
-                  <div className="flex flex-col items-start">
-                    <div className="flex items-center gap-1 mb-2">
-                      <span className="material-symbols-outlined text-[18px] text-[#257ca3]" style={{ fontVariationSettings: "'FILL' 1" }}>notifications</span>
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-[#5B6572]">Lembretes</span>
+              {/* Tips horizontal Card */}
+              <div className="glass-surface rounded-2xl p-5 transition-all duration-300 w-full"
+                style={{
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
+                }}>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined" style={{ color: "var(--color-primary, #257ca3)", fontVariationSettings: "'FILL' 1" }}>
+                        lightbulb
+                      </span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-text-main">
+                        Dica de Hidratação
+                      </span>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-[#191c1e]">
-                        Confirmados: <strong className="text-[#257ca3]">{confirmedReminders}</strong>
+                    <button
+                      onClick={() => setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-colors cursor-pointer text-text-main focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                      title="Nova dica"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">refresh</span>
+                    </button>
+                  </div>
+                  <p className="text-sm leading-relaxed font-medium" style={{ color: "var(--color-on-surface, #191c1e)" }}>
+                    "{HYDRATION_TIPS[tipIndex]}"
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Layout 2 Básico: Compacto / Lateral */
+            <div className="grid grid-cols-12 gap-4 w-full mt-1 flex-grow min-h-0">
+              {/* Coluna Esquerda (Botão Bebi Água e Lembretes Recentes) */}
+              <div className="col-span-12 md:col-span-7 flex flex-col gap-4 self-stretch min-h-0 justify-between">
+                
+                {/* Panel Horizontal do Botão e Próximo Alerta */}
+                <div className="glass-surface rounded-[2rem] p-5 w-full flex items-center justify-between relative overflow-hidden"
+                  style={{
+                    boxShadow: "0 8px 30px rgba(0,0,0,0.04)",
+                  }}>
+                  <div className="absolute top-0 left-0 w-full h-1"
+                    style={{ background: "linear-gradient(90deg, var(--color-primary, #257ca3), var(--color-secondary, #0f76a0))" }} />
+                  
+                  <div className="flex flex-col items-start gap-3">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 shrink-0">
+                      <span className="material-symbols-outlined text-[14px] text-primary">alarm</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                        {nextTime !== "--:--" ? nextTime : "Agendando..."}
                       </span>
-                      <span className="text-xs text-[#5B6572] font-medium">
-                        Ignorados: <strong>{ignoredReminders}</strong>
-                      </span>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold" style={{ color: "var(--color-on-surface, #191c1e)" }}>Próximo Alerta</p>
+                      <p className="text-[10px] text-outline mt-0.5">Fique atento para beber água!</p>
                     </div>
                   </div>
-                  {successRate !== null && (
-                    <div className="flex flex-col items-center shrink-0">
-                      <SuccessRateCircle rate={successRate} />
-                      <span className="text-[8px] font-bold uppercase tracking-wider text-[#5B6572] mt-1">Sucesso</span>
-                    </div>
-                  )}
+
+                  <div className="flex flex-col items-center gap-1.5">
+                    <button
+                      onClick={() => handleLogDrink(drinkAmount)}
+                      className="w-24 h-24 rounded-full flex flex-col items-center justify-center gap-0.5 text-white font-medium transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      style={{
+                        background: "linear-gradient(135deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
+                        boxShadow: "0 8px 20px rgba(37,124,163,0.25)"
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[28px]">water_drop</span>
+                      <span className="text-[9px] font-bold tracking-wider uppercase">Bebi Água</span>
+                    </button>
+                    {undoVisible && (
+                      <UndoChip
+                        key={lastAmount + "-dash"}
+                        amount={lastAmount}
+                        onUndo={handleUndo}
+                        onExpire={() => setUndoVisible(false)}
+                      />
+                    )}
+                  </div>
                 </div>
 
-                {/* Coluna Direita: Água Bebida */}
-                <div className="bg-gray-50/50 border border-gray-100/50 rounded-2xl p-4 flex flex-col items-stretch text-left self-stretch max-h-[160px]">
-                  <div className="flex items-center gap-1.5 mb-2 shrink-0 justify-between">
+                {/* Card de Registros (Água Bebida) maior verticalmente */}
+                <div className="glass-surface rounded-2xl p-5 flex flex-col items-stretch text-left flex-grow min-h-[160px]">
+                  <div className="flex items-center gap-1.5 mb-3 shrink-0 justify-between">
                     <div className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[18px] text-[#257ca3]" style={{ fontVariationSettings: "'FILL' 1" }}>local_drink</span>
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-[#5B6572]">Água Bebida ({timesDrunk})</span>
+                      <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>local_drink</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-text-main">Histórico de Hoje ({timesDrunk})</span>
                     </div>
                     {todayDrinks.length > 0 && (
                       <button
                         onClick={() => setHistoryOpen(true)}
-                        className="text-[10px] font-semibold text-[#257ca3] hover:underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 rounded-sm"
+                        className="text-[10px] font-semibold text-primary hover:underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded-sm"
                         title="Ver todo o histórico"
                       >
                         Ver todos
@@ -503,26 +634,26 @@ export function Dashboard() {
                     )}
                   </div>
                   
-                  <div className="overflow-y-auto flex-1 pr-1 flex flex-col gap-1.5 custom-scrollbar min-h-[50px]">
+                  <div className="overflow-y-auto flex-1 pr-1 flex flex-col gap-1.5 custom-scrollbar min-h-[80px]">
                     {todayDrinks.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full min-h-[50px] text-center text-[10px] text-[#71787c] font-medium leading-normal">
-                        Nenhum registro hoje.<br/>Beba água para começar!
+                      <div className="flex flex-col items-center justify-center h-full min-h-[80px] text-center text-xs text-outline font-medium leading-relaxed">
+                        Nenhum gole registrado hoje.<br/>Clique em "Bebi Água" acima para registrar!
                       </div>
                     ) : (
-                      todayDrinks.slice(0, 2).map((drink) => (
+                      todayDrinks.map((drink) => (
                         <div key={drink.id} 
-                             className="flex items-center justify-between p-1.5 rounded-xl bg-white border border-gray-150/30 hover:bg-gray-100/30 transition-all duration-200">
+                             className="flex items-center justify-between p-2 rounded-xl bg-surface-container-lowest border border-border-subtle hover:bg-surface-container-high transition-all duration-200">
                           <div className="flex items-center gap-2 pl-1">
-                            <span className="material-symbols-outlined text-[#257ca3] text-[14px]">water_drop</span>
-                            <span className="text-xs font-semibold text-[#191c1e]">{drink.amount_ml}ml</span>
-                            <span className="text-[10px] text-[#71787c]">{formatTime(drink.logged_at)}</span>
+                            <span className="material-symbols-outlined text-primary text-[14px]">water_drop</span>
+                            <span className="text-xs font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>{drink.amount_ml}ml</span>
+                            <span className="text-[10px] text-outline">{formatTime(drink.logged_at)}</span>
                           </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setDrinkToDeleteBasic(drink.id);
                             }}
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d32f2f] focus:ring-offset-2"
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-error hover:text-error-container hover:bg-error-container/20 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-2"
                             title="Remover este registro"
                           >
                             <span className="material-symbols-outlined text-[14px]">delete</span>
@@ -532,78 +663,110 @@ export function Dashboard() {
                     )}
                   </div>
                 </div>
-
               </div>
-            </div>
 
-            {drinkToDeleteBasic !== null && (
-              <Modal
-                open={true}
-                onClose={() => setDrinkToDeleteBasic(null)}
-                title="Confirmar Exclusão"
-                description="Deseja realmente excluir este registro de água? Isso atualizará seu total diário."
-                icon="warning"
-                iconColor="#bf360c"
-                iconBg="#ffe0b2"
-                maxWidth={380}
-              >
-                <div className="flex gap-3 mt-2">
-                  <ModalSecondaryButton onClick={() => setDrinkToDeleteBasic(null)}>
-                    Cancelar
-                  </ModalSecondaryButton>
-                  <button
-                    onClick={async () => {
-                      const id = drinkToDeleteBasic;
-                      setDrinkToDeleteBasic(null);
-                      await handleDeleteDrink(id);
-                    }}
-                    className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d32f2f] focus:ring-offset-2"
-                    style={{
-                      background: "linear-gradient(180deg, #d32f2f 0%, #c62828 100%)",
-                      boxShadow: "0 8px 20px rgba(211,47,47,0.25)",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </Modal>
-            )}
-
-
-
-            {/* Tips horizontal Card */}
-            <div className="glass-surface rounded-2xl p-5 transition-all duration-300 w-full"
-              style={{
-                boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
-              }}>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined" style={{ color: "var(--color-primary, #257ca3)", fontVariationSettings: "'FILL' 1" }}>
-                      lightbulb
-                    </span>
-                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-main, #5B6572)]">
-                      Dica de Hidratação
-                    </span>
+              {/* Coluna Direita (Lembretes/Sucesso e Dicas) */}
+              <div className="col-span-12 md:col-span-5 flex flex-col gap-4 self-stretch min-h-0 justify-between">
+                {/* Lembretes */}
+                <div 
+                  onClick={() => setReminderHistoryOpen(true)}
+                  className="glass-surface rounded-2xl p-5 flex flex-col items-stretch text-left cursor-pointer hover:border-primary transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  title="Clique para ver o histórico de lembretes"
+                >
+                  <div className="flex items-center gap-1 mb-3 shrink-0">
+                    <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>notifications</span>
+                    <span className="text-[10px] font-bold tracking-widest uppercase text-text-main">Resumo de Alertas</span>
                   </div>
-                  <button
-                    onClick={() => setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length)}
-                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-colors cursor-pointer text-[var(--color-text-main, #5B6572)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
-                    title="Nova dica"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">refresh</span>
-                  </button>
+                  
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col gap-2">
+                      <div className="text-xs font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>
+                        Confirmados: <strong className="text-primary text-sm">{confirmedReminders}</strong>
+                      </div>
+                      <div className="text-xs font-medium" style={{ color: "var(--color-text-main, #5B6572)" }}>
+                        Ignorados: <strong className="text-sm" style={{ color: "var(--color-on-surface)" }}>{ignoredReminders}</strong>
+                      </div>
+                    </div>
+                    {successRate !== null && (
+                      <div className="flex flex-col items-center shrink-0">
+                        <SuccessRateCircle rate={successRate} />
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-text-main mt-1">Taxa de Sucesso</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm leading-relaxed text-[#191c1e] font-medium">
-                  "{HYDRATION_TIPS[tipIndex]}"
-                </p>
+
+                {/* Dica de Hidratação */}
+                <div className="glass-surface rounded-2xl p-5 transition-all duration-300 flex-1 flex flex-col justify-between"
+                  style={{
+                    boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
+                  }}>
+                  <div className="flex flex-col gap-3 h-full justify-between">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined" style={{ color: "var(--color-primary, #257ca3)", fontVariationSettings: "'FILL' 1" }}>
+                          lightbulb
+                        </span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-text-main">
+                          Dica de Hidratação
+                        </span>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length);
+                        }}
+                        className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-colors cursor-pointer text-text-main focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                        title="Nova dica"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">refresh</span>
+                      </button>
+                    </div>
+                    <p className="text-sm leading-relaxed font-medium flex-grow flex items-center italic" style={{ color: "var(--color-on-surface, #191c1e)" }}>
+                      "{HYDRATION_TIPS[tipIndex]}"
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Modais compartilhados */}
+        {drinkToDeleteBasic !== null && (
+          <Modal
+            open={true}
+            onClose={() => setDrinkToDeleteBasic(null)}
+            title="Confirmar Exclusão"
+            description="Deseja realmente excluir este registro de água? Isso atualizará seu total diário."
+            icon="warning"
+            iconColor="var(--color-error, #bf360c)"
+            iconBg="var(--color-error-container, #ffe0b2)"
+            maxWidth={380}
+          >
+            <div className="flex gap-3 mt-2">
+              <ModalSecondaryButton onClick={() => setDrinkToDeleteBasic(null)}>
+                Cancelar
+              </ModalSecondaryButton>
+              <button
+                onClick={async () => {
+                  const id = drinkToDeleteBasic;
+                  setDrinkToDeleteBasic(null);
+                  await handleDeleteDrink(id);
+                }}
+                className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-2"
+                style={{
+                  backgroundColor: "var(--color-error, #d32f2f)",
+                  boxShadow: "0 8px 20px var(--color-error-container, rgba(211,47,47,0.25))",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                Excluir
+              </button>
+            </div>
+          </Modal>
+        )}
+
         <DrinkHistoryModal
           open={historyOpen}
           onClose={() => setHistoryOpen(false)}
