@@ -42,12 +42,6 @@ export const CHANGELOG: ChangelogVersion[] = [
         description:
           "Alternar o tema ou o visual do seu Dashboard ficou mais prático: adicionamos botões minimalistas rápidos diretamente no rodapé da barra lateral esquerda.",
       },
-      {
-        icon: "bolt",
-        title: "Desempenho Otimizado e Clima Removido",
-        description:
-          "Simplificamos o core do aplicativo removendo as requisições a APIs externas de clima, mantendo o app 100% focado em privacidade, totalmente offline e muito mais veloz.",
-      },
     ],
   },
   {

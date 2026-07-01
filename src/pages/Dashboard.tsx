@@ -180,7 +180,7 @@ function SuccessRateCircle({ rate }: { rate: number }) {
     <div className="flex flex-col items-center justify-center relative w-12 h-12 shrink-0">
       <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
         <circle
-          stroke="rgba(0,0,0,0.06)"
+          stroke="var(--color-outline-variant, rgba(0,0,0,0.06))"
           fill="transparent"
           strokeWidth={stroke}
           r={normalizedRadius}
@@ -200,7 +200,7 @@ function SuccessRateCircle({ rate }: { rate: number }) {
           strokeLinecap="round"
         />
       </svg>
-      <span className="absolute text-[10px] font-bold text-[#191c1e]">{Math.round(pct)}%</span>
+      <span className="absolute text-[10px] font-bold" style={{ color: "var(--color-on-surface, #191c1e)" }}>{Math.round(pct)}%</span>
     </div>
   );
 }

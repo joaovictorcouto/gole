@@ -15,13 +15,13 @@ export function CircularProgress({ percent, size = 64, strokeWidth = 2.5, classN
       <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
         <path
           fill="none"
-          stroke="#e6e8eb"
+          stroke="var(--color-outline-variant, #e6e8eb)"
           strokeWidth={strokeWidth}
           d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
         />
         <path
           fill="none"
-          stroke="#257ca3"
+          stroke="var(--color-primary, #257ca3)"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           style={{ strokeDasharray: `${dashArray}, 100`, transition: "stroke-dasharray 600ms cubic-bezier(0.16, 1, 0.3, 1)" }}
@@ -29,7 +29,7 @@ export function CircularProgress({ percent, size = 64, strokeWidth = 2.5, classN
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[10px] font-bold" style={{ color: "#257ca3" }}>
+        <span className="text-[10px] font-bold" style={{ color: "var(--color-primary, #257ca3)" }}>
           <AnimatedNumber value={percent} decimals={0} />%
         </span>
       </div>
