@@ -211,6 +211,7 @@ export function Dashboard() {
   const { todayStats, loadTodayStats, logDrink, settings, loadSettings, weekStats, loadWeekStats, drinkTick } = useAppStore();
   const [undoVisible, setUndoVisible] = useState(false);
   const [lastAmount, setLastAmount] = useState(0);
+  const [dashboardStyle, setDashboardStyle] = useState<"dashboard1" | "dashboard2">("dashboard1");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [reminderHistoryOpen, setReminderHistoryOpen] = useState(false);
   const [setTotalOpen, setSetTotalOpen] = useState(false);
@@ -240,6 +241,12 @@ export function Dashboard() {
     loadSettings();
     loadWeekStats();
     loadSuccessRate();
+    const style = localStorage.getItem("dashboard_style");
+    if (style === "dashboard2") {
+      setDashboardStyle("dashboard2");
+    } else {
+      setDashboardStyle("dashboard1");
+    }
     const interval = setInterval(() => {
       loadTodayStats();
       loadWeekStats();
@@ -650,7 +657,9 @@ export function Dashboard() {
             </div>
           </div>
         )}
-        <div className="grid grid-cols-12 gap-3 mt-1 flex-grow min-h-0">
+        {dashboardStyle === "dashboard1" ? (
+          <>
+            <div className="grid grid-cols-12 gap-3 mt-1 flex-grow min-h-0">
           {/* Left Side: Cards grid (7 columns) */}
           <div className="col-span-12 lg:col-span-7 flex flex-col justify-between self-stretch gap-3 min-h-0">
           
@@ -1025,6 +1034,229 @@ export function Dashboard() {
           )}
         </div>
       </div>
+          </>
+        ) : (
+          <>
+            {/* DASHBOARD 2 (Novo / Compacto / Criativo) */}
+            <div className="grid grid-cols-12 gap-3 mt-1 flex-grow min-h-0">
+              
+              {/* Left Side (8 columns) */}
+              <div className="col-span-12 lg:col-span-8 flex flex-col gap-3 self-stretch min-h-0 justify-between">
+                
+                {/* Row 1: Consumido, Restante & Botão de Registro Rápido */}
+                <div className="bg-white rounded-xl p-4 border border-white/20 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-1 min-h-0"
+                  style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+                  
+                  <div className="flex-1 grid grid-cols-2 gap-4 divide-x divide-gray-100 h-full items-center">
+                    {/* Consumido */}
+                    <div className="flex flex-col justify-center h-full group">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Consumido</p>
+                        <button
+                          onClick={() => setHistoryOpen(true)}
+                          className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer focus:outline-none"
+                          title="Editar registros de hoje"
+                        >
+                          <span className="material-symbols-outlined text-[13px]">edit</span>
+                        </button>
+                        <button
+                          onClick={() => setSetTotalOpen(true)}
+                          className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer focus:outline-none"
+                          title="Definir total bebido hoje"
+                        >
+                          <span className="material-symbols-outlined text-[13px]">tune</span>
+                        </button>
+                      </div>
+                      <h3 className="text-3xl font-semibold text-gray-800 tracking-tight leading-none cursor-pointer focus:outline-none"
+                        onClick={() => setHistoryOpen(true)}
+                        title="Editar registros de hoje">
+                        <AnimatedNumber value={consumed} />
+                        <span className="text-lg font-medium text-gray-400 ml-1">ml</span>
+                      </h3>
+                      {settings?.app_mode === "pro" && stats?.goal_expediente_ml && (
+                        <p className="text-[10px] text-gray-400 mt-1.5 leading-none">
+                          da meta de <strong>{stats.goal_expediente_ml}ml</strong> no PC
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Restante */}
+                    <div className="pl-4 flex flex-col justify-center h-full">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Restante</p>
+                      <h3 className="text-3xl font-semibold text-gray-800 tracking-tight leading-none">
+                        <AnimatedNumber value={remaining} />
+                        <span className="text-lg font-medium text-gray-400 ml-1">ml</span>
+                      </h3>
+                      {stats?.next_reminder_at && (
+                        <div className="flex items-center gap-1 mt-1.5 text-[10px] text-[#257ca3] font-bold uppercase tracking-wider leading-none">
+                          <span className="material-symbols-outlined text-[13px]">alarm</span>
+                          <span>Lembrete: {formatTime(stats.next_reminder_at)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Botão de Registro Rápido (Tamanho Normal) */}
+                  <div className="flex items-center justify-center shrink-0">
+                    <button
+                      onClick={() => handleLogDrink(drinkAmount)}
+                      className="px-5 py-3 bg-gradient-to-r from-[#257ca3] to-[#0f76a0] hover:from-[#1e6687] hover:to-[#0c5d7f] text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3]"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">water_drop</span>
+                      <span>
+                        {settings?.recipiente_configurado ? (
+                          `Beber ${
+                            settings.recipiente_capacidade_ml < 350
+                              ? "Copo"
+                              : settings.recipiente_capacidade_ml >= 1800
+                              ? "Garrafão"
+                              : "Garrafa"
+                          } (+${drinkAmount}ml)`
+                        ) : (
+                          `Beber +${drinkAmount}ml`
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Row 2: Missão Diária & Streak (Lado a Lado) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-[1.2] min-h-0">
+                  {/* Missão Diária */}
+                  {settings?.app_mode === "pro" && todayStats?.daily_mission ? (
+                    <div className="bg-white rounded-xl p-4 border border-white/20 flex flex-col justify-between h-full"
+                      style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
+                        style={{ backgroundColor: todayStats.daily_mission.is_completed ? "#dcfce7" : "rgba(201,230,255,0.5)" }}>
+                        <span className="material-symbols-outlined transition-all duration-300 text-[14px]"
+                          style={{
+                            color: todayStats.daily_mission.is_completed ? "#16a34a" : "#006492",
+                            fontVariationSettings: todayStats.daily_mission.is_completed ? "'FILL' 1" : "'FILL' 0"
+                          }}>
+                          {todayStats.daily_mission.is_completed ? "task_alt" : "target"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Missão Diária</p>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs font-semibold leading-tight text-gray-700 text-left line-clamp-2">
+                        {todayStats.daily_mission.description}
+                      </p>
+                      <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                        <div className="bg-green-500 h-1.5 rounded-full"
+                          style={{ width: `${Math.min(100, (todayStats.daily_mission.current_ml / todayStats.daily_mission.target_ml) * 100)}%` }} />
+                      </div>
+                      <div className="flex justify-between items-center text-[8px] font-bold text-gray-400 uppercase tracking-wider mt-1">
+                        <span>{todayStats.daily_mission.current_ml}ml / {todayStats.daily_mission.target_ml}ml</span>
+                        {todayStats.daily_mission.is_completed ? (
+                          <span className="text-green-600 font-bold">Completada!</span>
+                        ) : (
+                          <span>Em progresso</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between h-full"
+                    style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: "rgba(236,238,241,0.5)" }}>
+                        <span className="material-symbols-outlined text-[14px] text-gray-400">target</span>
+                      </div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Missão Diária</p>
+                    </div>
+                    <p className="text-[10px] text-gray-400 leading-tight italic">
+                      Nenhuma missão ativa. Complete no Modo Pro.
+                    </p>
+                  </div>
+                )}
+
+                {/* Streak */}
+                <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between h-full"
+                  style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: "rgba(201,230,255,0.5)" }}>
+                      <span className="material-symbols-outlined text-[14px]" style={{ color: "#006492" }}>local_fire_department</span>
+                    </div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Streak Atual</p>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <h3 className="text-3xl font-semibold text-gray-800 tracking-tight leading-none">
+                      <AnimatedNumber value={streak} decimals={0} />
+                    </h3>
+                    <p className="text-[10px] text-gray-500">dias seguidos</p>
+                  </div>
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">
+                    {weekTimeline.map((d, i) => (
+                      <div key={i} className="w-4.5 h-4.5 rounded-full flex items-center justify-center text-[8px] font-bold transition-colors"
+                        style={{
+                          backgroundColor: d.reached ? "#257ca3" : "#e0e3e6",
+                          color: d.reached ? "#ffffff" : "#71787c",
+                          outline: d.isToday ? "2px solid #257ca3" : "none",
+                          outlineOffset: "1px",
+                        }}
+                        title={d.isToday ? "Hoje" : undefined}>
+                        {d.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Dica de Hidratação Integrada */}
+              <div className="bg-[#f0f9ff]/50 border border-[#bae6fd]/50 rounded-xl p-3 flex gap-3 items-center shrink-0"
+                style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.01)" }}>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
+                  <span className="material-symbols-outlined text-[15px] text-[#257ca3]">lightbulb</span>
+                </div>
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-left">
+                  <span className="text-xs font-bold text-[#0369a1] shrink-0">Dica de Hidratação:</span>
+                  <p className="text-xs text-[#0369a1] leading-tight line-clamp-1">
+                    {customTipText || HYDRATION_TIPS[tipIndex]}
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Side (4 columns): Copo de Água */}
+            <div className="col-span-12 lg:col-span-4 bg-white rounded-xl border border-white/20 p-4 flex flex-col justify-between items-center self-stretch"
+              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+              <div className="text-center w-full">
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Nível de Hidratação</p>
+                <h3 className="text-2xl font-semibold mt-1 text-[#257ca3]">{Math.round(percent)}%</h3>
+              </div>
+              <div className="flex-grow flex items-center justify-center relative min-h-[220px] w-full py-2">
+                <WaterGlass percent={percent} className="min-h-[220px]" />
+              </div>
+              
+              {undoVisible ? (
+                <div className="w-full shrink-0 animate-fade-in mt-2">
+                  <UndoChip
+                    key={lastAmount + "-dash"}
+                    amount={lastAmount}
+                    onUndo={handleUndo}
+                    onExpire={() => setUndoVisible(false)}
+                  />
+                </div>
+              ) : (
+                <div className="w-full shrink-0 flex items-center justify-center mt-2 border-t pt-2" style={{ borderColor: "rgba(44,52,64,0.06)" }}>
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wide">
+                    <span className="material-symbols-outlined text-[13px]">info</span>
+                    <span>Registro atualiza a gota em tempo real</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </>
+      )}
 
       </div>{/* end scrollable */}
 

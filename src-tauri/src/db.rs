@@ -360,15 +360,64 @@ pub fn update_drink(conn: &Connection, id: i64, amount_ml: i64, logged_at: &str)
 }
 
 pub fn delete_drink(conn: &Connection, id: i64) -> Result<()> {
+    // 1. Obter o logged_at do drink antes de deletar
+    let logged_at: Option<String> = conn.query_row(
+        "SELECT logged_at FROM daily_logs WHERE id = ?1",
+        params![id],
+        |row| row.get(0)
+    ).ok();
+
+    // 2. Deletar de daily_logs
     conn.execute("DELETE FROM daily_logs WHERE id = ?1", params![id])?;
+
+    // 3. Deletar o reminder associado que caiu na mesma janela de tolerância do drink
+    if let Some(logged_dt_str) = logged_at {
+        if let Ok(logged_dt) = chrono::NaiveDateTime::parse_from_str(&logged_dt_str, "%Y-%m-%dT%H:%M:%S") {
+            let settings = get_settings(conn).ok();
+            let interval = settings.map(|s| if s.reminder_interval_min > 0 { s.reminder_interval_min } else { 30 }).unwrap_or(30);
+            let half_interval = chrono::Duration::minutes(interval / 2);
+            
+            let window_start = (logged_dt - half_interval).format("%Y-%m-%dT%H:%M:%S").to_string();
+            let window_end = (logged_dt + half_interval).format("%Y-%m-%dT%H:%M:%S").to_string();
+
+            let _ = conn.execute(
+                "DELETE FROM reminders WHERE sent_at >= ?1 AND sent_at <= ?2",
+                params![window_start, window_end],
+            );
+        }
+    }
+
     Ok(())
 }
 
 pub fn delete_last_drink(conn: &Connection, date: &str) -> Result<()> {
-    conn.execute(
-        "DELETE FROM daily_logs WHERE id = (SELECT id FROM daily_logs WHERE date = ?1 ORDER BY logged_at DESC LIMIT 1)",
+    // 1. Obter o id e logged_at do último drink cadastrado hoje
+    let last_drink: Option<(i64, String)> = conn.query_row(
+        "SELECT id, logged_at FROM daily_logs WHERE date = ?1 ORDER BY logged_at DESC LIMIT 1",
         params![date],
-    )?;
+        |row| Ok((row.get(0)?, row.get(1)?))
+    ).ok();
+
+    if let Some((id, logged_dt_str)) = last_drink {
+        // 2. Deletar de daily_logs
+        conn.execute("DELETE FROM daily_logs WHERE id = ?1", params![id])?;
+
+        // 3. Deletar o reminder associado que caiu na mesma janela de tolerância do drink
+        if let Ok(logged_dt) = chrono::NaiveDateTime::parse_from_str(&logged_dt_str, "%Y-%m-%dT%H:%M:%S") {
+            let settings = get_settings(conn).ok();
+            let interval = settings.map(|s| if s.reminder_interval_min > 0 { s.reminder_interval_min } else { 30 }).unwrap_or(30);
+            let half_interval = chrono::Duration::minutes(interval / 2);
+            
+            let window_start = (logged_dt - half_interval).format("%Y-%m-%dT%H:%M:%S").to_string();
+            let window_end = (logged_dt + half_interval).format("%Y-%m-%dT%H:%M:%S").to_string();
+
+            let _ = conn.execute(
+                "DELETE FROM reminders WHERE sent_at >= ?1 AND sent_at <= ?2",
+                params![window_start, window_end],
+            );
+        }
+    }
+
     Ok(())
 }
 

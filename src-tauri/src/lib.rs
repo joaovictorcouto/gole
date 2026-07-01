@@ -488,10 +488,14 @@ fn log_drink_at(state: State<AppState>, app: AppHandle, amount_ml: i64, logged_a
 
 #[tauri::command]
 fn update_drink(state: State<AppState>, app: AppHandle, id: i64, amount_ml: i64, logged_at: String) -> Result<TodayStats, String> {
+    let date = logged_at.get(0..10).unwrap_or("").to_string();
     {
         let conn = state.conn.lock().unwrap();
         db::update_drink(&conn, id, amount_ml, &logged_at).map_err(|e| e.to_string())?;
+        let _ = recalculate_daily_mission_progress(&conn, &date);
+        let _ = revert_achievements_if_needed(&conn);
     }
+    check_achievements_internal(&state)?;
     emit_schedule_changed(&app);
     get_today_stats(state)
 }
@@ -541,6 +545,8 @@ fn set_today_total(state: State<AppState>, app: AppHandle, target_ml: i64) -> Re
         } else if diff < 0 {
             return Err("Total informado é menor que o já consumido. Edite pelo histórico.".into());
         }
+        let _ = recalculate_daily_mission_progress(&conn, &date);
+        let _ = revert_achievements_if_needed(&conn);
     }
     check_achievements_internal(&state)?;
     emit_schedule_changed(&app);

@@ -820,6 +820,54 @@ export function Settings() {
               </Section>
             )}
 
+            {/* Aparência e Layout */}
+            <Section title="Aparência e Layout" icon="dashboard">
+              <div className="py-2">
+                <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Estilo do Dashboard</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      localStorage.setItem("dashboard_style", "dashboard1");
+                      window.location.reload();
+                    }}
+                    className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 text-left"
+                    style={{
+                      backgroundColor: localStorage.getItem("dashboard_style") !== "dashboard2" ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
+                      color: localStorage.getItem("dashboard_style") !== "dashboard2" ? "#257ca3" : "#5B6572",
+                      fontWeight: localStorage.getItem("dashboard_style") !== "dashboard2" ? "600" : "400",
+                      border: `1px solid ${localStorage.getItem("dashboard_style") !== "dashboard2" ? "#257ca3" : "transparent"}`,
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[24px]">dashboard</span>
+                    <div className="text-center">
+                      <p className="text-sm font-semibold">Dashboard 1</p>
+                      <p className="text-[10px] opacity-80 mt-0.5">Layout Simétrico (Original)</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      localStorage.setItem("dashboard_style", "dashboard2");
+                      window.location.reload();
+                    }}
+                    className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 text-left"
+                    style={{
+                      backgroundColor: localStorage.getItem("dashboard_style") === "dashboard2" ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
+                      color: localStorage.getItem("dashboard_style") === "dashboard2" ? "#257ca3" : "#5B6572",
+                      fontWeight: localStorage.getItem("dashboard_style") === "dashboard2" ? "600" : "400",
+                      border: `1px solid ${localStorage.getItem("dashboard_style") === "dashboard2" ? "#257ca3" : "transparent"}`,
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[24px]">view_quilt</span>
+                    <div className="text-center">
+                      <p className="text-sm font-semibold">Dashboard 2</p>
+                      <p className="text-[10px] opacity-80 mt-0.5">Layout Compacto (Novo)</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </Section>
+
             {/* 4. Som e Alertas */}
             <Section title="Som e Alertas" icon="volume_up">
               {/* Som */}
