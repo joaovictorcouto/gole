@@ -14,6 +14,43 @@ export interface ChangelogVersion {
 // Latest first. Add new versions to the top.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: "1.0.5",
+    date: "2026-07-01",
+    highlight: "Conheça o Modo Escuro nativo, o Modo Básico e as novas aparências do Dashboard!",
+    entries: [
+      {
+        icon: "dark_mode",
+        title: "Modo Escuro Nativo Premium",
+        description:
+          "Agora o GOLE oferece um tema escuro completo e refinado para o seu desktop, reduzindo a fadiga visual. Você pode escolher entre os temas Claro, Escuro ou sincronizar automaticamente com as preferências do seu Sistema.",
+      },
+      {
+        icon: "spa",
+        title: "Modo Básico Simplificado",
+        description:
+          "Para quem busca simplicidade absoluta, o app agora conta com o Modo Básico: removemos metas, volumes calculados e estatísticas complexas, focando exclusivamente em lembretes de intervalo simples.",
+      },
+      {
+        icon: "dashboard",
+        title: "Dois Estilos de Dashboard (Aparências 1 e 2)",
+        description:
+          "Escolha entre duas opções de visual: o Dashboard 1 (foco clássico no botão central gigante) e o Dashboard 2 (design moderno e compacto integrado com histórico em colunas, ideal para multitarefas).",
+      },
+      {
+        icon: "shortcut",
+        title: "Atalhos Rápidos no Menu Lateral",
+        description:
+          "Alternar o tema ou o visual do seu Dashboard ficou mais prático: adicionamos botões minimalistas rápidos diretamente no rodapé da barra lateral esquerda.",
+      },
+      {
+        icon: "bolt",
+        title: "Desempenho Otimizado e Clima Removido",
+        description:
+          "Simplificamos o core do aplicativo removendo as requisições a APIs externas de clima, mantendo o app 100% focado em privacidade, totalmente offline e muito mais veloz.",
+      },
+    ],
+  },
+  {
     version: "1.0.0",
     date: "2026-06-04",
     highlight: "Bem-vindo ao GOLE — guia rápido das funcionalidades.",

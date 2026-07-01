@@ -28,21 +28,21 @@ export function ChangelogModal({ open, onClose }: Props) {
         {latest && (
           <section>
             <div className="flex items-baseline justify-between mb-3">
-              <h2 className="text-sm font-bold" style={{ color: "#191c1e" }}>
+              <h2 className="text-sm font-bold" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                 Versão {latest.version}
               </h2>
-              <span className="text-[10px] uppercase font-semibold text-gray-400">
+              <span className="text-[10px] uppercase font-semibold text-outline">
                 {formatDate(latest.date)}
               </span>
             </div>
             <div className="space-y-3">
               {latest.entries.map((e, i) => (
                 <div key={i}>
-                  <h3 className="text-sm font-bold text-[#257ca3] mb-1 flex items-center gap-1.5">
+                  <h3 className="text-sm font-bold text-primary mb-1 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[16px]">{e.icon}</span>
                     {e.title}
                   </h3>
-                  <p className="text-xs text-[#5B6572] leading-relaxed">{e.description}</p>
+                  <p className="text-xs text-text-main leading-relaxed" style={{ color: "var(--color-text-main, #5B6572)" }}>{e.description}</p>
                 </div>
               ))}
             </div>
@@ -58,21 +58,21 @@ export function ChangelogModal({ open, onClose }: Props) {
               {older.map((v) => (
                 <div key={v.version}>
                   <div className="flex items-baseline justify-between mb-2">
-                    <h3 className="text-sm font-bold" style={{ color: "#191c1e" }}>
+                    <h3 className="text-sm font-bold" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                       Versão {v.version}
                     </h3>
-                    <span className="text-[10px] uppercase font-semibold text-gray-400">
+                    <span className="text-[10px] uppercase font-semibold text-outline">
                       {formatDate(v.date)}
                     </span>
                   </div>
                   <div className="space-y-2">
                     {v.entries.map((e, i) => (
                       <div key={i}>
-                        <h4 className="text-xs font-semibold text-[#257ca3] mb-0.5 flex items-center gap-1.5">
+                        <h4 className="text-xs font-semibold text-primary mb-0.5 flex items-center gap-1.5">
                           <span className="material-symbols-outlined text-[14px]">{e.icon}</span>
                           {e.title}
                         </h4>
-                        <p className="text-[11px] text-[#5B6572] leading-relaxed">{e.description}</p>
+                        <p className="text-[11px] text-text-main leading-relaxed" style={{ color: "var(--color-text-main, #5B6572)" }}>{e.description}</p>
                       </div>
                     ))}
                   </div>
@@ -85,8 +85,8 @@ export function ChangelogModal({ open, onClose }: Props) {
 
       <button
         onClick={onClose}
-        className="w-full mt-4 py-2 rounded-xl text-white font-medium text-xs cursor-pointer"
-        style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
+        className="w-full mt-4 py-2.5 rounded-xl text-white font-semibold text-xs cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        style={{ background: "linear-gradient(180deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)" }}
       >
         Entendido!
       </button>
