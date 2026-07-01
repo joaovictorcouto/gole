@@ -55,7 +55,7 @@ Abaixo estão os dados reais do aplicativo na ordem exata solicitada pela tela d
 *   **Package display name:** `Gole`
 *   **Publisher name:** `CN=4A6B1E51-6F58-4705-9CE5-BA9C66ADDD83`
 *   **Publisher display name:** `CoutoApps`
-*   **Version:** `1` . `0` . `4` . `0`
+*   **Version:** `1` . `0` . `5` . `0`
 *   **Package Description:** `Um rastreador de hidratação moderno, minimalista e 100% focado em privacidade.`
 
 *(Nota: O executável de entrada interno do pacote é o `gole.exe`)*
@@ -129,7 +129,7 @@ GoleMSIX/
   <Identity
     Name="CoutoApps.Gole"
     Publisher="CN=4A6B1E51-6F58-4705-9CE5-BA9C66ADDD83"
-    Version="1.0.4.0" 
+    Version="1.0.5.0" 
     ProcessorArchitecture="x64" />
 
   <Properties>
@@ -174,8 +174,8 @@ GoleMSIX/
 ### Comandos de Empacotamento e Assinatura (PowerShell):
 ```powershell
 # 1. Empacotar a pasta em um arquivo .msix
-makeappx pack /d "C:\Caminho\Para\GoleMSIX" /p "C:\Caminho\Para\CoutoApps.Gole_1.0.4.0_X64.msix"
+makeappx pack /d "C:\Caminho\Para\GoleMSIX" /p "C:\Caminho\Para\CoutoApps.Gole_1.0.5.0_X64.msix"
 
 # 2. Assinar o pacote com o seu certificado digital da loja
-signtool sign /fd SHA256 /a /f "C:\Caminho\Para\seu_certificado.pfx" /p "sua_senha" "C:\Caminho\Para\CoutoApps.Gole_1.0.4.0_X64.msix"
+signtool sign /fd SHA256 /a /f "C:\Caminho\Para\seu_certificado.pfx" /p "sua_senha" "C:\Caminho\Para\CoutoApps.Gole_1.0.5.0_X64.msix"
 ```

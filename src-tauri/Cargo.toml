@@ -1,6 +1,6 @@
 [package]
 name = "gole"
-version = "1.0.4"
+version = "1.0.5"
 description = "Gole - Hydration Tracker"
 authors = ["CoutoApps"]
 edition = "2021"

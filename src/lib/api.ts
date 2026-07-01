@@ -79,6 +79,8 @@ export interface TodayStats {
   modifiers?: DailyModifier[];
   daily_mission?: DailyMission | null;
   weather?: WeatherInfo | null;
+  goal_expediente_ml?: number;
+  goal_fora_expediente_ml?: number;
 }
 
 export interface WeatherInfo {

@@ -700,6 +700,18 @@ export function Dashboard() {
                       {getContainerGoalText()}
                     </span>
                   )}
+                  {settings?.app_mode === "pro" && stats?.goal_expediente_ml !== undefined && stats?.goal_fora_expediente_ml !== undefined && (
+                    <div className="mt-2 pt-1.5 border-t border-gray-100 flex flex-col gap-0.5 text-[9px] text-gray-400 font-medium leading-none">
+                      <div className="flex justify-between gap-3">
+                        <span>💻 No PC:</span>
+                        <strong className="text-gray-600">{formatMl(stats.goal_expediente_ml)}</strong>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <span>🏡 Fora do PC:</span>
+                        <strong className="text-gray-600">{formatMl(stats.goal_fora_expediente_ml)}</strong>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

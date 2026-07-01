@@ -123,37 +123,106 @@ fn position_reminder_window(window: &tauri::WebviewWindow) {
     }
 }
 
-/// Computes the next scheduled fire datetime for today.
-/// Honors override; otherwise rolls last_fire+interval forward until > now.
-/// Returns None if no slot fits within today's work window.
-fn compute_next_slot(conn: &Connection) -> Option<chrono::NaiveDateTime> {
-    let settings = db::get_settings(conn).ok()?;
-    let now = Local::now().naive_local();
-    let date = Local::now().format("%Y-%m-%d").to_string();
-    let rows = db::list_today_reminders(conn, &date).ok()?;
+fn get_work_hours(start_hour_str: &str, end_hour_str: &str) -> f64 {
+    let start_time = chrono::NaiveTime::parse_from_str(start_hour_str, "%H:%M")
+        .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(8, 0, 0).unwrap());
+    let end_time = chrono::NaiveTime::parse_from_str(end_hour_str, "%H:%M")
+        .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
+        
+    if end_time >= start_time {
+        let duration = end_time - start_time;
+        duration.num_minutes() as f64 / 60.0
+    } else {
+        let duration = (chrono::NaiveTime::from_hms_opt(23, 59, 59).unwrap() - start_time) 
+                     + (end_time - chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap()) 
+                     + chrono::Duration::seconds(1);
+        duration.num_minutes() as f64 / 60.0
+    }
+}
 
+fn generate_grid(settings: &db::Settings) -> Vec<chrono::NaiveDateTime> {
+    let mut grid = Vec::new();
+    
     let start_time = chrono::NaiveTime::parse_from_str(&settings.work_start_hour, "%H:%M")
         .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(8, 0, 0).unwrap());
     let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
         .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
+        
+    let today = Local::now().date_naive();
+    let mut current_time = start_time;
+    
+    let interval = if settings.reminder_interval_min > 0 {
+        settings.reminder_interval_min
+    } else {
+        30
+    };
+    
+    while current_time <= end_time {
+        grid.push(today.and_time(current_time));
+        
+        let (new_time, overflow_days) = current_time.overflowing_add_signed(chrono::Duration::minutes(interval));
+        if overflow_days != 0 || new_time < current_time {
+            break;
+        }
+        current_time = new_time;
+    }
+    
+    grid
+}
 
+/// Computes the next scheduled fire datetime for today using a fixed grid schedule.
+fn compute_next_slot(conn: &Connection) -> Option<chrono::NaiveDateTime> {
+    let settings = db::get_settings(conn).ok()?;
+    let now = Local::now().naive_local();
+    
+    // Snooze/override has absolute priority if scheduled in the future
     if !settings.next_override_at.is_empty() {
         if let Ok(dt) = chrono::NaiveDateTime::parse_from_str(&settings.next_override_at, "%Y-%m-%dT%H:%M:%S") {
-            if dt > now { return Some(dt); }
+            if dt > now {
+                return Some(dt);
+            }
         }
     }
 
-    let today_start = Local::now().date_naive().and_time(start_time);
-    let today_end = Local::now().date_naive().and_time(end_time);
-    let last_fire = rows.last().and_then(|r| chrono::NaiveDateTime::parse_from_str(&r.sent_at, "%Y-%m-%dT%H:%M:%S").ok());
-    let mut t = match last_fire {
-        Some(t) => t + chrono::Duration::minutes(settings.reminder_interval_min),
-        None => if now < today_start { today_start } else { now + chrono::Duration::minutes(settings.reminder_interval_min) },
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    let rows = db::list_today_reminders(conn, &date).unwrap_or_default();
+    let grid = generate_grid(&settings);
+    
+    let interval = if settings.reminder_interval_min > 0 {
+        settings.reminder_interval_min
+    } else {
+        30
     };
-    while t <= now {
-        t = t + chrono::Duration::minutes(settings.reminder_interval_min);
+    
+    let half_interval = chrono::Duration::minutes(interval / 2);
+
+    for slot in grid {
+        let window_start = slot - half_interval;
+        let window_end = slot + half_interval;
+        
+        // Check if this slot was already satisfied (sent or logged within its window)
+        let is_satisfied = rows.iter().any(|r| {
+            if let Ok(sent_dt) = chrono::NaiveDateTime::parse_from_str(&r.sent_at, "%Y-%m-%dT%H:%M:%S") {
+                sent_dt >= window_start && sent_dt <= window_end
+            } else {
+                false
+            }
+        });
+        
+        if is_satisfied {
+            continue;
+        }
+        
+        // If it was not satisfied, and we haven't passed its active window, it's the next slot.
+        // If now > window_end, this slot is considered missed/expired.
+        if now > window_end {
+            continue;
+        }
+        
+        return Some(slot);
     }
-    if t <= today_end { Some(t) } else { None }
+    
+    None
 }
 
 fn emit_schedule_changed(app: &AppHandle) {
@@ -168,6 +237,14 @@ fn current_suggested_amount(conn: &Connection) -> i64 {
     if settings.next_override_ml > 0 {
         return settings.next_override_ml;
     }
+    
+    // Se estiver no Modo Completo (pro), a meta do expediente é proporcional ao tempo acordado (16h)
+    let target_goal = if settings.app_mode == "pro" {
+        let horas = get_work_hours(&settings.work_start_hour, &settings.work_end_hour);
+        ((settings.daily_goal_ml as f64 * (horas / 16.0)) as i64).max(0)
+    } else {
+        settings.daily_goal_ml
+    };
     
     let date = Local::now().format("%Y-%m-%d").to_string();
     let rows = db::list_today_reminders(conn, &date).unwrap_or_default();
@@ -198,7 +275,7 @@ fn current_suggested_amount(conn: &Connection) -> i64 {
     let next_exists = next_at <= today_end;
     if !next_exists {
         return hydration::suggested_per_reminder(
-            settings.daily_goal_ml,
+            target_goal,
             settings.reminder_interval_min,
             &settings.work_start_hour,
             &settings.work_end_hour,
@@ -216,7 +293,7 @@ fn current_suggested_amount(conn: &Connection) -> i64 {
     let total_remaining_slots = 1 + upcoming_count;
     
     let dyn_sips = hydration::sips_per_remaining_slot(
-        settings.daily_goal_ml, consumed, settings.sip_ml, total_remaining_slots,
+        target_goal, consumed, settings.sip_ml, total_remaining_slots,
     );
     let dyn_ml = dyn_sips * settings.sip_ml.max(1);
     
@@ -224,7 +301,7 @@ fn current_suggested_amount(conn: &Connection) -> i64 {
         dyn_ml
     } else {
         hydration::suggested_per_reminder(
-            settings.daily_goal_ml,
+            target_goal,
             settings.reminder_interval_min,
             &settings.work_start_hour,
             &settings.work_end_hour,
@@ -277,6 +354,8 @@ struct TodayStats {
     modifiers: Option<Vec<db::DailyModifier>>,
     daily_mission: Option<db::DailyMission>,
     weather: Option<WeatherInfo>,
+    goal_expediente_ml: Option<i64>,
+    goal_fora_expediente_ml: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -585,6 +664,15 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
         None
     };
 
+    let (goal_expediente_ml, goal_fora_expediente_ml) = if settings.app_mode == "pro" {
+        let horas = get_work_hours(&settings.work_start_hour, &settings.work_end_hour);
+        let goal_exp = ((settings.daily_goal_ml as f64 * (horas / 16.0)) as i64).max(0);
+        let goal_fora = (settings.daily_goal_ml - goal_exp).max(0);
+        (Some(goal_exp), Some(goal_fora))
+    } else {
+        (None, None)
+    };
+
     Ok(TodayStats {
         date,
         goal_ml: goal,
@@ -599,6 +687,8 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
         modifiers,
         daily_mission,
         weather,
+        goal_expediente_ml,
+        goal_fora_expediente_ml,
     })
 }
 
@@ -637,9 +727,16 @@ fn try_consume_next_slot(conn: &Connection, now: &chrono::NaiveDateTime) {
         Some(t) => t,
         None => return,
     };
-    let window_min = (settings.reminder_interval_min / 2).max(5);
-    let delta = (next - *now).num_minutes();
-    if delta >= 0 && delta <= window_min {
+    let interval = if settings.reminder_interval_min > 0 {
+        settings.reminder_interval_min
+    } else {
+        30
+    };
+    let half_interval = chrono::Duration::minutes(interval / 2);
+    let window_start = next - half_interval;
+    let window_end = next + half_interval;
+    
+    if *now >= window_start && *now <= window_end {
         let stamp = next.format("%Y-%m-%dT%H:%M:%S").to_string();
         let _ = conn.execute(
             "INSERT INTO reminders (sent_at, confirmed, snoozed) VALUES (?1, 1, 0)",

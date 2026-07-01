@@ -2127,7 +2127,7 @@ dependencies = [
 
 [[package]]
 name = "gole"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "active-win-pos-rs",
  "aes-gcm",
