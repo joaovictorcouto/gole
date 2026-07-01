@@ -304,10 +304,11 @@ export function Dashboard() {
   };
 
   const stats = todayStats;
-  const percent = stats?.percent ?? 0;
+  const isPro = settings?.app_mode === "pro";
+  const goal = isPro && stats?.goal_expediente_ml ? stats.goal_expediente_ml : (stats?.goal_ml ?? 2500);
   const consumed = stats?.consumed_ml ?? 0;
-  const goal = stats?.goal_ml ?? 2500;
-  const remaining = stats?.remaining_ml ?? goal;
+  const percent = goal > 0 ? (consumed / goal) * 100 : 0;
+  const remaining = Math.max(0, goal - consumed);
   const streak = stats?.streak ?? 0;
   const suggested = stats?.suggested_per_reminder ?? 250;
 
@@ -637,6 +638,18 @@ export function Dashboard() {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-10 pb-6">
+        {settings?.app_mode === "pro" && stats?.goal_expediente_ml !== undefined && (
+          <div className="mt-2 mb-3 bg-[#e0f2fe]/40 border border-[#bfe8ff]/80 rounded-xl p-3 flex gap-3 items-center">
+            <span className="material-symbols-outlined text-[24px] text-[#006492] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
+              info
+            </span>
+            <div className="text-xs text-[#004f74] leading-relaxed">
+              Sua meta diária ideal é de <strong className="text-[#003853]">{formatMl(stats.goal_ml)}</strong>. 
+              Como o aplicativo monitora o seu expediente no computador, os lembretes ativos ajudarão você a consumir a meta proporcional de <strong className="text-[#003853]">{formatMl(stats.goal_expediente_ml)}</strong> enquanto estiver ativo no PC. 
+              O restante de <strong className="text-[#003853]">{formatMl(stats.goal_fora_expediente_ml ?? 0)}</strong> deve ser consumido naturalmente fora do horário do computador.
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-12 gap-4 mt-2">
           {/* Left Side: Cards grid (7 columns) */}
           <div className="col-span-12 lg:col-span-7 flex flex-col justify-between self-stretch">
@@ -737,10 +750,18 @@ export function Dashboard() {
                   <span className="material-symbols-outlined text-[18px] text-[#0284c7]">schedule</span>
                 </div>
               </div>
-              <div className="mt-4 pt-1">
-                <p className="text-xs text-gray-500 leading-tight">
-                  faltam para você atingir seu objetivo diário de hidratação.
-                </p>
+              <div className="mt-4 pt-1.5 border-t border-gray-100 flex justify-between items-center gap-3 text-xs text-gray-500 leading-tight">
+                <span>
+                  {settings?.app_mode === "pro" 
+                    ? "faltam para atingir a meta no PC." 
+                    : "faltam para atingir o objetivo diário."}
+                </span>
+                {stats?.next_reminder_at && (
+                  <div className="flex items-center gap-1 bg-[#257ca3]/10 border border-[#257ca3]/20 px-2 py-0.5 rounded-full text-[9px] font-bold text-[#257ca3] uppercase tracking-wider shrink-0" title="Próximo lembrete">
+                    <span className="material-symbols-outlined text-[12px]">alarm</span>
+                    {formatTime(stats.next_reminder_at)}
+                  </div>
+                )}
               </div>
             </div>
           </div>
