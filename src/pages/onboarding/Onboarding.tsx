@@ -169,17 +169,45 @@ function OnboardingShell({
   totalSteps?: number;
   children: React.ReactNode;
 }) {
+  const { theme, setTheme } = useAppStore();
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  const isDark = theme === "dark";
+
   return (
     <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: "var(--color-background, #f7f9fc)" }}>
       {/* Ambient blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[60px] z-0 pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(191,232,255,0.6) 0%, transparent 70%)" }} />
+        style={{
+          background: isDark
+            ? "radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)"
+            : "radial-gradient(circle, rgba(191,232,255,0.6) 0%, transparent 70%)"
+        }} />
       <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[80px] z-0 pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(198,231,255,0.5) 0%, transparent 70%)" }} />
+        style={{
+          background: isDark
+            ? "radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%)"
+            : "radial-gradient(circle, rgba(198,231,255,0.5) 0%, transparent 70%)"
+        }} />
 
       {/* Unified header */}
       <header className="absolute top-0 left-0 w-full px-8 py-6 flex justify-between items-center z-20">
-        <div className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-primary, #257ca3)" }}>Gole</div>
+        <div className="flex items-center gap-3">
+          <div className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-primary, #257ca3)" }}>Gole</div>
+          
+          {/* Botão de Tema no Cabeçalho do Onboarding */}
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-container-high/50 transition-colors cursor-pointer text-text-main hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            title="Alternar Tema (Claro / Escuro)"
+          >
+            <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isDark ? "'FILL' 1" : "'FILL' 0" }}>
+              {isDark ? "light_mode" : "dark_mode"}
+            </span>
+          </button>
+        </div>
         {step > 0 ? (
           <div className="flex gap-2 items-center">
             {Array.from({ length: totalSteps }).map((_, i) => (
@@ -222,8 +250,8 @@ function StepFooter({
       {showBack && (
         <button
           onClick={onBack}
-          className="w-14 h-14 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-white"
-          style={{ color: "#5B6572", border: "1px solid #e0e3e6", backgroundColor: "rgba(255,255,255,0.5)" }}
+          className="w-14 h-14 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-surface-container-high border border-border-subtle focus:outline-none focus:ring-2 focus:ring-primary"
+          style={{ color: "var(--color-text-main, #5B6572)", backgroundColor: "var(--color-surface-container-low, rgba(255,255,255,0.5))" }}
         >
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
@@ -233,8 +261,8 @@ function StepFooter({
         disabled={nextDisabled}
         className="flex-1 h-14 px-12 rounded-full text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5"
         style={{
-          background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
-          boxShadow: nextDisabled ? "none" : "0 8px 20px rgba(59,99,119,0.25)",
+          background: "linear-gradient(180deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
+          boxShadow: nextDisabled ? "none" : "0 8px 20px var(--color-primary-fixed-dim, rgba(59,99,119,0.25))",
           opacity: nextDisabled ? 0.4 : 1,
           cursor: nextDisabled ? "not-allowed" : "pointer",
           letterSpacing: "0.02em",
@@ -324,18 +352,18 @@ export function Onboarding() {
                 fill="white" fillOpacity="0.2" />
               <defs>
                 <linearGradient id="welcome-grad" x1="50" y1="15" x2="50" y2="90" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#BFE8FF" />
-                  <stop offset="1" stopColor="#5ABEFF" />
+                  <stop stopColor="var(--color-secondary-container, #BFE8FF)" />
+                  <stop offset="1" stopColor="var(--color-primary, #5ABEFF)" />
                 </linearGradient>
               </defs>
             </svg>
           </div>
 
           <div className="space-y-3 max-w-xl text-center mb-8 animate-fade-in">
-            <h1 className="text-4xl font-semibold leading-[1.15] tracking-[-0.03em]" style={{ color: "#2C3440" }}>
+            <h1 className="text-4xl font-semibold leading-[1.15] tracking-[-0.03em]" style={{ color: "var(--color-on-surface, #2C3440)" }}>
               Escolha seu modo de hidratação
             </h1>
-            <p className="text-base" style={{ color: "#5B6572", lineHeight: "1.5" }}>
+            <p className="text-base" style={{ color: "var(--color-text-main, #5B6572)", lineHeight: "1.5" }}>
               O Gole pode funcionar como um lembrete simples ou como um rastreador completo de metas. Escolha a melhor opção para você:
             </p>
           </div>
@@ -344,25 +372,22 @@ export function Onboarding() {
             {/* Card Básico */}
             <div
               onClick={() => setAppMode("basic")}
-              className={`p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center text-center gap-4 hover:scale-[1.02] ${
-                appMode === "basic"
-                  ? "border-[#257ca3] bg-white shadow-[0_12px_30px_rgba(37,124,163,0.15)]"
-                  : "border-transparent bg-white/60 hover:bg-white hover:border-[#257ca3]/30"
-              }`}
+              className="p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center text-center gap-4 hover:scale-[1.02] bg-surface-container-lowest/40 hover:bg-surface-container-high/40"
               style={{
-                boxShadow: appMode === "basic" ? undefined : "0 8px 25px rgba(0,0,0,0.03)",
+                borderColor: appMode === "basic" ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.06))",
+                boxShadow: appMode === "basic" ? "0 12px 30px var(--color-primary-fixed-dim, rgba(37,124,163,0.15))" : "0 8px 25px rgba(0,0,0,0.02)",
               }}
             >
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center transition-colors"
                 style={{
-                  backgroundColor: appMode === "basic" ? "#bfe8ff" : "rgba(224,227,230,0.5)",
+                  backgroundColor: appMode === "basic" ? "var(--color-primary-container, #bfe8ff)" : "var(--color-surface-container, rgba(224,227,230,0.5))",
                 }}
               >
                 <span
                   className="material-symbols-outlined text-[28px]"
                   style={{
-                    color: appMode === "basic" ? "#257ca3" : "#5B6572",
+                    color: appMode === "basic" ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                     fontVariationSettings: appMode === "basic" ? "'FILL' 1" : "'FILL' 0",
                   }}
                 >
@@ -372,14 +397,14 @@ export function Onboarding() {
               <div>
                 <h3
                   className="text-lg font-bold mb-1 transition-colors"
-                  style={{ color: appMode === "basic" ? "#257ca3" : "#191c1e" }}
+                  style={{ color: appMode === "basic" ? "var(--color-primary, #257ca3)" : "var(--color-on-surface, #191c1e)" }}
                 >
                   Lembrete Simples
                 </h3>
-                <span className="text-[10px] font-bold tracking-widest uppercase bg-[#EAECEF] px-2.5 py-0.5 rounded-full text-[#5B6572] mb-3 inline-block">
+                <span className="text-[10px] font-bold tracking-widest uppercase bg-surface-container-high px-2.5 py-0.5 rounded-full text-text-main mb-3 inline-block">
                   Básico
                 </span>
-                <p className="text-sm text-[#5B6572] leading-relaxed mt-2">
+                <p className="text-sm text-text-main leading-relaxed mt-2" style={{ color: "var(--color-text-main, #5B6572)" }}>
                   Apenas notificações para lembrar de beber água de tempos em tempos. Sem metas diárias ou estatísticas de consumo.
                 </p>
               </div>
@@ -388,25 +413,22 @@ export function Onboarding() {
             {/* Card Pro */}
             <div
               onClick={() => setAppMode("pro")}
-              className={`p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center text-center gap-4 hover:scale-[1.02] ${
-                appMode === "pro"
-                  ? "border-[#257ca3] bg-white shadow-[0_12px_30px_rgba(37,124,163,0.15)]"
-                  : "border-transparent bg-white/60 hover:bg-white hover:border-[#257ca3]/30"
-              }`}
+              className="p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center text-center gap-4 hover:scale-[1.02] bg-surface-container-lowest/40 hover:bg-surface-container-high/40"
               style={{
-                boxShadow: appMode === "pro" ? undefined : "0 8px 25px rgba(0,0,0,0.03)",
+                borderColor: appMode === "pro" ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.06))",
+                boxShadow: appMode === "pro" ? "0 12px 30px var(--color-primary-fixed-dim, rgba(37,124,163,0.15))" : "0 8px 25px rgba(0,0,0,0.02)",
               }}
             >
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center transition-colors"
                 style={{
-                  backgroundColor: appMode === "pro" ? "#bfe8ff" : "rgba(224,227,230,0.5)",
+                  backgroundColor: appMode === "pro" ? "var(--color-primary-container, #bfe8ff)" : "var(--color-surface-container, rgba(224,227,230,0.5))",
                 }}
               >
                 <span
                   className="material-symbols-outlined text-[28px]"
                   style={{
-                    color: appMode === "pro" ? "#257ca3" : "#5B6572",
+                    color: appMode === "pro" ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                     fontVariationSettings: appMode === "pro" ? "'FILL' 1" : "'FILL' 0",
                   }}
                 >
@@ -416,14 +438,15 @@ export function Onboarding() {
               <div>
                 <h3
                   className="text-lg font-bold mb-1 transition-colors"
-                  style={{ color: appMode === "pro" ? "#257ca3" : "#191c1e" }}
+                  style={{ color: appMode === "pro" ? "var(--color-primary, #257ca3)" : "var(--color-on-surface, #191c1e)" }}
                 >
                   Metas & Métricas
                 </h3>
-                <span className="text-[10px] font-bold tracking-widest uppercase bg-[#257ca3] px-2.5 py-0.5 rounded-full text-white mb-3 inline-block">
+                <span className="text-[10px] font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full text-white mb-3 inline-block"
+                  style={{ backgroundColor: "var(--color-primary, #257ca3)" }}>
                   Completo
                 </span>
-                <p className="text-sm text-[#5B6572] leading-relaxed mt-2">
+                <p className="text-sm text-text-main leading-relaxed mt-2" style={{ color: "var(--color-text-main, #5B6572)" }}>
                   Meta diária de hidratação baseada no seu perfil físico (peso/idade/clima). Histórico de gols, conquistas e analytics.
                 </p>
               </div>
@@ -432,10 +455,10 @@ export function Onboarding() {
 
           <button
             onClick={() => setStep(appMode === "basic" ? "work_hours" : "weight")}
-            className="h-14 px-12 rounded-full text-white font-medium text-sm flex items-center gap-2 group transition-all duration-300 hover:-translate-y-0.5 max-w-[320px] w-full cursor-pointer justify-center"
+            className="h-14 px-12 rounded-full text-white font-medium text-sm flex items-center gap-2 group transition-all duration-300 hover:-translate-y-0.5 max-w-[320px] w-full cursor-pointer justify-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             style={{
-              background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
-              boxShadow: "0 8px 20px rgba(59,99,119,0.25)",
+              background: "linear-gradient(180deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
+              boxShadow: "0 8px 20px var(--color-primary-fixed-dim, rgba(59,99,119,0.25))",
               letterSpacing: "0.02em",
             }}
           >
@@ -457,13 +480,13 @@ export function Onboarding() {
           {/* Título da Etapa (Altura Fixa no Topo) */}
           <div className="text-center mb-6 max-w-2xl w-full mx-auto animate-fade-in flex-none">
             <span className="text-xs font-semibold uppercase tracking-widest mb-4 block px-4 py-1 rounded-full w-max mx-auto"
-              style={{ color: "#41484c", backgroundColor: "rgba(224,227,230,0.5)" }}>
+              style={{ color: "var(--color-on-surface, #41484c)", backgroundColor: "var(--color-surface-container, rgba(224,227,230,0.5))" }}>
               Passo 1 de 4
             </span>
-            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "#191c1e", letterSpacing: "-0.04em" }}>
+            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.04em" }}>
               Seus dados básicos
             </h1>
-            <p className="text-lg" style={{ color: "#5B6572" }}>
+            <p className="text-lg" style={{ color: "var(--color-text-main, #5B6572)" }}>
               Clique sobre os números para digitar se preferir.
             </p>
           </div>
@@ -473,7 +496,7 @@ export function Onboarding() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-20 w-full max-w-5xl animate-fade-in">
               {/* Peso Card - Sem Caixa */}
               <div className="flex flex-col items-center w-full px-4">
-                <span className="text-sm font-bold tracking-widest uppercase mb-4 text-[#5B6572]">Peso (kg)</span>
+                <span className="text-sm font-bold tracking-widest uppercase mb-4 text-text-main" style={{ color: "var(--color-text-main, #5B6572)" }}>Peso (kg)</span>
                 
                 <div className="flex items-center justify-center h-24 mb-3">
                   {isEditingWeight ? (
@@ -495,15 +518,15 @@ export function Onboarding() {
                           e.currentTarget.blur();
                         }
                       }}
-                      className="text-7xl font-bold text-center bg-transparent border-b-2 border-[#257ca3] w-36 focus:outline-none py-1"
-                      style={{ color: "#257ca3" }}
+                      className="text-7xl font-bold text-center bg-transparent border-b-2 border-primary w-36 focus:outline-none py-1"
+                      style={{ color: "var(--color-primary, #257ca3)" }}
                       autoFocus
                     />
                   ) : (
                     <span
                       onClick={() => setIsEditingWeight(true)}
-                      className="text-8xl font-extrabold cursor-pointer select-none hover:text-[#5ABEFF] transition-colors"
-                      style={{ color: "#257ca3" }}
+                      className="text-8xl font-extrabold cursor-pointer select-none hover:text-primary transition-colors animate-fade-in"
+                      style={{ color: "var(--color-primary, #257ca3)" }}
                     >
                       {weight}
                     </span>
@@ -523,14 +546,14 @@ export function Onboarding() {
                   className="w-full focus:outline-none mt-4"
                 />
                 <div className="flex justify-between w-full mt-2 px-1">
-                  <span className="text-[11px] font-bold text-gray-400">{SLIDER_MIN_WEIGHT}kg</span>
-                  <span className="text-[11px] font-bold text-gray-400">{SLIDER_MAX_WEIGHT}kg</span>
+                  <span className="text-[11px] font-bold text-outline">{SLIDER_MIN_WEIGHT}kg</span>
+                  <span className="text-[11px] font-bold text-outline">{SLIDER_MAX_WEIGHT}kg</span>
                 </div>
               </div>
 
               {/* Idade Card - Sem Caixa */}
               <div className="flex flex-col items-center w-full px-4">
-                <span className="text-sm font-bold tracking-widest uppercase mb-4 text-[#5B6572]">Idade (anos)</span>
+                <span className="text-sm font-bold tracking-widest uppercase mb-4 text-text-main" style={{ color: "var(--color-text-main, #5B6572)" }}>Idade (anos)</span>
                 
                 <div className="flex items-center justify-center h-24 mb-3">
                   {isEditingAge ? (
@@ -552,15 +575,15 @@ export function Onboarding() {
                           e.currentTarget.blur();
                         }
                       }}
-                      className="text-7xl font-bold text-center bg-transparent border-b-2 border-[#257ca3] w-36 focus:outline-none py-1"
-                      style={{ color: "#257ca3" }}
+                      className="text-7xl font-bold text-center bg-transparent border-b-2 border-primary w-36 focus:outline-none py-1"
+                      style={{ color: "var(--color-primary, #257ca3)" }}
                       autoFocus
                     />
                   ) : (
                     <span
                       onClick={() => setIsEditingAge(true)}
-                      className="text-8xl font-extrabold cursor-pointer select-none hover:text-[#5ABEFF] transition-colors"
-                      style={{ color: "#257ca3" }}
+                      className="text-8xl font-extrabold cursor-pointer select-none hover:text-primary transition-colors animate-fade-in"
+                      style={{ color: "var(--color-primary, #257ca3)" }}
                     >
                       {age}
                     </span>
@@ -580,8 +603,8 @@ export function Onboarding() {
                   className="w-full focus:outline-none mt-4"
                 />
                 <div className="flex justify-between w-full mt-2 px-1">
-                  <span className="text-[11px] font-bold text-gray-400">{SLIDER_MIN_AGE} anos</span>
-                  <span className="text-[11px] font-bold text-gray-400">{SLIDER_MAX_AGE} anos</span>
+                  <span className="text-[11px] font-bold text-outline">{SLIDER_MIN_AGE} anos</span>
+                  <span className="text-[11px] font-bold text-outline">{SLIDER_MAX_AGE} anos</span>
                 </div>
               </div>
             </div>
@@ -607,13 +630,13 @@ export function Onboarding() {
           {/* Título da Etapa (Altura Fixa no Topo) */}
           <div className="text-center mb-6 max-w-2xl w-full mx-auto animate-fade-in flex-none">
             <span className="text-xs font-semibold uppercase tracking-widest mb-4 block px-4 py-1 rounded-full w-max mx-auto"
-              style={{ color: "#41484c", backgroundColor: "rgba(224,227,230,0.5)" }}>
+              style={{ color: "var(--color-on-surface, #41484c)", backgroundColor: "var(--color-surface-container, rgba(224,227,230,0.5))" }}>
               Passo 2 de 4
             </span>
-            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "#191c1e", letterSpacing: "-0.04em" }}>
+            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.04em" }}>
               Qual é o seu nível de atividade física?
             </h1>
-            <p className="text-lg" style={{ color: "#5B6572" }}>
+            <p className="text-lg" style={{ color: "var(--color-text-main, #5B6572)" }}>
               Isso ajuda a ajustar sua meta para compensar a perda de líquidos.
             </p>
           </div>
@@ -629,18 +652,18 @@ export function Onboarding() {
                     onClick={() => setActivity(a.id)}
                     className="group relative rounded-2xl p-6 flex items-start gap-4 text-left transition-all duration-300 focus:outline-none cursor-pointer"
                     style={{
-                      backgroundColor: isSelected ? "rgba(191,232,255,0.4)" : "rgba(255,255,255,0.7)",
-                      border: `1px solid ${isSelected ? "#257ca3" : "rgba(255,255,255,0.6)"}`,
-                      boxShadow: isSelected ? "0 12px 40px rgba(0,0,0,0.08)" : "0 2px 12px rgba(0,0,0,0.02)",
+                      backgroundColor: isSelected ? "var(--color-primary-container, rgba(191,232,255,0.2))" : "var(--color-surface-container-low, rgba(255,255,255,0.45))",
+                      border: `1px solid ${isSelected ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(255,255,255,0.6))"}`,
+                      boxShadow: isSelected ? "0 12px 40px var(--color-primary-fixed-dim, rgba(0,0,0,0.08))" : "0 2px 12px rgba(0,0,0,0.02)",
                       transform: isSelected ? "translateY(-4px)" : "none",
                     }}
                   >
                     <span className="text-3xl">{a.emoji}</span>
                     <div className="flex-1">
-                      <h3 className="text-xl font-medium mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
+                      <h3 className="text-xl font-medium mb-1" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.01em" }}>
                         {a.label}
                       </h3>
-                      <p className="text-sm" style={{ color: "#5B6572" }}>{a.description}</p>
+                      <p className="text-sm" style={{ color: "var(--color-text-main, #5B6572)" }}>{a.description}</p>
                     </div>
                   </button>
                 );
@@ -669,13 +692,13 @@ export function Onboarding() {
           {/* Título da Etapa (Altura Fixa no Topo) */}
           <div className="text-center mb-6 max-w-2xl w-full mx-auto animate-fade-in flex-none">
             <span className="text-xs font-semibold uppercase tracking-widest mb-4 block px-4 py-1 rounded-full w-max mx-auto"
-              style={{ color: "#41484c", backgroundColor: "rgba(224,227,230,0.5)" }}>
+              style={{ color: "var(--color-on-surface, #41484c)", backgroundColor: "var(--color-surface-container, rgba(224,227,230,0.5))" }}>
               Passo 3 de 4
             </span>
-            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "#191c1e", letterSpacing: "-0.04em" }}>
+            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.04em" }}>
               Como é o clima onde você mora?
             </h1>
-            <p className="text-lg" style={{ color: "#5B6572" }}>
+            <p className="text-lg" style={{ color: "var(--color-text-main, #5B6572)" }}>
               Isso nos ajuda a entender sua taxa de transpiração básica.
             </p>
           </div>
@@ -691,26 +714,26 @@ export function Onboarding() {
                     onClick={() => setClimate(c.id)}
                     className="group relative rounded-2xl p-6 flex flex-col items-center justify-center gap-4 text-center transition-all duration-300 focus:outline-none min-h-[200px] cursor-pointer"
                     style={{
-                      backgroundColor: isSelected ? "rgba(191,232,255,0.4)" : "rgba(255,255,255,0.7)",
-                      border: `1px solid ${isSelected ? "#257ca3" : "rgba(255,255,255,0.6)"}`,
-                      boxShadow: isSelected ? "0 12px 40px rgba(0,0,0,0.08)" : "0 2px 12px rgba(0,0,0,0.02)",
+                      backgroundColor: isSelected ? "var(--color-primary-container, rgba(191,232,255,0.2))" : "var(--color-surface-container-low, rgba(255,255,255,0.45))",
+                      border: `1px solid ${isSelected ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(255,255,255,0.6))"}`,
+                      boxShadow: isSelected ? "0 12px 40px var(--color-primary-fixed-dim, rgba(0,0,0,0.08))" : "0 2px 12px rgba(0,0,0,0.02)",
                       transform: isSelected ? "translateY(-4px)" : "none",
                     }}
                   >
-                    <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 transition-transform duration-300 group-hover:scale-105">
+                    <div className="w-16 h-16 rounded-full bg-surface-container shadow-sm flex items-center justify-center mb-2 transition-transform duration-300 group-hover:scale-105">
                       <span className="material-symbols-outlined text-[32px] transition-all duration-300"
                          style={{
-                           color: isSelected ? "#257ca3" : "rgba(59,99,119,0.7)",
+                           color: isSelected ? "var(--color-primary, #257ca3)" : "var(--color-text-main, rgba(59,99,119,0.7))",
                            fontVariationSettings: isSelected ? "'FILL' 1" : "'FILL' 0",
                          }}>
                         {c.icon}
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-medium mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
+                      <h3 className="text-xl font-medium mb-1" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.01em" }}>
                         {c.label}
                       </h3>
-                      <p className="text-sm" style={{ color: "#5B6572" }}>{c.description}</p>
+                      <p className="text-sm" style={{ color: "var(--color-text-main, #5B6572)" }}>{c.description}</p>
                     </div>
                   </button>
                 );
@@ -739,13 +762,13 @@ export function Onboarding() {
           {/* Título da Etapa */}
           <div className="text-center mb-10 max-w-2xl w-full mx-auto animate-fade-in flex-none">
             <span className="text-xs font-semibold uppercase tracking-widest mb-4 block px-4 py-1 rounded-full w-max mx-auto"
-              style={{ color: "#41484c", backgroundColor: "rgba(224,227,230,0.5)" }}>
+              style={{ color: "var(--color-on-surface, #41484c)", backgroundColor: "var(--color-surface-container, rgba(224,227,230,0.5))" }}>
               Passo 4 de 5
             </span>
-            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "#191c1e", letterSpacing: "-0.04em" }}>
+            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.04em" }}>
               Seu horário no computador
             </h1>
-            <p className="text-lg" style={{ color: "#5B6572" }}>
+            <p className="text-lg" style={{ color: "var(--color-text-main, #5B6572)" }}>
               Defina o horário em que costuma usar o computador para enviarmos os lembretes.
             </p>
           </div>
@@ -757,23 +780,23 @@ export function Onboarding() {
               <div 
                 className="flex-1 flex flex-col items-center p-8 rounded-[2rem] border transition-all duration-300 w-full max-w-[280px]"
                 style={{
-                  background: "rgba(255,255,255,0.75)",
+                  background: "var(--color-surface-container-low, rgba(255,255,255,0.75))",
                   backdropFilter: "blur(20px)",
-                  borderColor: "rgba(255,255,255,0.8)",
+                  borderColor: "var(--color-border-subtle, rgba(255,255,255,0.8))",
                   boxShadow: "0 8px 30px rgba(0,0,0,0.02)",
                 }}
               >
-                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: "rgba(191,232,255,0.4)" }}>
-                  <span className="material-symbols-outlined text-[26px]" style={{ color: "#257ca3" }}>schedule</span>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: "var(--color-primary-container, rgba(191,232,255,0.4))" }}>
+                  <span className="material-symbols-outlined text-[26px]" style={{ color: "var(--color-primary, #257ca3)" }}>schedule</span>
                 </div>
-                <span className="text-xs font-bold tracking-widest uppercase mb-4 text-[#5B6572]">Início de uso</span>
+                <span className="text-xs font-bold tracking-widest uppercase mb-4 text-text-main" style={{ color: "var(--color-text-main, #5B6572)" }}>Início de uso</span>
                 
                 <input
                   type="time"
                   value={workStartHour}
                   onChange={(e) => setWorkStartHour(e.target.value)}
-                  className="text-4xl font-extrabold text-center bg-transparent border-b-2 border-transparent hover:border-[#257ca3]/30 focus:border-[#257ca3] w-full focus:outline-none py-1 pb-2 cursor-pointer transition-colors"
-                  style={{ color: "#257ca3" }}
+                  className="text-4xl font-extrabold text-center bg-transparent border-b-2 border-transparent hover:border-primary/30 focus:border-primary w-full focus:outline-none py-1 pb-2 cursor-pointer transition-colors"
+                  style={{ color: "var(--color-primary, #257ca3)" }}
                 />
 
                 <div className="w-full px-2 mt-6">
@@ -784,39 +807,39 @@ export function Onboarding() {
                     step={30}
                     value={timeToMinutes(workStartHour)}
                     onChange={(e) => setWorkStartHour(formatMinutesToTime(Number(e.target.value)))}
-                    className="w-full accent-[#257ca3] h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-primary h-1.5 bg-surface-container rounded-lg appearance-none cursor-pointer"
                   />
                   <div className="flex justify-between w-full mt-1.5 px-0.5">
-                    <span className="text-[10px] font-semibold text-gray-400">00:00</span>
-                    <span className="text-[10px] font-semibold text-gray-400">12:00</span>
-                    <span className="text-[10px] font-semibold text-gray-400">23:30</span>
+                    <span className="text-[10px] font-semibold text-outline">00:00</span>
+                    <span className="text-[10px] font-semibold text-outline">12:00</span>
+                    <span className="text-[10px] font-semibold text-outline">23:30</span>
                   </div>
                 </div>
               </div>
 
-              <span className="text-lg font-bold text-gray-400 uppercase tracking-widest hidden md:inline">até</span>
+              <span className="text-lg font-bold text-outline uppercase tracking-widest hidden md:inline">até</span>
 
               {/* Card Fim */}
               <div 
                 className="flex-1 flex flex-col items-center p-8 rounded-[2rem] border transition-all duration-300 w-full max-w-[280px]"
                 style={{
-                  background: "rgba(255,255,255,0.75)",
+                  background: "var(--color-surface-container-low, rgba(255,255,255,0.75))",
                   backdropFilter: "blur(20px)",
-                  borderColor: "rgba(255,255,255,0.8)",
+                  borderColor: "var(--color-border-subtle, rgba(255,255,255,0.8))",
                   boxShadow: "0 8px 30px rgba(0,0,0,0.02)",
                 }}
               >
-                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: "rgba(191,232,255,0.4)" }}>
-                  <span className="material-symbols-outlined text-[26px]" style={{ color: "#257ca3" }}>power_settings_new</span>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: "var(--color-primary-container, rgba(191,232,255,0.4))" }}>
+                  <span className="material-symbols-outlined text-[26px]" style={{ color: "var(--color-primary, #257ca3)" }}>power_settings_new</span>
                 </div>
-                <span className="text-xs font-bold tracking-widest uppercase mb-4 text-[#5B6572]">Término de uso</span>
+                <span className="text-xs font-bold tracking-widest uppercase mb-4 text-text-main" style={{ color: "var(--color-text-main, #5B6572)" }}>Término de uso</span>
                 
                 <input
                   type="time"
                   value={workEndHour}
                   onChange={(e) => setWorkEndHour(e.target.value)}
-                  className="text-4xl font-extrabold text-center bg-transparent border-b-2 border-transparent hover:border-[#257ca3]/30 focus:border-[#257ca3] w-full focus:outline-none py-1 pb-2 cursor-pointer transition-colors"
-                  style={{ color: "#257ca3" }}
+                  className="text-4xl font-extrabold text-center bg-transparent border-b-2 border-transparent hover:border-primary/30 focus:border-primary w-full focus:outline-none py-1 pb-2 cursor-pointer transition-colors"
+                  style={{ color: "var(--color-primary, #257ca3)" }}
                 />
 
                 <div className="w-full px-2 mt-6">
@@ -827,12 +850,12 @@ export function Onboarding() {
                     step={30}
                     value={timeToMinutes(workEndHour)}
                     onChange={(e) => setWorkEndHour(formatMinutesToTime(Number(e.target.value)))}
-                    className="w-full accent-[#257ca3] h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-primary h-1.5 bg-surface-container rounded-lg appearance-none cursor-pointer"
                   />
                   <div className="flex justify-between w-full mt-1.5 px-0.5">
-                    <span className="text-[10px] font-semibold text-gray-400">00:00</span>
-                    <span className="text-[10px] font-semibold text-gray-400">12:00</span>
-                    <span className="text-[10px] font-semibold text-gray-400">24:00</span>
+                    <span className="text-[10px] font-semibold text-outline">00:00</span>
+                    <span className="text-[10px] font-semibold text-outline">12:00</span>
+                    <span className="text-[10px] font-semibold text-outline">24:00</span>
                   </div>
                 </div>
               </div>
@@ -889,13 +912,13 @@ export function Onboarding() {
           {/* Título da Etapa (Altura Fixa no Topo) */}
           <div className="text-center mb-6 max-w-2xl w-full mx-auto animate-fade-in flex-none">
             <span className="text-xs font-semibold uppercase tracking-widest mb-4 block px-4 py-1 rounded-full w-max mx-auto"
-              style={{ color: "#41484c", backgroundColor: "rgba(224,227,230,0.5)" }}>
+              style={{ color: "var(--color-on-surface, #41484c)", backgroundColor: "var(--color-surface-container, rgba(224,227,230,0.5))" }}>
               Passo 5 de 5 (Opcional)
             </span>
-            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "#191c1e", letterSpacing: "-0.04em" }}>
+            <h1 className="text-5xl font-semibold leading-tight mb-3" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.04em" }}>
               Você costuma usar um recipiente principal?
             </h1>
-            <p className="text-lg" style={{ color: "#5B6572" }}>
+            <p className="text-lg" style={{ color: "var(--color-text-main, #5B6572)" }}>
               Ajuda a transformar mililitros em medidas mais fáceis de visualizar.
             </p>
           </div>
@@ -908,10 +931,10 @@ export function Onboarding() {
                   {svgComponent}
                 </div>
                 <div className="flex items-baseline gap-1 mt-4">
-                  <span className="text-4xl font-semibold" style={{ color: "#257ca3" }}>{recipienteCapacidade}</span>
-                  <span className="text-sm font-medium text-gray-400">ml</span>
+                  <span className="text-4xl font-semibold" style={{ color: "var(--color-primary, #257ca3)" }}>{recipienteCapacidade}</span>
+                  <span className="text-sm font-medium text-outline">ml</span>
                 </div>
-                <span className="text-sm font-medium mt-1" style={{ color: "#5B6572" }}>{containerLabel}</span>
+                <span className="text-sm font-medium mt-1" style={{ color: "var(--color-text-main, #5B6572)" }}>{containerLabel}</span>
               </div>
 
               <div className="w-full px-4">
@@ -925,8 +948,8 @@ export function Onboarding() {
                   className="w-full focus:outline-none"
                 />
                 <div className="flex justify-between w-full mt-2 px-1">
-                  <span className="text-xs font-semibold text-gray-400">200ml</span>
-                  <span className="text-xs font-semibold text-gray-400">2000ml</span>
+                  <span className="text-xs font-semibold text-outline">200ml</span>
+                  <span className="text-xs font-semibold text-outline">2000ml</span>
                 </div>
               </div>
             </div>
@@ -937,8 +960,8 @@ export function Onboarding() {
             <div className="flex items-center justify-center gap-4 w-full max-w-md mx-auto">
               <button
                 onClick={() => setStep("work_hours")}
-                className="w-14 h-14 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-white"
-                style={{ color: "#5B6572", border: "1px solid #e0e3e6", backgroundColor: "rgba(255,255,255,0.5)" }}
+                className="w-14 h-14 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-surface-container-high border border-border-subtle focus:outline-none focus:ring-2 focus:ring-primary"
+                style={{ color: "var(--color-text-main, #5B6572)", backgroundColor: "var(--color-surface-container-low, rgba(255,255,255,0.5))" }}
               >
                 <span className="material-symbols-outlined">arrow_back</span>
               </button>
@@ -947,10 +970,10 @@ export function Onboarding() {
                   setRecipienteConfigurado(false);
                   setStep("result");
                 }}
-                className="h-14 px-6 rounded-full font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 hover:bg-gray-50 border border-gray-200 cursor-pointer"
+                className="h-14 px-6 rounded-full font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 hover:bg-surface-container-high border border-border-subtle cursor-pointer"
                 style={{
-                  backgroundColor: "rgba(255,255,255,0.5)",
-                  color: "#5B6572"
+                  backgroundColor: "var(--color-surface-container-low, rgba(255,255,255,0.5))",
+                  color: "var(--color-text-main, #5B6572)"
                 }}
               >
                 Pular
@@ -960,10 +983,10 @@ export function Onboarding() {
                   setRecipienteConfigurado(true);
                   setStep("result");
                 }}
-                className="flex-1 h-14 px-8 rounded-full text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
+                className="flex-1 h-14 px-8 rounded-full text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                 style={{
-                  background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
-                  boxShadow: "0 8px 20px rgba(59,99,119,0.25)",
+                  background: "linear-gradient(180deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
+                  boxShadow: "0 8px 20px var(--color-primary-fixed-dim, rgba(59,99,119,0.25))",
                 }}
               >
                 Confirmar
@@ -984,44 +1007,44 @@ export function Onboarding() {
           <div
             className="w-full rounded-[2rem] p-8 flex flex-col items-center text-center relative overflow-hidden"
             style={{
-              background: "rgba(255,255,255,0.75)",
+              background: "var(--color-surface-container-low, rgba(255,255,255,0.75))",
               backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.8)",
+              border: "1px solid var(--color-border-subtle, rgba(255,255,255,0.8))",
               boxShadow: "0 8px 30px rgba(0,0,0,0.04)",
             }}
           >
             <div className="absolute top-0 left-0 w-full h-1"
-              style={{ background: "linear-gradient(90deg, #257ca3, #006492, #0f76a0)" }} />
+              style={{ background: "linear-gradient(90deg, var(--color-primary, #257ca3), var(--color-secondary, #006492), var(--color-tertiary, #0f76a0))" }} />
 
             <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 relative"
-              style={{ backgroundColor: "#bfe8ff" }}>
+              style={{ backgroundColor: "var(--color-primary-container, #bfe8ff)" }}>
               <div className="absolute inset-0 rounded-full border-2 animate-ripple"
-                style={{ borderColor: "#c0e8ff" }} />
+                style={{ borderColor: "var(--color-primary-container, #c0e8ff)" }} />
               <span className="material-symbols-outlined text-[40px]"
-                style={{ color: "#257ca3", fontVariationSettings: "'FILL' 1" }}>
+                style={{ color: "var(--color-primary, #257ca3)", fontVariationSettings: "'FILL' 1" }}>
                 water_drop
               </span>
             </div>
 
             {appMode === "basic" ? (
-              <h2 className="text-2xl font-semibold mb-2" style={{ color: "#191c1e", letterSpacing: "-0.02em" }}>
+              <h2 className="text-2xl font-semibold mb-2" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.02em" }}>
                 Lembretes configurados!
-                <span className="block mt-2 text-base font-normal leading-relaxed text-[#5B6572]">
+                <span className="block mt-2 text-base font-normal leading-relaxed text-text-main" style={{ color: "var(--color-text-main, #5B6572)" }}>
                   Você receberá notificações periodicamente para beber água durante o seu horário ativo.
                 </span>
               </h2>
             ) : (
-              <h2 className="text-3xl font-semibold mb-2" style={{ color: "#191c1e", letterSpacing: "-0.02em" }}>
+              <h2 className="text-3xl font-semibold mb-2" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.02em" }}>
                 Sua meta diária:
-                <span className="block mt-1 text-5xl font-semibold tracking-[-0.04em]" style={{ color: "#006492" }}>
+                <span className="block mt-1 text-5xl font-semibold tracking-[-0.04em]" style={{ color: "var(--color-primary, #006492)" }}>
                   {formatGoal(goal)}
                 </span>
               </h2>
             )}
 
             {/* Elegant Summary of inputs */}
-            <div className="w-full mt-6 pt-6 border-t flex flex-col gap-4 text-left mb-8" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#5B6572] mb-1">
+            <div className="w-full mt-6 pt-6 border-t flex flex-col gap-4 text-left mb-8" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
+              <p className="text-xs font-semibold uppercase tracking-widest text-text-main mb-1" style={{ color: "var(--color-text-main, #5B6572)" }}>
                 Resumo das configurações:
               </p>
               
@@ -1031,14 +1054,14 @@ export function Onboarding() {
                     {/* Peso e Idade */}
                     <button 
                       onClick={() => setStep("weight")}
-                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
-                      style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-surface-container-high border border-transparent hover:border-primary/20 cursor-pointer"
+                      style={{ backgroundColor: "var(--color-surface-container-lowest, rgba(255,255,255,0.4))" }}
                     >
-                      <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                      <span className="text-[11px] font-semibold text-text-main uppercase tracking-wider flex items-center gap-1" style={{ color: "var(--color-text-main, #5B6572)" }}>
                         <span className="material-symbols-outlined text-[14px]">person</span>
                         Perfil
                       </span>
-                      <span className="text-base font-semibold text-[#191c1e] mt-1">
+                      <span className="text-base font-semibold text-text-dark mt-1" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                         {weight} kg • {age} anos
                       </span>
                     </button>
@@ -1048,14 +1071,14 @@ export function Onboarding() {
                 {/* Horário de Uso */}
                 <button 
                   onClick={() => setStep("work_hours")}
-                  className={`p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer ${appMode === 'basic' ? 'col-span-2' : ''}`}
-                  style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                  className={`p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-surface-container-high border border-transparent hover:border-primary/20 cursor-pointer ${appMode === 'basic' ? 'col-span-2' : ''}`}
+                  style={{ backgroundColor: "var(--color-surface-container-lowest, rgba(255,255,255,0.4))" }}
                 >
-                  <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                  <span className="text-[11px] font-semibold text-text-main uppercase tracking-wider flex items-center gap-1" style={{ color: "var(--color-text-main, #5B6572)" }}>
                     <span className="material-symbols-outlined text-[14px]">schedule</span>
                     Horário ativo
                   </span>
-                  <span className="text-base font-semibold text-[#191c1e] mt-1">
+                  <span className="text-base font-semibold text-text-dark mt-1" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                     {workStartHour} às {workEndHour}
                   </span>
                 </button>
@@ -1065,14 +1088,14 @@ export function Onboarding() {
                     {/* Atividade */}
                     <button 
                       onClick={() => setStep("activity")}
-                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
-                      style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-surface-container-high border border-transparent hover:border-primary/20 cursor-pointer"
+                      style={{ backgroundColor: "var(--color-surface-container-lowest, rgba(255,255,255,0.4))" }}
                     >
-                      <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                      <span className="text-[11px] font-semibold text-text-main uppercase tracking-wider flex items-center gap-1" style={{ color: "var(--color-text-main, #5B6572)" }}>
                         <span className="material-symbols-outlined text-[14px]">fitness_center</span>
                         Exercício
                       </span>
-                      <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
+                      <span className="text-base font-semibold text-text-dark mt-1 truncate" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                         {ACTIVITIES.find(a => a.id === activity)?.label || "Não informado"}
                       </span>
                     </button>
@@ -1080,14 +1103,14 @@ export function Onboarding() {
                     {/* Clima */}
                     <button 
                       onClick={() => setStep("climate")}
-                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
-                      style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                      className="p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-surface-container-high border border-transparent hover:border-primary/20 cursor-pointer"
+                      style={{ backgroundColor: "var(--color-surface-container-lowest, rgba(255,255,255,0.4))" }}
                     >
-                      <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                      <span className="text-[11px] font-semibold text-text-main uppercase tracking-wider flex items-center gap-1" style={{ color: "var(--color-text-main, #5B6572)" }}>
                         <span className="material-symbols-outlined text-[14px]">thermostat</span>
                         Clima
                       </span>
-                      <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
+                      <span className="text-base font-semibold text-text-dark mt-1 truncate" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                         {CLIMATES.find(c => c.id === climate)?.label || "Não informado"}
                       </span>
                     </button>
@@ -1095,14 +1118,14 @@ export function Onboarding() {
                     {/* Recipiente */}
                     <button 
                       onClick={() => setStep("recipiente_setup")}
-                      className="col-span-2 p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-white hover:shadow-sm border border-transparent hover:border-[#257ca3]/20 cursor-pointer"
-                      style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                      className="col-span-2 p-4 rounded-xl flex flex-col gap-1 text-left transition-all duration-200 hover:bg-surface-container-high border border-transparent hover:border-primary/20 cursor-pointer"
+                      style={{ backgroundColor: "var(--color-surface-container-lowest, rgba(255,255,255,0.4))" }}
                     >
-                      <span className="text-[11px] font-semibold text-[#5B6572] uppercase tracking-wider flex items-center gap-1">
+                      <span className="text-[11px] font-semibold text-text-main uppercase tracking-wider flex items-center gap-1" style={{ color: "var(--color-text-main, #5B6572)" }}>
                         <span className="material-symbols-outlined text-[14px]">local_drink</span>
                         Recipiente principal
                       </span>
-                      <span className="text-base font-semibold text-[#191c1e] mt-1 truncate">
+                      <span className="text-base font-semibold text-text-dark mt-1 truncate" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                         {recipienteConfigurado ? `${recipienteCapacidade} ml` : "Não definido"}
                       </span>
                     </button>
@@ -1114,10 +1137,10 @@ export function Onboarding() {
             <button
               onClick={handleFinish}
               disabled={submitting}
-              className="w-full h-14 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 group transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+              className="w-full h-14 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 group transition-all duration-300 hover:-translate-y-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
               style={{
-                background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)",
-                boxShadow: "0 8px 20px rgba(59,99,119,0.25)",
+                background: "linear-gradient(180deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
+                boxShadow: "0 8px 20px var(--color-primary-fixed-dim, rgba(59,99,119,0.25))",
                 opacity: submitting ? 0.6 : 1,
                 cursor: submitting ? "wait" : "pointer",
                 letterSpacing: "0.02em",
@@ -1135,8 +1158,8 @@ export function Onboarding() {
               onClick={() => {
                 setStep(appMode === "basic" ? "work_hours" : "recipiente_setup");
               }}
-              className="mt-4 text-sm font-medium transition-colors hover:text-[#257ca3] cursor-pointer"
-              style={{ color: "#5B6572" }}
+              className="mt-4 text-sm font-medium transition-colors hover:text-primary cursor-pointer focus:outline-none"
+              style={{ color: "var(--color-text-main, #5B6572)" }}
             >
               ← Ajustar respostas
             </button>
