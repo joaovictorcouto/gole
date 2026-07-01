@@ -20,7 +20,7 @@ const navItems = [
 export function SideNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logDrink, todayStats, settings, loadSettings } = useAppStore();
+  const { logDrink, todayStats, settings, loadSettings, theme, setTheme } = useAppStore();
   const [supportOpen, setSupportOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [undo, setUndo] = useState<{ amount: number; key: number } | null>(null);
@@ -30,6 +30,23 @@ export function SideNav() {
   const [pwdError, setPwdError] = useState(false);
   const devAvailable = useDevGateAvailable();
   const isDev = useIsDev();
+  const [dashboardStyle, setDashboardStyle] = useState("dashboard1");
+
+  useEffect(() => {
+    const style = localStorage.getItem("dashboard_style") || "dashboard1";
+    setDashboardStyle(style);
+  }, []);
+
+  const toggleThemeQuick = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+  };
+
+  const toggleLayoutQuick = () => {
+    const nextStyle = dashboardStyle === "dashboard2" ? "dashboard1" : "dashboard2";
+    localStorage.setItem("dashboard_style", nextStyle);
+    window.location.reload();
+  };
 
   const handleLogoClick = () => {
     if (!devAvailable) return;
@@ -165,16 +182,38 @@ export function SideNav() {
             />
           </div>
         )}
-        <button
-          onClick={() => setSupportOpen(true)}
-          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:bg-surface-container-high/50 cursor-pointer"
-          style={{ color: "var(--color-text-main, #5B6572)", fontSize: "14px", letterSpacing: "0.02em" }}
-        >
-          <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform duration-200">
-            help_outline
-          </span>
-          Suporte
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSupportOpen(true)}
+            className="flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 group hover:bg-surface-container-high/50 cursor-pointer"
+            style={{ color: "var(--color-text-main, #5B6572)", fontSize: "14px", letterSpacing: "0.02em" }}
+          >
+            <span className="material-symbols-outlined group-hover:translate-x-0.5 transition-transform duration-200">
+              help_outline
+            </span>
+            Suporte
+          </button>
+          
+          <button
+            onClick={toggleThemeQuick}
+            className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-surface-container-high/50 transition-colors cursor-pointer text-text-main hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            title="Alternar Tema (Claro / Escuro)"
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: theme === "dark" ? "'FILL' 1" : "'FILL' 0" }}>
+              {theme === "dark" ? "light_mode" : "dark_mode"}
+            </span>
+          </button>
+
+          <button
+            onClick={toggleLayoutQuick}
+            className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-surface-container-high/50 transition-colors cursor-pointer text-text-main hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            title="Alternar Layout do Dashboard"
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              {dashboardStyle === "dashboard2" ? "dashboard" : "view_quilt"}
+            </span>
+          </button>
+        </div>
 
         <div className="text-[10px] text-center text-outline font-medium pt-1">
           v{__APP_VERSION__} • <button onClick={() => setChangelogOpen(true)} className="underline hover:text-text-dark cursor-pointer">O que há de novo?</button>
