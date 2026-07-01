@@ -57,9 +57,9 @@ const HistoryBottleSvg = ({ pct, reached }: { pct: number; reached: boolean }) =
   const uid = useMemo(() => Math.random().toString(36).slice(2, 9), [reached]);
   const clipId = `drop-clip-${uid}`;
   const gradId = `drop-grad-${uid}`;
-  const waterColorStart = reached ? "#257ca3" : "#8AD4FF";
-  const waterColorEnd = reached ? "#0f76a0" : "#41AFFF";
   const clamped = Math.min(100, Math.max(0, pct));
+  const waterColorStart = reached ? "var(--color-primary, #257ca3)" : "var(--color-secondary-container, #8dd1fd)";
+  const waterColorEnd = reached ? "var(--color-secondary, #0f76a0)" : "var(--color-primary-container, #bfe8ff)";
   // Water surface y inside the drop. Surface at HIST_VISIBLE_BOTTOM when 0%,
   // at HIST_TOP when 100%. Use HIST_H for proportional fill.
   const surfaceY = HIST_VISIBLE_BOTTOM - (clamped / 100) * HIST_H;
@@ -77,7 +77,7 @@ const HistoryBottleSvg = ({ pct, reached }: { pct: number; reached: boolean }) =
         </linearGradient>
       </defs>
       {/* Empty drop body */}
-      <path d={DROP_HIST_PATH} fill="rgba(236,238,241,0.55)" />
+      <path d={DROP_HIST_PATH} fill="var(--color-surface-container-high, rgba(236,238,241,0.55))" />
       {/* Water fill: tall rect translated so its top edge sits at surfaceY.
           Extending well past the viewBox guarantees the bottom never empties. */}
       <g clipPath={`url(#${clipId})`}>
@@ -92,7 +92,7 @@ const HistoryBottleSvg = ({ pct, reached }: { pct: number; reached: boolean }) =
         />
       </g>
       {/* Outline */}
-      <path d={DROP_HIST_PATH} stroke="#257ca3" strokeWidth="3" strokeLinejoin="round" fill="none" />
+      <path d={DROP_HIST_PATH} stroke="var(--color-primary, #257ca3)" strokeWidth="3" strokeLinejoin="round" fill="none" />
       {/* Inner highlight */}
       <path d="M36 36 C 30 48, 28 58, 30 68" stroke="rgba(255,255,255,0.55)" strokeWidth="3" strokeLinecap="round" fill="none" />
       {reached && (
@@ -258,7 +258,7 @@ export function Statistics() {
         <h1 className="text-5xl font-semibold mb-2" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}>
           Estatísticas
         </h1>
-        <p className="text-lg" style={{ color: "#41484c" }}>Acompanhe sua evolução de hidratação.</p>
+        <p className="text-lg" style={{ color: "var(--color-text-main, #41484c)" }}>Acompanhe sua evolução de hidratação.</p>
       </header>
 
       <div className="flex-1 overflow-y-auto px-10 pb-10">
@@ -271,12 +271,12 @@ export function Statistics() {
           { label: "Restante", value: `${((stats?.remaining_ml ?? 0) / 1000).toFixed(2).replace(".", ",")}L` },
           { label: "Progresso", value: `${Math.round(stats?.percent ?? 0)}%` },
         ].map((item) => (
-          <div key={item.label} className="bg-white rounded-xl p-6 border border-white/20"
+          <div key={item.label} className="glass-surface rounded-xl p-6"
             style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#5B6572" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-main, #5B6572)" }}>
               {item.label}
             </p>
-            <p className="text-3xl font-semibold" style={{ color: "#257ca3", letterSpacing: "-0.02em" }}>
+            <p className="text-3xl font-semibold" style={{ color: "var(--color-primary, #257ca3)", letterSpacing: "-0.02em" }}>
               {item.value}
             </p>
           </div>
@@ -284,10 +284,10 @@ export function Statistics() {
       </div>
 
       {/* Chart */}
-      <div className="bg-white rounded-xl p-6 border border-white/20 mb-8"
+      <div className="glass-surface rounded-xl p-6 mb-8"
         style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
         <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-          <h2 className="text-2xl font-medium" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
+          <h2 className="text-2xl font-medium" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.01em" }}>
             Histórico
           </h2>
           <div className="flex gap-2 flex-wrap">
@@ -302,8 +302,8 @@ export function Statistics() {
                 onClick={() => setPeriod(p.id)}
                 className="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer"
                 style={{
-                  backgroundColor: period === p.id ? "#257ca3" : "#eceef1",
-                  color: period === p.id ? "#ffffff" : "#5B6572",
+                  backgroundColor: period === p.id ? "var(--color-primary, #257ca3)" : "var(--color-surface-container, #eceef1)",
+                  color: period === p.id ? "#ffffff" : "var(--color-text-main, #5B6572)",
                   letterSpacing: "0.02em",
                 }}
               >
@@ -314,8 +314,8 @@ export function Statistics() {
         </div>
 
         {period === "custom" && (
-          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl flex-wrap" style={{ backgroundColor: "#f7f9fc" }}>
-            <div className="flex items-center gap-2 text-sm" style={{ color: "#5B6572" }}>
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl flex-wrap" style={{ backgroundColor: "var(--color-surface-container-low, #f7f9fc)" }}>
+            <div className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text-main, #5B6572)" }}>
               <span>De</span>
               <DatePicker
                 value={customStart}
@@ -324,7 +324,7 @@ export function Statistics() {
                 label="Data inicial"
               />
             </div>
-            <div className="flex items-center gap-2 text-sm" style={{ color: "#5B6572" }}>
+            <div className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text-main, #5B6572)" }}>
               <span>até</span>
               <DatePicker
                 value={customEnd}
@@ -334,7 +334,7 @@ export function Statistics() {
                 label="Data final"
               />
             </div>
-            <span className="text-xs ml-auto" style={{ color: "#71787c" }}>
+            <span className="text-xs ml-auto" style={{ color: "var(--color-outline, #71787c)" }}>
               {chartData.length} {chartData.length === 1 ? "dia" : "dias"} no período
             </span>
           </div>
@@ -344,7 +344,7 @@ export function Statistics() {
           const count = chartData.length;
           if (count === 0) {
             return (
-              <div className="w-full text-center py-12" style={{ color: "#5B6572" }}>
+              <div className="w-full text-center py-12" style={{ color: "var(--color-text-main, #5B6572)" }}>
                 Sem dados para o período selecionado.
               </div>
             );
@@ -405,14 +405,14 @@ export function Statistics() {
         {/* Legend */}
         <div className="flex gap-6 mt-4 items-center flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#257ca3" }} />
-            <span className="text-xs" style={{ color: "#5B6572" }}>Meta atingida</span>
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "var(--color-primary, #257ca3)" }} />
+            <span className="text-xs" style={{ color: "var(--color-text-main, #5B6572)" }}>Meta atingida</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "#bfe8ff" }} />
-            <span className="text-xs" style={{ color: "#5B6572" }}>Parcial</span>
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: "var(--color-primary-container, #bfe8ff)" }} />
+            <span className="text-xs" style={{ color: "var(--color-text-main, #5B6572)" }}>Parcial</span>
           </div>
-          <span className="text-xs ml-auto italic" style={{ color: "#71787c" }}>
+          <span className="text-xs ml-auto italic" style={{ color: "var(--color-outline, #71787c)" }}>
             Clique em uma garrafa para editar os registros daquele dia.
           </span>
         </div>
@@ -420,25 +420,25 @@ export function Statistics() {
 
       {/* Aggregates */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-white/20"
+        <div className="glass-surface rounded-xl p-6"
           style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#5B6572" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-main, #5B6572)" }}>
             Média diária
           </p>
-          <p className="text-4xl font-semibold" style={{ color: "#257ca3", letterSpacing: "-0.02em" }}>
+          <p className="text-4xl font-semibold" style={{ color: "var(--color-primary, #257ca3)", letterSpacing: "-0.02em" }}>
             {avgConsumed >= 1000 ? `${(avgConsumed / 1000).toFixed(2).replace(".", ",")}L` : `${avgConsumed}ml`}
           </p>
-          <p className="text-sm mt-1" style={{ color: "#5B6572" }}>no período selecionado</p>
+          <p className="text-sm mt-1" style={{ color: "var(--color-text-main, #5B6572)" }}>no período selecionado</p>
         </div>
-        <div className="bg-white rounded-xl p-6 border border-white/20"
+        <div className="glass-surface rounded-xl p-6"
           style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#5B6572" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-main, #5B6572)" }}>
             Dias com meta atingida
           </p>
-          <p className="text-4xl font-semibold" style={{ color: "#257ca3", letterSpacing: "-0.02em" }}>
+          <p className="text-4xl font-semibold" style={{ color: "var(--color-primary, #257ca3)", letterSpacing: "-0.02em" }}>
             {daysGoalReached}/{chartData.length}
           </p>
-          <p className="text-sm mt-1" style={{ color: "#5B6572" }}>dias no período</p>
+          <p className="text-sm mt-1" style={{ color: "var(--color-text-main, #5B6572)" }}>dias no período</p>
         </div>
       </div>
 

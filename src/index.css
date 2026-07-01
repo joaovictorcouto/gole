@@ -65,10 +65,86 @@ html, body, #root {
 }
 
 body {
-  background-color: #f7f9fc;
-  color: #191c1e;
+  background-color: var(--color-background, #f7f9fc);
+  color: var(--color-on-background, #191c1e);
   margin: 0;
   padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode */
+:root.dark body,
+:root.dark {
+  --color-background: #0f1419;
+  --color-on-background: #e2e6ea;
+  --color-surface: #0f1419;
+  --color-surface-dim: #1a1f25;
+  --color-surface-bright: #151b21;
+  --color-surface-container-lowest: #0a0e12;
+  --color-surface-container-low: #141a1f;
+  --color-surface-container: #1c2228;
+  --color-surface-container-high: #252b32;
+  --color-surface-container-highest: #2f363d;
+  --color-on-surface: #e2e6ea;
+  --color-on-surface-variant: #9aa5b1;
+  --color-outline: #6b7785;
+  --color-outline-variant: #3a424b;
+  --color-surface-tint: #38bdf8;
+  --color-inverse-surface: #e2e6ea;
+  --color-inverse-on-surface: #1a1f25;
+  --color-inverse-primary: #257ca3;
+  --color-primary: #38bdf8;
+  --color-on-primary: #0c4a6e;
+  --color-primary-container: #164e72;
+  --color-on-primary-container: #bae6fd;
+  --color-secondary: #7dd3fc;
+  --color-on-secondary: #0c4a6e;
+  --color-secondary-container: #0c4a6e;
+  --color-on-secondary-container: #bae6fd;
+  --color-tertiary: #93c5fd;
+  --color-on-tertiary: #1e3a5f;
+  --color-tertiary-container: #1e3a5f;
+  --color-on-tertiary-container: #dbeafe;
+  --color-error: #ff6b6b;
+  --color-on-error: #601010;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+  --color-primary-fixed: #164e72;
+  --color-primary-fixed-dim: #38bdf8;
+  --color-text-main: #9aa5b1;
+  --color-text-dark: #e2e6ea;
+  --color-surface-glass: rgba(15, 20, 25, 0.85);
+  --color-border-subtle: rgba(226, 230, 234, 0.06);
+  background-color: #0f1419;
+  color: #e2e6ea;
+}
+
+:root.dark .glass-surface {
+  background-color: rgba(15, 20, 25, 0.85);
+  border-color: rgba(226, 230, 234, 0.06);
+}
+
+:root.dark input[type=range]::-webkit-slider-runnable-track {
+  background: #2f363d;
+}
+
+:root.dark input[type=range]::-webkit-slider-thumb {
+  border-color: #1c2228;
+}
+
+:root.dark ::-webkit-scrollbar-thumb {
+  background: #3a424b;
+}
+:root.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7785;
+}
+
+:root.dark .toggle-track {
+  background-color: #3a424b;
+}
+
+:root.dark .toggle-input:checked ~ .toggle-track {
+  background-color: #38bdf8;
 }
 
 button, [role="button"], a, label[for], input[type="range"] {

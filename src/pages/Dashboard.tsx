@@ -384,16 +384,16 @@ export function Dashboard() {
         {/* Header */}
         <header className="flex justify-between items-end px-10 pt-10 pb-6 shrink-0">
           <div>
-            <h2 className="text-2xl font-medium mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
+            <h2 className="text-2xl font-medium mb-1" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.01em" }}>
               Hidratação Ativa
             </h2>
-            <p className="text-base" style={{ color: "#5B6572" }}>
+            <p className="text-base" style={{ color: "var(--color-text-main, #5B6572)" }}>
               Lembretes simples ativos. Sem metas ou contagens complexas.
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#257ca3" }}>Hoje</p>
-            <p className="text-base font-medium" style={{ color: "#191c1e" }}>{formatDate()}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-primary, #257ca3)" }}>Hoje</p>
+            <p className="text-base font-medium" style={{ color: "var(--color-on-surface, #191c1e)" }}>{formatDate()}</p>
           </div>
         </header>
 
@@ -401,11 +401,9 @@ export function Dashboard() {
         <div className="flex-1 overflow-y-auto px-10 pb-6">
           <div className="flex flex-col gap-4 justify-center items-center my-0 max-w-2xl mx-auto w-full pt-2">
             {/* Card Principal de Ação */}
-            <div className="bg-white rounded-[2rem] p-6 border border-white/20 w-full flex flex-col items-center relative overflow-hidden"
+            <div className="glass-surface rounded-[2rem] p-6 w-full flex flex-col items-center relative overflow-hidden"
               style={{
                 boxShadow: "0 10px 40px rgba(0,0,0,0.03)",
-                background: "rgba(255,255,255,0.8)",
-                backdropFilter: "blur(20px)"
               }}>
               
               <div className="absolute top-0 left-0 w-full h-1"
@@ -414,9 +412,9 @@ export function Dashboard() {
               {/* Seção do Botão Principal (Destaque) */}
               <div className="flex flex-col items-center mb-6 relative">
                 {/* Próximo Alerta Pill */}
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#257ca3]/10 border border-[#257ca3]/20 mb-4 shrink-0">
-                  <span className="material-symbols-outlined text-[14px] text-[#257ca3]">alarm</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#257ca3]">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4 shrink-0">
+                  <span className="material-symbols-outlined text-[14px] text-primary">alarm</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
                     Próximo Alerta: {nextTime !== "--:--" ? nextTime : "Agendando..."}
                   </span>
                 </div>
@@ -424,9 +422,9 @@ export function Dashboard() {
                 {/* Botão de Registro Rápido: Grande, Minimalista e Evidenciado */}
                 <button
                   onClick={() => handleLogDrink(drinkAmount)}
-                  className="w-32 h-32 rounded-full flex flex-col items-center justify-center gap-1 text-white font-medium transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative group focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-4"
+                  className="w-32 h-32 rounded-full flex flex-col items-center justify-center gap-1 text-white font-medium transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-4"
                   style={{
-                    background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)",
+                    background: "linear-gradient(135deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
                     boxShadow: "0 12px 30px rgba(37,124,163,0.3)"
                   }}
                 >
@@ -575,26 +573,23 @@ export function Dashboard() {
 
 
             {/* Tips horizontal Card */}
-            <div className="rounded-2xl p-5 border transition-all duration-300 w-full"
+            <div className="glass-surface rounded-2xl p-5 transition-all duration-300 w-full"
               style={{
-                background: "rgba(255,255,255,0.7)",
-                backdropFilter: "blur(20px)",
-                borderColor: "rgba(255,255,255,0.3)",
                 boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
               }}>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined" style={{ color: "#257ca3", fontVariationSettings: "'FILL' 1" }}>
+                    <span className="material-symbols-outlined" style={{ color: "var(--color-primary, #257ca3)", fontVariationSettings: "'FILL' 1" }}>
                       lightbulb
                     </span>
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#5B6572]">
+                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-main, #5B6572)]">
                       Dica de Hidratação
                     </span>
                   </div>
                   <button
                     onClick={() => setTipIndex((prev) => (prev + 1) % HYDRATION_TIPS.length)}
-                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors cursor-pointer text-[#5B6572] focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
+                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-colors cursor-pointer text-[var(--color-text-main, #5B6572)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
                     title="Nova dica"
                   >
                     <span className="material-symbols-outlined text-[16px]">refresh</span>
@@ -626,30 +621,30 @@ export function Dashboard() {
       {/* Fixed header */}
       <header className="flex justify-between items-end px-8 pt-4 pb-2 shrink-0">
         <div>
-          <h2 className="text-xl font-medium mb-0.5" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
+          <h2 className="text-xl font-medium mb-0.5" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.01em" }}>
             Resumo Diário
           </h2>
-          <p className="text-xs" style={{ color: "#5B6572" }}>
+          <p className="text-xs" style={{ color: "var(--color-text-main, #5B6572)" }}>
             Acompanhe seu fluxo de hidratação de hoje.
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-semibold uppercase tracking-wider leading-none" style={{ color: "#257ca3" }}>Hoje</p>
-          <p className="text-xs font-medium mt-1" style={{ color: "#191c1e" }}>{formatDate()}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider leading-none" style={{ color: "var(--color-primary, #257ca3)" }}>Hoje</p>
+          <p className="text-xs font-medium mt-1" style={{ color: "var(--color-on-surface, #191c1e)" }}>{formatDate()}</p>
         </div>
       </header>
 
       {/* Scrollable content */}
       <div className="flex-1 flex flex-col px-8 pb-4 overflow-y-auto min-h-0">
         {settings?.app_mode === "pro" && stats?.goal_expediente_ml !== undefined && (
-          <div className="mt-1 mb-2 bg-[#e0f2fe]/40 border border-[#bfe8ff]/80 rounded-xl p-2.5 flex gap-2.5 items-center">
-            <span className="material-symbols-outlined text-[24px] text-[#006492] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <div className="mt-1 mb-2 bg-primary-container/20 border border-primary-container/40 rounded-xl p-2.5 flex gap-2.5 items-center">
+            <span className="material-symbols-outlined text-[24px] text-primary shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
               info
             </span>
-            <div className="text-xs text-[#004f74] leading-relaxed">
-              Sua meta diária ideal é de <strong className="text-[#003853]">{formatMl(stats.goal_ml)}</strong>. 
-              Como o aplicativo monitora o seu expediente no computador, os lembretes ativos ajudarão você a consumir a meta proporcional de <strong className="text-[#003853]">{formatMl(stats.goal_expediente_ml)}</strong> enquanto estiver ativo no PC. 
-              O restante de <strong className="text-[#003853]">{formatMl(stats.goal_fora_expediente_ml ?? 0)}</strong> deve ser consumido naturalmente fora do horário do computador.
+            <div className="text-xs text-[var(--color-on-primary-container)] leading-relaxed">
+              Sua meta diária ideal é de <strong className="text-[var(--color-on-surface)]">{formatMl(stats.goal_ml)}</strong>. 
+              Como o aplicativo monitora o seu expediente no computador, os lembretes ativos ajudarão você a consumir a meta proporcional de <strong className="text-[var(--color-on-surface)]">{formatMl(stats.goal_expediente_ml)}</strong> enquanto estiver ativo no PC. 
+              O restante de <strong className="text-[var(--color-on-surface)]">{formatMl(stats.goal_fora_expediente_ml ?? 0)}</strong> deve ser consumido naturalmente fora do horário do computador.
             </div>
           </div>
         )}
@@ -662,40 +657,39 @@ export function Dashboard() {
           {/* Row 1: Consumed & Remaining */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
             {/* Consumed card */}
-            <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 relative overflow-hidden flex flex-col justify-between"
+            <div className="glass-surface rounded-xl p-4 group hover:border-primary transition-colors duration-300 relative overflow-hidden flex flex-col justify-between"
               style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
               <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-text-main">
                       Consumido
                     </p>
                     <button
                       onClick={() => setHistoryOpen(true)}
-                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none"
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-primary hover:bg-primary-container/30 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none"
                       title="Editar registros de hoje"
                     >
                       <span className="material-symbols-outlined text-[16px]">edit</span>
                     </button>
                     <button
                       onClick={() => setSetTotalOpen(true)}
-                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none"
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-primary hover:bg-primary-container/30 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer focus:outline-none"
                       title="Definir total bebido hoje"
                     >
                       <span className="material-symbols-outlined text-[16px]">tune</span>
                     </button>
                   </div>
-                  <h3 className="text-4xl font-semibold leading-none cursor-pointer focus:outline-none" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}
+                  <h3 className="text-4xl font-semibold leading-none cursor-pointer focus:outline-none" style={{ color: "var(--color-primary, #257ca3)", letterSpacing: "-0.04em" }}
                     onClick={() => setHistoryOpen(true)}
                     title="Editar registros de hoje">
                     {consumed >= 1000 ? (consumed / 1000).toFixed(2).replace(".", ",") : consumed}
-                    <span className="text-xl font-medium text-gray-500">
+                    <span className="text-xl font-medium text-text-main">
                       {consumed >= 1000 ? "L" : "ml"}
                     </span>
                   </h3>
                 </div>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-primary-container/30">
                   {settings?.recipiente_configurado ? (
                     (() => {
                       const cap = settings.recipiente_capacidade_ml;
@@ -705,28 +699,28 @@ export function Dashboard() {
                       return <JugSvg />;
                     })()
                   ) : (
-                    <span className="material-symbols-outlined text-[18px]" style={{ color: "#257ca3" }}>local_drink</span>
+                    <span className="material-symbols-outlined text-[18px] text-primary">local_drink</span>
                   )}
                 </div>
               </div>
               <div className="flex items-center gap-3 mt-4">
                 <CircularProgress percent={percent} size={48} />
-                <div className="text-xs text-gray-500 leading-tight">
-                  da sua meta de <strong className="text-gray-800">{formatMl(goal)}</strong>
+                <div className="text-xs text-text-main leading-tight">
+                  da sua meta de <strong className="text-text-dark">{formatMl(goal)}</strong>
                   {settings?.recipiente_configurado && (
-                    <span className="block text-[10px] mt-0.5 font-medium text-[#257ca3]">
+                    <span className="block text-[10px] mt-0.5 font-medium text-primary">
                       {getContainerGoalText()}
                     </span>
                   )}
                   {settings?.app_mode === "pro" && stats?.goal_expediente_ml !== undefined && stats?.goal_fora_expediente_ml !== undefined && (
-                    <div className="mt-2 pt-1.5 border-t border-gray-100 flex flex-col gap-0.5 text-[9px] text-gray-400 font-medium leading-none">
+                    <div className="mt-2 pt-1.5 border-t border-border-subtle flex flex-col gap-0.5 text-[9px] text-gray-400 font-medium leading-none">
                       <div className="flex justify-between gap-3">
                         <span>💻 No PC:</span>
-                        <strong className="text-gray-600">{formatMl(stats.goal_expediente_ml)}</strong>
+                        <strong className="text-text-main">{formatMl(stats.goal_expediente_ml)}</strong>
                       </div>
                       <div className="flex justify-between gap-3">
                         <span>🏡 Fora do PC:</span>
-                        <strong className="text-gray-600">{formatMl(stats.goal_fora_expediente_ml)}</strong>
+                        <strong className="text-text-main">{formatMl(stats.goal_fora_expediente_ml)}</strong>
                       </div>
                     </div>
                   )}
@@ -735,34 +729,33 @@ export function Dashboard() {
             </div>
 
             {/* Remaining card */}
-            <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between"
+            <div className="glass-surface rounded-xl p-4 group hover:border-primary transition-colors duration-300 flex flex-col justify-between"
               style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Restante</p>
-                  <h3 className="text-4xl font-semibold leading-none text-gray-800" style={{ letterSpacing: "-0.02em" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-text-main mb-1">Restante</p>
+                  <h3 className="text-4xl font-semibold leading-none text-text-dark" style={{ letterSpacing: "-0.02em" }}>
                     <AnimatedNumber
                       value={remaining}
                       format={(n) => remaining >= 1000 ? (n / 1000).toFixed(2).replace(".", ",") : String(Math.round(n))}
                     />
-                    <span className="text-xl font-medium text-gray-500">
+                    <span className="text-xl font-medium text-text-main">
                       {remaining >= 1000 ? "L" : "ml"}
                     </span>
                   </h3>
                 </div>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: "rgba(224,242,254,0.5)" }}>
-                  <span className="material-symbols-outlined text-[18px] text-[#0284c7]">schedule</span>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-primary-container/30">
+                  <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
                 </div>
               </div>
-              <div className="mt-4 pt-1.5 border-t border-gray-100 flex justify-between items-center gap-3 text-xs text-gray-500 leading-tight">
+              <div className="mt-4 pt-1.5 border-t border-border-subtle flex justify-between items-center gap-3 text-xs text-text-main leading-tight">
                 <span>
                   {settings?.app_mode === "pro" 
                     ? "faltam para atingir a meta no PC." 
                     : "faltam para atingir o objetivo diário."}
                 </span>
                 {stats?.next_reminder_at && (
-                  <div className="flex items-center gap-1 bg-[#257ca3]/10 border border-[#257ca3]/20 px-2 py-0.5 rounded-full text-[9px] font-bold text-[#257ca3] uppercase tracking-wider shrink-0" title="Próximo lembrete">
+                  <div className="flex items-center gap-1 bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full text-[9px] font-bold text-primary uppercase tracking-wider shrink-0" title="Próximo lembrete">
                     <span className="material-symbols-outlined text-[12px]">alarm</span>
                     {formatTime(stats.next_reminder_at)}
                   </div>
@@ -774,31 +767,30 @@ export function Dashboard() {
           {/* Row 2: Streak */}
           <div className="w-full flex-1 min-h-0">
             {/* Streak */}
-            <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between h-full"
+            <div className="glass-surface rounded-xl p-4 group hover:border-primary transition-colors duration-300 flex flex-col justify-between h-full"
               style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: "rgba(201,230,255,0.5)" }}>
-                    <span className="material-symbols-outlined text-[18px]" style={{ color: "#006492" }}>local_fire_department</span>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-primary-container/30">
+                    <span className="material-symbols-outlined text-[18px] text-primary">local_fire_department</span>
                   </div>
-                  <p className="text-xs font-semibold text-gray-500">Streak Atual</p>
+                  <p className="text-xs font-semibold text-text-main">Streak Atual</p>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <h3 className="text-4xl font-semibold leading-none text-gray-800" style={{ letterSpacing: "-0.04em" }}>
+                  <h3 className="text-4xl font-semibold leading-none text-text-dark" style={{ letterSpacing: "-0.04em" }}>
                     <AnimatedNumber value={streak} decimals={0} />
                   </h3>
-                  <p className="text-xs text-gray-500">dias seguidos</p>
+                  <p className="text-xs text-text-main">dias seguidos</p>
                 </div>
               </div>
               {/* Week timeline */}
-              <div className="flex justify-between items-center mt-3 pt-3 border-t" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-border-subtle">
                 {weekTimeline.map((d, i) => (
                   <div key={i} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold transition-colors"
                     style={{
-                      backgroundColor: d.reached ? "#257ca3" : "#e0e3e6",
-                      color: d.reached ? "#ffffff" : "#71787c",
-                      outline: d.isToday ? "2px solid #257ca3" : "none",
+                      backgroundColor: d.reached ? "var(--color-primary, #257ca3)" : "var(--color-outline-variant, #e0e3e6)",
+                      color: d.reached ? "#ffffff" : "var(--color-outline, #71787c)",
+                      outline: d.isToday ? "2px solid var(--color-primary, #257ca3)" : "none",
                       outlineOffset: "1px",
                     }}
                     title={d.isToday ? "Hoje" : undefined}>
@@ -843,35 +835,35 @@ export function Dashboard() {
 
             {/* Missão Diária */}
             {settings?.app_mode === "pro" && todayStats?.daily_mission ? (
-              <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-all duration-300 relative overflow-hidden flex flex-col justify-between h-full"
+              <div className="glass-surface rounded-xl p-4 group hover:border-primary transition-all duration-300 relative overflow-hidden flex flex-col justify-between h-full"
                 style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
                 <div className="flex items-center gap-2.5 mb-2">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
-                    style={{ backgroundColor: todayStats.daily_mission.is_completed ? "#dcfce7" : "rgba(201,230,255,0.5)" }}>
+                    style={{ backgroundColor: todayStats.daily_mission.is_completed ? "rgba(22, 163, 74, 0.15)" : "var(--color-primary-container)" }}>
                     <span className="material-symbols-outlined transition-all duration-300 text-[16px]"
                       style={{
-                        color: todayStats.daily_mission.is_completed ? "#16a34a" : "#006492",
+                        color: todayStats.daily_mission.is_completed ? "#16a34a" : "var(--color-primary, #257ca3)",
                         fontVariationSettings: todayStats.daily_mission.is_completed ? "'FILL' 1" : "'FILL' 0"
                       }}>
                       {todayStats.daily_mission.is_completed ? "task_alt" : "target"}
                     </span>
                   </div>
                   <div className="text-left">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Missão Diária</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-text-main">Missão Diária</p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <p className={`text-xs font-semibold leading-tight transition-all duration-300 text-left line-clamp-2 ${
-                    todayStats.daily_mission.is_completed ? "line-through text-gray-400" : "text-gray-800"
+                    todayStats.daily_mission.is_completed ? "line-through text-outline" : "text-text-dark"
                   }`}>
                     {todayStats.daily_mission.description}
                   </p>
 
-                  <div className="w-full bg-gray-100 rounded-full h-1 overflow-hidden">
+                  <div className="w-full bg-surface-container-high rounded-full h-1 overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 rounded-full ${
-                        todayStats.daily_mission.is_completed ? "bg-green-500" : "bg-[#257ca3]"
+                        todayStats.daily_mission.is_completed ? "bg-green-500" : "bg-primary"
                       }`}
                       style={{
                         width: `${Math.min(
@@ -882,7 +874,7 @@ export function Dashboard() {
                     />
                   </div>
 
-                  <div className="flex justify-between items-center text-[8px] font-bold text-gray-400 uppercase tracking-wider">
+                  <div className="flex justify-between items-center text-[8px] font-bold text-outline uppercase tracking-wider">
                     <span>
                       {todayStats.daily_mission.current_ml}ml / {todayStats.daily_mission.target_ml}ml
                     </span>
@@ -895,17 +887,16 @@ export function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between h-full"
+              <div className="glass-surface rounded-xl p-4 group hover:border-primary transition-colors duration-300 flex flex-col justify-between h-full"
                 style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: "rgba(236,238,241,0.5)" }}>
-                    <span className="material-symbols-outlined text-[18px] text-gray-400">target</span>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-surface-container-high/40">
+                    <span className="material-symbols-outlined text-[18px] text-outline">target</span>
                   </div>
-                  <p className="text-xs font-semibold text-gray-500">Missão Diária</p>
+                  <p className="text-xs font-semibold text-text-main">Missão Diária</p>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-3 leading-tight italic">
-                  Nenhuma missão ativa. Complete no Modo Pro.
+                <p className="text-[10px] text-outline mt-3 leading-tight italic">
+                  Nenhuma missão activa. Complete no Modo Pro.
                 </p>
               </div>
             )}
@@ -914,11 +905,11 @@ export function Dashboard() {
         </div>
 
         {/* Right Side: Water Glass (5 columns) */}
-        <div className="col-span-12 lg:col-span-5 bg-white rounded-xl border border-white/20 p-4 flex flex-col justify-between items-center self-stretch"
+        <div className="col-span-12 lg:col-span-5 glass-surface rounded-xl p-4 flex flex-col justify-between items-center self-stretch"
           style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
           <div className="text-center w-full">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Nível de Hidratação</p>
-            <h3 className="text-3xl font-semibold mt-1 text-[#257ca3]">{Math.round(percent)}%</h3>
+            <p className="text-xs font-bold uppercase tracking-wider text-text-main">Nível de Hidratação</p>
+            <h3 className="text-3xl font-semibold mt-1 text-primary">{Math.round(percent)}%</h3>
           </div>
           <div className="flex-1 flex items-center justify-center relative min-h-[280px] w-full py-4">
             <WaterGlass percent={percent} className="min-h-[280px]" />
@@ -945,25 +936,21 @@ export function Dashboard() {
       </div>
 
       {/* Tip card horizontal at the bottom */}
-      <div className="rounded-xl p-4 border shrink-0 transition-all duration-300 mt-4"
+      <div className="glass-surface rounded-xl p-4 shrink-0 transition-all duration-300 mt-4"
         style={{
-          background: "rgba(255,255,255,0.7)",
-          backdropFilter: "blur(20px)",
-          borderColor: "rgba(255,255,255,0.3)",
           boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
         }}>
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
-                <span className="material-symbols-outlined" style={{ color: "#257ca3" }}>lightbulb</span>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-primary-container/40">
+                <span className="material-symbols-outlined" style={{ color: "var(--color-primary, #257ca3)" }}>lightbulb</span>
               </div>
               <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-4 flex-1">
-                <span className="text-sm font-bold shrink-0" style={{ color: "#191c1e" }}>
+                <span className="text-sm font-bold shrink-0" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                   Dica de Hidratação:
                 </span>
-                <p className="text-sm text-left flex-1" style={{ color: "#5B6572", lineHeight: "1.5" }}>
+                <p className="text-sm text-left flex-1" style={{ color: "var(--color-text-main, #5B6572)", lineHeight: "1.5" }}>
                   {customTipText || HYDRATION_TIPS[tipIndex]}
                 </p>
               </div>
@@ -1040,37 +1027,37 @@ export function Dashboard() {
               <div className="col-span-12 lg:col-span-8 flex flex-col gap-3 self-stretch min-h-0 justify-between">
                 
                 {/* Row 1: Consumido, Restante & Botão de Registro Rápido */}
-                <div className="bg-white rounded-xl p-4 border border-white/20 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-1 min-h-0"
+                <div className="glass-surface rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-1 min-h-0"
                   style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
                   
-                  <div className="flex-1 grid grid-cols-2 gap-4 divide-x divide-gray-100 h-full items-center">
+                  <div className="flex-1 grid grid-cols-2 gap-4 divide-x divide-border-subtle h-full items-center">
                     {/* Consumido */}
                     <div className="flex flex-col justify-center h-full group">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Consumido</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-text-main">Consumido</p>
                         <button
                           onClick={() => setHistoryOpen(true)}
-                          className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer focus:outline-none"
+                          className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-primary hover:bg-primary-container/30 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer focus:outline-none"
                           title="Editar registros de hoje"
                         >
                           <span className="material-symbols-outlined text-[13px]">edit</span>
                         </button>
                         <button
                           onClick={() => setSetTotalOpen(true)}
-                          className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-[#257ca3] hover:bg-[#bfe8ff]/50 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer focus:outline-none"
+                          className="opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity text-primary hover:bg-primary-container/30 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer focus:outline-none"
                           title="Definir total bebido hoje"
                         >
                           <span className="material-symbols-outlined text-[13px]">tune</span>
                         </button>
                       </div>
-                      <h3 className="text-3xl font-semibold text-gray-800 tracking-tight leading-none cursor-pointer focus:outline-none"
+                      <h3 className="text-3xl font-semibold text-text-dark tracking-tight leading-none cursor-pointer focus:outline-none"
                         onClick={() => setHistoryOpen(true)}
                         title="Editar registros de hoje">
                         <AnimatedNumber value={consumed} />
-                        <span className="text-lg font-medium text-gray-400 ml-1">ml</span>
+                        <span className="text-lg font-medium text-text-main ml-1">ml</span>
                       </h3>
                       {settings?.app_mode === "pro" && stats?.goal_expediente_ml && (
-                        <p className="text-[10px] text-gray-400 mt-1.5 leading-none">
+                        <p className="text-[10px] text-text-main mt-1.5 leading-none">
                           da meta de <strong>{stats.goal_expediente_ml}ml</strong> no PC
                         </p>
                       )}
@@ -1078,13 +1065,13 @@ export function Dashboard() {
 
                     {/* Restante */}
                     <div className="pl-4 flex flex-col justify-center h-full">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Restante</p>
-                      <h3 className="text-3xl font-semibold text-gray-800 tracking-tight leading-none">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-text-main mb-1">Restante</p>
+                      <h3 className="text-3xl font-semibold text-text-dark tracking-tight leading-none">
                         <AnimatedNumber value={remaining} />
-                        <span className="text-lg font-medium text-gray-400 ml-1">ml</span>
+                        <span className="text-lg font-medium text-text-main ml-1">ml</span>
                       </h3>
                       {stats?.next_reminder_at && (
-                        <div className="flex items-center gap-1 mt-1.5 text-[10px] text-[#257ca3] font-bold uppercase tracking-wider leading-none">
+                        <div className="flex items-center gap-1 mt-1.5 text-[10px] text-primary font-bold uppercase tracking-wider leading-none">
                           <span className="material-symbols-outlined text-[13px]">alarm</span>
                           <span>Lembrete: {formatTime(stats.next_reminder_at)}</span>
                         </div>
@@ -1096,7 +1083,7 @@ export function Dashboard() {
                   <div className="flex items-center justify-center shrink-0">
                     <button
                       onClick={() => handleLogDrink(drinkAmount)}
-                      className="px-5 py-3 bg-gradient-to-r from-[#257ca3] to-[#0f76a0] hover:from-[#1e6687] hover:to-[#0c5d7f] text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3]"
+                      className="px-5 py-3 bg-gradient-to-r from-primary to-secondary hover:brightness-95 text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <span className="material-symbols-outlined text-[16px]">water_drop</span>
                       <span>
@@ -1120,31 +1107,31 @@ export function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-[1.2] min-h-0">
                   {/* Missão Diária */}
                   {settings?.app_mode === "pro" && todayStats?.daily_mission ? (
-                    <div className="bg-white rounded-xl p-4 border border-white/20 flex flex-col justify-between h-full"
+                    <div className="glass-surface rounded-xl p-4 flex flex-col justify-between h-full"
                       style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
-                        style={{ backgroundColor: todayStats.daily_mission.is_completed ? "#dcfce7" : "rgba(201,230,255,0.5)" }}>
+                        style={{ backgroundColor: todayStats.daily_mission.is_completed ? "rgba(22, 163, 74, 0.15)" : "var(--color-primary-container)" }}>
                         <span className="material-symbols-outlined transition-all duration-300 text-[14px]"
                           style={{
-                            color: todayStats.daily_mission.is_completed ? "#16a34a" : "#006492",
+                            color: todayStats.daily_mission.is_completed ? "#16a34a" : "var(--color-primary, #257ca3)",
                             fontVariationSettings: todayStats.daily_mission.is_completed ? "'FILL' 1" : "'FILL' 0"
                           }}>
                           {todayStats.daily_mission.is_completed ? "task_alt" : "target"}
                         </span>
                       </div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Missão Diária</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-text-main">Missão Diária</p>
                     </div>
 
                     <div className="flex flex-col gap-1">
-                      <p className="text-xs font-semibold leading-tight text-gray-700 text-left line-clamp-2">
+                      <p className="text-xs font-semibold leading-tight text-text-dark text-left line-clamp-2">
                         {todayStats.daily_mission.description}
                       </p>
-                      <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                      <div className="w-full bg-surface-container-high rounded-full h-1.5 mt-1 overflow-hidden">
                         <div className="bg-green-500 h-1.5 rounded-full"
                           style={{ width: `${Math.min(100, (todayStats.daily_mission.current_ml / todayStats.daily_mission.target_ml) * 100)}%` }} />
                       </div>
-                      <div className="flex justify-between items-center text-[8px] font-bold text-gray-400 uppercase tracking-wider mt-1">
+                      <div className="flex justify-between items-center text-[8px] font-bold text-outline uppercase tracking-wider mt-1">
                         <span>{todayStats.daily_mission.current_ml}ml / {todayStats.daily_mission.target_ml}ml</span>
                         {todayStats.daily_mission.is_completed ? (
                           <span className="text-green-600 font-bold">Completada!</span>
@@ -1155,44 +1142,43 @@ export function Dashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between h-full"
+                  <div className="glass-surface rounded-xl p-4 flex flex-col justify-between h-full"
                     style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: "rgba(236,238,241,0.5)" }}>
-                        <span className="material-symbols-outlined text-[14px] text-gray-400">target</span>
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-surface-container-high/40">
+                        <span className="material-symbols-outlined text-[14px] text-outline">target</span>
                       </div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Missão Diária</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-text-main">Missão Diária</p>
                     </div>
-                    <p className="text-[10px] text-gray-400 leading-tight italic">
-                      Nenhuma missão ativa. Complete no Modo Pro.
+                    <p className="text-[10px] text-outline leading-tight italic">
+                      Nenhuma missão activa. Complete no Modo Pro.
                     </p>
                   </div>
                 )}
 
                 {/* Streak */}
-                <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between h-full"
+                {/* Streak */}
+                <div className="glass-surface rounded-xl p-4 flex flex-col justify-between h-full"
                   style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: "rgba(201,230,255,0.5)" }}>
-                      <span className="material-symbols-outlined text-[14px]" style={{ color: "#006492" }}>local_fire_department</span>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-primary-container/30">
+                      <span className="material-symbols-outlined text-[14px] text-primary">local_fire_department</span>
                     </div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Streak Atual</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-text-main">Streak Atual</p>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <h3 className="text-3xl font-semibold text-gray-800 tracking-tight leading-none">
+                    <h3 className="text-3xl font-semibold text-text-dark tracking-tight leading-none">
                       <AnimatedNumber value={streak} decimals={0} />
                     </h3>
-                    <p className="text-[10px] text-gray-500">dias seguidos</p>
+                    <p className="text-[10px] text-text-main">dias seguidos</p>
                   </div>
-                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-border-subtle">
                     {weekTimeline.map((d, i) => (
                       <div key={i} className="w-4.5 h-4.5 rounded-full flex items-center justify-center text-[8px] font-bold transition-colors"
                         style={{
-                          backgroundColor: d.reached ? "#257ca3" : "#e0e3e6",
-                          color: d.reached ? "#ffffff" : "#71787c",
-                          outline: d.isToday ? "2px solid #257ca3" : "none",
+                          backgroundColor: d.reached ? "var(--color-primary, #257ca3)" : "var(--color-outline-variant, #e0e3e6)",
+                          color: d.reached ? "#ffffff" : "var(--color-outline, #71787c)",
+                          outline: d.isToday ? "2px solid var(--color-primary, #257ca3)" : "none",
                           outlineOffset: "1px",
                         }}
                         title={d.isToday ? "Hoje" : undefined}>
@@ -1204,15 +1190,14 @@ export function Dashboard() {
               </div>
 
               {/* Row 3: Dica de Hidratação Integrada */}
-              <div className="bg-[#f0f9ff]/50 border border-[#bae6fd]/50 rounded-xl p-3 flex gap-3 items-center shrink-0"
+              <div className="bg-primary-container/20 border border-primary-container/40 rounded-xl p-3 flex gap-3 items-center shrink-0"
                 style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.01)" }}>
-                <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
-                  <span className="material-symbols-outlined text-[15px] text-[#257ca3]">lightbulb</span>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-primary-container/40">
+                  <span className="material-symbols-outlined text-[15px] text-primary">lightbulb</span>
                 </div>
                 <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-left">
-                  <span className="text-xs font-bold text-[#0369a1] shrink-0">Dica de Hidratação:</span>
-                  <p className="text-xs text-[#0369a1] leading-tight line-clamp-1">
+                  <span className="text-xs font-bold text-[var(--color-on-primary-container)] shrink-0">Dica de Hidratação:</span>
+                  <p className="text-xs text-[var(--color-on-primary-container)] leading-tight line-clamp-1">
                     {customTipText || HYDRATION_TIPS[tipIndex]}
                   </p>
                 </div>
@@ -1221,11 +1206,11 @@ export function Dashboard() {
             </div>
 
             {/* Right Side (4 columns): Copo de Água */}
-            <div className="col-span-12 lg:col-span-4 bg-white rounded-xl border border-white/20 p-4 flex flex-col justify-between items-center self-stretch"
+            <div className="col-span-12 lg:col-span-4 glass-surface rounded-xl p-4 flex flex-col justify-between items-center self-stretch"
               style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
               <div className="text-center w-full">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Nível de Hidratação</p>
-                <h3 className="text-2xl font-semibold mt-1 text-[#257ca3]">{Math.round(percent)}%</h3>
+                <p className="text-xs font-bold uppercase tracking-wider text-text-main">Nível de Hidratação</p>
+                <h3 className="text-2xl font-semibold mt-1 text-primary">{Math.round(percent)}%</h3>
               </div>
               <div className="flex-grow flex items-center justify-center relative min-h-[220px] w-full py-2">
                 <WaterGlass percent={percent} className="min-h-[220px]" />
@@ -1241,8 +1226,8 @@ export function Dashboard() {
                   />
                 </div>
               ) : (
-                <div className="w-full shrink-0 flex items-center justify-center mt-2 border-t pt-2" style={{ borderColor: "rgba(44,52,64,0.06)" }}>
-                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wide">
+                <div className="w-full shrink-0 flex items-center justify-center mt-2 border-t pt-2" style={{ borderColor: "var(--color-border-subtle)" }}>
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-outline uppercase tracking-wide">
                     <span className="material-symbols-outlined text-[13px]">info</span>
                     <span>Registro atualiza a gota em tempo real</span>
                   </div>

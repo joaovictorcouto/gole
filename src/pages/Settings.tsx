@@ -49,18 +49,15 @@ const filterTabs = [
 
 function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl p-6 mb-6 transition-colors duration-300 hover:border-[#006492]/50"
+    <div className="glass-surface rounded-xl p-6 mb-6 transition-colors duration-300 hover:border-primary/50"
       style={{
-        background: "rgba(255,255,255,0.7)",
-        backdropFilter: "blur(20px)",
-        border: "1px solid white",
         boxShadow: "0 8px 30px rgba(0,0,0,0.04)",
       }}>
       <div className="flex items-center gap-3 mb-6">
-        <span className="material-symbols-outlined" style={{ color: "#257ca3", fontVariationSettings: "'FILL' 1" }}>
+        <span className="material-symbols-outlined" style={{ color: "var(--color-primary, #257ca3)", fontVariationSettings: "'FILL' 1" }}>
           {icon}
         </span>
-        <h2 className="text-2xl font-medium" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
+        <h2 className="text-2xl font-medium" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.01em" }}>
           {title}
         </h2>
       </div>
@@ -72,8 +69,8 @@ function Section({ title, icon, children }: { title: string; icon: string; child
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-4 border-b last:border-b-0"
-      style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-      <span className="text-sm font-medium" style={{ color: "#191c1e" }}>{label}</span>
+      style={{ borderColor: "var(--color-border-subtle)" }}>
+      <span className="text-sm font-medium" style={{ color: "var(--color-on-surface, #191c1e)" }}>{label}</span>
       {children}
     </div>
   );
@@ -191,7 +188,7 @@ const JugSvg = () => (
 export function Settings() {
   const navigate = useNavigate();
   const isDev = useIsDev();
-  const { settings, saveSettings, loadSettings } = useAppStore();
+  const { settings, saveSettings, loadSettings, theme, setTheme } = useAppStore();
   const [testingNotif, setTestingNotif] = useState(false);
   const [localGoal, setLocalGoal] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"general" | "phrases">("general");
@@ -864,6 +861,39 @@ export function Settings() {
                       <p className="text-[10px] opacity-80 mt-0.5">Layout Compacto (Novo)</p>
                     </div>
                   </button>
+                </div>
+              </div>
+
+              {/* Tema */}
+              <div className="py-2 border-t mt-4 pt-4" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                <p className="text-sm font-medium mb-3" style={{ color: "var(--color-on-background, #191c1e)" }}>Tema</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { id: "light" as const, label: "Claro", icon: "light_mode", desc: "Sempre claro" },
+                    { id: "dark" as const, label: "Escuro", icon: "dark_mode", desc: "Sempre escuro" },
+                    { id: "system" as const, label: "Sistema", icon: "contrast", desc: "Segue o sistema" },
+                  ]).map((opt) => {
+                    const isActive = theme === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setTheme(opt.id)}
+                        className="flex flex-col items-center gap-2 px-3 py-4 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none"
+                        style={{
+                          backgroundColor: isActive ? "rgba(56,189,248,0.15)" : "var(--color-surface-container, rgba(236,238,241,0.5))",
+                          color: isActive ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
+                          fontWeight: isActive ? 600 : 400,
+                          border: `1.5px solid ${isActive ? "var(--color-primary, #257ca3)" : "transparent"}`,
+                        }}
+                      >
+                        <span className="material-symbols-outlined text-[22px]">{opt.icon}</span>
+                        <div className="text-center">
+                          <p className="text-sm font-semibold">{opt.label}</p>
+                          <p className="text-[9px] opacity-70 mt-0.5">{opt.desc}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </Section>

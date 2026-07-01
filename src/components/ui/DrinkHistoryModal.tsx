@@ -133,9 +133,9 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
         remaining > 0 ? (
           <button
             onClick={handleCompleteGoal}
-            className="w-full mb-3 py-2.5 rounded-xl border text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] text-white focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+            className="w-full mb-3 py-2.5 rounded-xl border text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.01] text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             style={{
-              background: "linear-gradient(135deg, #257ca3 0%, #0f76a0 100%)",
+              background: "linear-gradient(135deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)",
               border: "none",
               boxShadow: "0 4px 12px rgba(59,99,119,0.15)"
             }}
@@ -144,7 +144,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
             Marcar como batida (+{remaining}ml)
           </button>
         ) : (
-          <div className="w-full mb-3 py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-emerald-600 font-semibold text-sm bg-emerald-50 border border-emerald-100">
+          <div className="w-full mb-3 py-2 px-3 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400">
             <span className="material-symbols-outlined text-[18px]">check_circle</span>
             Meta de hidratação batida! 🎉
           </div>
@@ -153,7 +153,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
 
       {/* Add new */}
       {adding ? (
-        <div className="mb-4 p-3 rounded-xl space-y-2" style={{ backgroundColor: "#f7f9fc" }}>
+        <div className="mb-4 p-3 rounded-xl space-y-2" style={{ backgroundColor: "var(--color-surface-container-low, #f7f9fc)" }}>
           <div className="flex gap-2">
             {!isBasicMode && (
               <input
@@ -164,8 +164,8 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                 min={1}
                 max={5000}
                 onChange={(e) => setNewAmount(e.target.value)}
-                className="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
-                style={{ backgroundColor: "white", borderColor: "#e0e3e6" }}
+                className="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 text-text-dark bg-surface"
+                style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
               />
             )}
             <input
@@ -173,23 +173,23 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
               autoFocus={isBasicMode}
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              className="px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 flex-1"
-              style={{ backgroundColor: "white", borderColor: "#e0e3e6" }}
+              className="px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 flex-1 text-text-dark bg-surface"
+              style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
               title="Horário"
             />
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleAdd}
-              className="flex-1 px-4 py-2 rounded-xl text-white font-medium text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-              style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
+              className="flex-1 px-4 py-2 rounded-xl text-white font-medium text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              style={{ background: "linear-gradient(180deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)" }}
             >
               Adicionar
             </button>
             <button
               onClick={() => { setAdding(false); setNewAmount(""); }}
-              className="px-4 py-2 rounded-xl font-medium text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-              style={{ color: "#5B6572", backgroundColor: "#eceef1" }}
+              className="px-4 py-2 rounded-xl font-medium text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 hover:bg-surface-container-high transition-colors"
+              style={{ color: "var(--color-text-main, #5B6572)", backgroundColor: "var(--color-surface-container, #eceef1)" }}
             >
               Cancelar
             </button>
@@ -198,8 +198,8 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="w-full mb-4 py-2.5 rounded-xl border text-sm font-medium cursor-pointer flex items-center justify-center gap-2 transition-colors hover:bg-[#f7f9fc] focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-          style={{ borderColor: "#e0e3e6", color: "#257ca3", borderStyle: "dashed" }}
+          className="w-full mb-4 py-2.5 rounded-xl border text-sm font-medium cursor-pointer flex items-center justify-center gap-2 transition-colors hover:bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          style={{ borderColor: "var(--color-outline-variant, #e0e3e6)", color: "var(--color-primary, #257ca3)", borderStyle: "dashed" }}
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
           Adicionar registro manual
@@ -209,7 +209,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
       {/* List */}
       <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
         {drinks.length === 0 && (
-          <div className="text-center py-8 text-sm" style={{ color: "#71787c" }}>
+          <div className="text-center py-8 text-sm" style={{ color: "var(--color-outline, #71787c)" }}>
             Nenhum registro nesse dia.
           </div>
         )}
@@ -219,9 +219,9 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
             <div
               key={d.id}
               className="flex items-center gap-3 p-3 rounded-xl border transition-colors"
-              style={{ borderColor: "#eceef1", backgroundColor: isEditing ? "#f7f9fc" : "white" }}
+              style={{ borderColor: "var(--color-border-subtle, #eceef1)", backgroundColor: isEditing ? "var(--color-surface-container-low, #f7f9fc)" : "var(--color-surface-container-lowest, white)" }}
             >
-              <span className="material-symbols-outlined text-[20px]" style={{ color: "#257ca3" }}>water_drop</span>
+              <span className="material-symbols-outlined text-[20px]" style={{ color: "var(--color-primary, #257ca3)" }}>water_drop</span>
               <div className="flex-grow flex items-center gap-2">
                 {isEditing ? (
                   <>
@@ -234,8 +234,8 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                         max={5000}
                         onChange={(e) => setEditValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(d.id); if (e.key === "Escape") setEditingId(null); }}
-                        className="w-24 px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
-                        style={{ borderColor: "#e0e3e6", backgroundColor: "white" }}
+                        className="w-24 px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 text-text-dark bg-surface"
+                        style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
                         title="Quantidade (ml)"
                       />
                     )}
@@ -245,17 +245,17 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                       value={editTime}
                       onChange={(e) => setEditTime(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(d.id); if (e.key === "Escape") setEditingId(null); }}
-                      className="px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 flex-grow"
-                      style={{ borderColor: "#e0e3e6", backgroundColor: "white" }}
+                      className="px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 flex-grow text-text-dark bg-surface"
+                      style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
                       title="Horário"
                     />
                   </>
                 ) : (
                   <>
-                    <span className="text-sm font-semibold" style={{ color: "#191c1e" }}>
+                    <span className="text-sm font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>
                       {isBasicMode ? "Copo de água" : `${d.amount_ml}ml`}
                     </span>
-                    <span className="text-xs text-gray-400 font-medium bg-[#f1f3f5] px-2 py-0.5 rounded-md ml-1">
+                    <span className="text-xs text-text-main font-medium bg-surface-container-high px-2 py-0.5 rounded-md ml-1">
                       {formatTime(d.logged_at)}
                     </span>
                   </>
@@ -288,13 +288,13 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                         const mm = String(dTime.getMinutes()).padStart(2, "0");
                         setEditTime(`${hh}:${mm}`);
                       }}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-outline hover:text-text-dark hover:bg-surface-container-high cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 transition-colors"
                     >
                       <span className="material-symbols-outlined text-[18px]">edit</span>
                     </button>
                     <button
                       onClick={() => setDrinkToDelete(d.id)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-500/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors"
                       title="Excluir registro"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>

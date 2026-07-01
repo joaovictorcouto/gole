@@ -170,7 +170,7 @@ function OnboardingShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: "#f7f9fc" }}>
+    <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: "var(--color-background, #f7f9fc)" }}>
       {/* Ambient blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[60px] z-0 pointer-events-none"
         style={{ background: "radial-gradient(circle, rgba(191,232,255,0.6) 0%, transparent 70%)" }} />
@@ -179,7 +179,7 @@ function OnboardingShell({
 
       {/* Unified header */}
       <header className="absolute top-0 left-0 w-full px-8 py-6 flex justify-between items-center z-20">
-        <div className="text-2xl font-semibold tracking-tight" style={{ color: "#257ca3" }}>Gole</div>
+        <div className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-primary, #257ca3)" }}>Gole</div>
         {step > 0 ? (
           <div className="flex gap-2 items-center">
             {Array.from({ length: totalSteps }).map((_, i) => (
@@ -188,7 +188,7 @@ function OnboardingShell({
                 className="h-1.5 rounded-full transition-all duration-300"
                 style={{
                   width: i + 1 === step ? "32px" : "16px",
-                  backgroundColor: i + 1 <= step ? "#257ca3" : "#e0e3e6",
+                  backgroundColor: i + 1 <= step ? "var(--color-primary, #257ca3)" : "var(--color-outline-variant, #e0e3e6)",
                   boxShadow: i + 1 === step ? "0 2px 8px rgba(59,99,119,0.25)" : "none",
                 }}
               />

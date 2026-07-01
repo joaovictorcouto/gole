@@ -37,6 +37,8 @@ interface AppStore {
     appMode?: string
   ) => Promise<void>;
   setReminderNotif: (n: ReminderNotif | null) => void;
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
   updateLastCheckDate: () => Promise<void>;
 }
 
@@ -48,6 +50,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   achievements: [],
   reminderNotif: null,
   drinkTick: 0,
+  theme: (localStorage.getItem('gole-theme') as 'light' | 'dark' | 'system') || 'system',
 
   loadSettings: async () => {
     const settings = await api.getSettings();
@@ -156,6 +159,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   setReminderNotif: (reminderNotif) => set({ reminderNotif }),
+
+  setTheme: (theme) => {
+    localStorage.setItem('gole-theme', theme);
+    set({ theme });
+  },
 
   updateLastCheckDate: async () => {
     await api.updateLastCheckDate();

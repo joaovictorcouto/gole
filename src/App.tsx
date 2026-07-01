@@ -16,7 +16,7 @@ import { playSound, SoundPreset } from "./lib/sounds";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#f7f9fc" }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "var(--color-background, #f7f9fc)" }}>
       <SideNav />
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {children}
@@ -189,7 +189,7 @@ export default function App() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#f7f9fc" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--color-background, #f7f9fc)" }}>
         <div className="flex flex-col items-center gap-4">
           <svg width="60" height="60" viewBox="0 0 100 100" fill="none">
             <path d="M50 15C50 15 25 45 25 65C25 78.8071 36.1929 90 50 90C63.8071 90 75 78.8071 75 65C75 45 50 15 50 15Z"
@@ -201,7 +201,7 @@ export default function App() {
               </linearGradient>
             </defs>
           </svg>
-          <p className="text-sm" style={{ color: "#5B6572" }}>Carregando Gole...</p>
+          <p className="text-sm" style={{ color: "var(--color-text-main, #5B6572)" }}>Carregando Gole...</p>
         </div>
       </div>
     );
