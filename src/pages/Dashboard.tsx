@@ -637,7 +637,7 @@ export function Dashboard() {
       </header>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-8 pb-4">
+      <div className="flex-1 flex flex-col px-8 pb-4 overflow-y-auto min-h-0">
         {settings?.app_mode === "pro" && stats?.goal_expediente_ml !== undefined && (
           <div className="mt-1 mb-2 bg-[#e0f2fe]/40 border border-[#bfe8ff]/80 rounded-xl p-2.5 flex gap-2.5 items-center">
             <span className="material-symbols-outlined text-[24px] text-[#006492] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -650,12 +650,12 @@ export function Dashboard() {
             </div>
           </div>
         )}
-        <div className="grid grid-cols-12 gap-3 mt-1">
+        <div className="grid grid-cols-12 gap-3 mt-1 flex-grow min-h-0">
           {/* Left Side: Cards grid (7 columns) */}
-          <div className="col-span-12 lg:col-span-7 flex flex-col justify-between self-stretch">
+          <div className="col-span-12 lg:col-span-7 flex flex-col justify-between self-stretch gap-3 min-h-0">
           
           {/* Row 1: Consumed & Remaining */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
             {/* Consumed card */}
             <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 relative overflow-hidden flex flex-col justify-between"
               style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
@@ -767,9 +767,9 @@ export function Dashboard() {
           </div>
 
           {/* Row 2: Streak */}
-          <div className="w-full">
+          <div className="w-full flex-1 min-h-0">
             {/* Streak */}
-            <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between"
+            <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between h-full"
               style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
               <div>
                 <div className="flex items-center gap-3 mb-3">
@@ -805,7 +805,7 @@ export function Dashboard() {
           </div>
 
           {/* Row 3: Quick Action & Daily Mission */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
             {/* Quick action */}
             <button
               onClick={() => handleLogDrink(drinkAmount)}
@@ -838,7 +838,7 @@ export function Dashboard() {
 
             {/* Missão Diária */}
             {settings?.app_mode === "pro" && todayStats?.daily_mission ? (
-              <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
+              <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-all duration-300 relative overflow-hidden flex flex-col justify-between h-full"
                 style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
                 <div className="flex items-center gap-2.5 mb-2">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300"
@@ -890,7 +890,7 @@ export function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between"
+              <div className="bg-white rounded-xl p-4 border border-white/20 group hover:border-[#006492] transition-colors duration-300 flex flex-col justify-between h-full"
                 style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"

@@ -498,9 +498,25 @@ fn update_drink(state: State<AppState>, app: AppHandle, id: i64, amount_ml: i64,
 
 #[tauri::command]
 fn delete_drink(state: State<AppState>, app: AppHandle, id: i64) -> Result<TodayStats, String> {
+    let date = Local::now().format("%Y-%m-%d").to_string();
     {
         let conn = state.conn.lock().unwrap();
         db::delete_drink(&conn, id).map_err(|e| e.to_string())?;
+        let _ = recalculate_daily_mission_progress(&conn, &date);
+        let _ = revert_achievements_if_needed(&conn);
+    }
+    emit_schedule_changed(&app);
+    get_today_stats(state)
+}
+
+#[tauri::command]
+fn delete_last_drink(state: State<AppState>, app: AppHandle) -> Result<TodayStats, String> {
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    {
+        let conn = state.conn.lock().unwrap();
+        db::delete_last_drink(&conn, &date).map_err(|e| e.to_string())?;
+        let _ = recalculate_daily_mission_progress(&conn, &date);
+        let _ = revert_achievements_if_needed(&conn);
     }
     emit_schedule_changed(&app);
     get_today_stats(state)
@@ -531,16 +547,97 @@ fn set_today_total(state: State<AppState>, app: AppHandle, target_ml: i64) -> Re
     get_today_stats(state)
 }
 
-#[tauri::command]
-fn delete_last_drink(state: State<AppState>, app: AppHandle) -> Result<TodayStats, String> {
-    let date = Local::now().format("%Y-%m-%d").to_string();
-    {
-        let conn = state.conn.lock().unwrap();
-        db::delete_last_drink(&conn, &date).map_err(|e| e.to_string())?;
+fn recalculate_daily_mission_progress(conn: &Connection, date: &str) -> Result<(), String> {
+    if let Some(mission) = db::get_daily_mission(conn, date).map_err(|e| e.to_string())? {
+        let mut stmt = conn
+            .prepare("SELECT amount_ml, logged_at FROM daily_logs WHERE date = ?1")
+            .map_err(|e| e.to_string())?;
+            
+        let rows = stmt
+            .query_map(rusqlite::params![date], |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+            })
+            .map_err(|e| e.to_string())?;
+            
+        let mut current_ml = 0;
+        for r in rows {
+            let (amount, logged_at) = r.map_err(|e| e.to_string())?;
+            
+            let applies = if mission.mission_type == "morning_hydration" {
+                if let Some(t_parts) = logged_at.split('T').nth(1) {
+                    if let Some(hour_str) = t_parts.split(':').next() {
+                        if let Ok(hour) = hour_str.parse::<u32>() {
+                            hour < 10
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            } else {
+                true
+            };
+            
+            if applies {
+                current_ml += amount;
+            }
+        }
+        
+        let final_ml = current_ml.min(mission.target_ml);
+        let completed = if final_ml >= mission.target_ml { 1 } else { 0 };
+        
+        conn.execute(
+            "UPDATE daily_missions SET current_ml = ?1, is_completed = ?2 WHERE id = ?3",
+            rusqlite::params![final_ml, completed, mission.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
-    emit_schedule_changed(&app);
-    get_today_stats(state)
+    
+    Ok(())
 }
+
+fn revert_achievements_if_needed(conn: &Connection) -> Result<(), String> {
+    let settings = db::get_settings(conn).map_err(|e| e.to_string())?;
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    let consumed = db::get_today_consumed(conn, &date).map_err(|e| e.to_string())?;
+    let goal = settings.daily_goal_ml;
+
+    if consumed < goal {
+        let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'goal_complete'", []);
+    }
+
+    if consumed == 0 {
+        let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'first_day'", []);
+    }
+
+    let streak = db::get_streak(conn, goal).map_err(|e| e.to_string())?;
+    if streak < 3   { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'streak_3'", []); }
+    if streak < 7   { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'streak_7'", []); }
+    if streak < 14  { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'streak_14'", []); }
+    if streak < 30  { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'streak_30'", []); }
+    if streak < 100 { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'streak_100'", []); }
+
+    let total_liters = db::get_total_consumed_liters(conn).map_err(|e| e.to_string())?;
+    if total_liters < 10.0  { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'liters_10'", []); }
+    if total_liters < 50.0  { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'liters_50'", []); }
+    if total_liters < 100.0 { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'liters_100'", []); }
+    if total_liters < 500.0 { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'liters_500'", []); }
+
+    let active_days = db::distinct_days_with_logs(conn).map_err(|e| e.to_string())?;
+    if active_days < 7  { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'active_7'", []); }
+    if active_days < 30 { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'active_30'", []); }
+
+    let goal_days = db::days_goal_reached_count(conn, goal).map_err(|e| e.to_string())?;
+    if goal_days < 10  { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'goal_10_days'", []); }
+    if goal_days < 50  { let _ = conn.execute("DELETE FROM unlocked_achievements WHERE id = 'goal_50_days'", []); }
+
+    Ok(())
+}
+
+
 
 #[tauri::command]
 fn complete_onboarding(
