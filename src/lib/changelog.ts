@@ -14,6 +14,31 @@ export interface ChangelogVersion {
 // Latest first. Add new versions to the top.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: "1.0.6",
+    date: "2026-07-01",
+    highlight: "Melhorias de Modo Escuro no Onboarding e ajustes de contraste no Dashboard!",
+    entries: [
+      {
+        icon: "dark_mode",
+        title: "Modo Escuro no Onboarding",
+        description:
+          "O fluxo de configuração inicial (Onboarding) agora conta com suporte completo ao tema escuro, garantindo conforto visual desde a primeira execução.",
+      },
+      {
+        icon: "palette",
+        title: "Botão de Tema no Primeiro Acesso",
+        description:
+          "Adicionamos um botão minimalista de alternar tema logo no cabeçalho do Onboarding, permitindo escolher o estilo visual imediatamente.",
+      },
+      {
+        icon: "contrast",
+        title: "Ajustes de Contraste e Legibilidade",
+        description:
+          "Refinamos o contraste do círculo de progresso, gráficos e textos no Dashboard para perfeita leitura sob o Modo Escuro.",
+      },
+    ],
+  },
+  {
     version: "1.0.5",
     date: "2026-07-01",
     highlight: "Conheça o Modo Escuro nativo, o Modo Básico e as novas aparências do Dashboard!",
