@@ -96,9 +96,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         INSERT OR IGNORE INTO settings (key, value) VALUES ('next_override_at', '');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('next_override_ml', '0');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('app_mode', 'pro');
-        INSERT OR IGNORE INTO settings (key, value) VALUES ('weather_enabled', 'true');
-        INSERT OR IGNORE INTO settings (key, value) VALUES ('weather_city', 'Sinop');
-        INSERT OR IGNORE INTO settings (key, value) VALUES ('weather_api_key', '');
+
 
         -- Profissional
         INSERT OR IGNORE INTO phrases (text, category) VALUES ('💧 Hora da água.', 'profissional');
@@ -244,9 +242,6 @@ pub struct Settings {
     pub next_override_at: String,
     pub next_override_ml: i64,
     pub app_mode: String,
-    pub weather_enabled: bool,
-    pub weather_city: String,
-    pub weather_api_key: String,
 }
 
 pub fn get_settings(conn: &Connection) -> Result<Settings> {
@@ -262,14 +257,6 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
     let personality = map.get("notification_personality").cloned().unwrap_or_else(|| "tudo".into());
     let personality = if personality == "mixed" { "tudo".to_string() } else { personality };
     let app_mode = map.get("app_mode").cloned().unwrap_or_else(|| "pro".into());
-
-    let raw_key = map.get("weather_api_key").cloned().unwrap_or_default();
-    let decrypted_key = if !raw_key.is_empty() {
-        let dec = decrypt_key(&raw_key);
-        if dec.is_empty() { raw_key } else { dec }
-    } else {
-        raw_key
-    };
 
     Ok(Settings {
         onboarding_complete: map.get("onboarding_complete").map(|v| v == "true").unwrap_or(false),
@@ -294,9 +281,6 @@ pub fn get_settings(conn: &Connection) -> Result<Settings> {
         next_override_at: map.get("next_override_at").cloned().unwrap_or_default(),
         next_override_ml: map.get("next_override_ml").and_then(|v| v.parse().ok()).unwrap_or(0),
         app_mode,
-        weather_enabled: map.get("weather_enabled").map(|v| v == "true").unwrap_or(true),
-        weather_city: map.get("weather_city").cloned().unwrap_or_else(|| "Sinop".into()),
-        weather_api_key: decrypted_key,
     })
 }
 
@@ -1019,42 +1003,6 @@ mod tests {
         let mission = get_daily_mission(&conn, date).unwrap().unwrap();
         assert_eq!(mission.current_ml, 500);
         assert!(mission.is_completed);
-    }
-
-    #[test]
-    fn test_weather_cache() {
-        let conn = Connection::open_in_memory().unwrap();
-        init_db(&conn).unwrap();
-
-        // Inicialmente as chaves devem estar vazias ou inexistentes
-        let raw_temp = conn.query_row(
-            "SELECT value FROM settings WHERE key = 'weather_current_temp'",
-            [],
-            |row| row.get::<_, String>(0)
-        ).unwrap_or_default();
-        assert!(raw_temp.is_empty());
-
-        // Salvar dados de clima
-        set_setting(&conn, "weather_current_temp", "36.0").unwrap();
-        set_setting(&conn, "weather_current_condition", "Clear").unwrap();
-        set_setting(&conn, "weather_current_description", "calor excessivo").unwrap();
-        set_setting(&conn, "weather_current_icon", "01d").unwrap();
-        set_setting(&conn, "weather_last_updated", "16:30").unwrap();
-
-        // Recuperar e validar
-        let temp: String = conn.query_row(
-            "SELECT value FROM settings WHERE key = 'weather_current_temp'",
-            [],
-            |row| row.get(0)
-        ).unwrap();
-        let cond: String = conn.query_row(
-            "SELECT value FROM settings WHERE key = 'weather_current_condition'",
-            [],
-            |row| row.get(0)
-        ).unwrap();
-
-        assert_eq!(temp, "36.0");
-        assert_eq!(cond, "Clear");
     }
 }
 

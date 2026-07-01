@@ -330,14 +330,7 @@ fn refresh_tray_drink_label(app: &AppHandle) {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct WeatherInfo {
-    temp: f64,
-    condition: String,
-    description: String,
-    icon: String,
-    last_updated: String,
-}
+
 
 #[derive(Serialize, Deserialize)]
 struct TodayStats {
@@ -353,7 +346,6 @@ struct TodayStats {
     next_reminder_at: Option<String>,
     modifiers: Option<Vec<db::DailyModifier>>,
     daily_mission: Option<db::DailyMission>,
-    weather: Option<WeatherInfo>,
     goal_expediente_ml: Option<i64>,
     goal_fora_expediente_ml: Option<i64>,
 }
@@ -400,9 +392,6 @@ fn save_settings(
     work_end_hour: String,
     sip_ml: i64,
     app_mode: String,
-    weather_enabled: bool,
-    weather_city: String,
-    weather_api_key: String,
 ) -> Result<i64, String> {
     let conn = state.conn.lock().unwrap();
     let goal = if app_mode == "basic" { 0 } else { hydration::calculate_goal(weight_kg, &activity_level, &climate) };
@@ -426,11 +415,6 @@ fn save_settings(
     let sip_ml = if sip_ml > 0 { sip_ml } else { 20 };
     db::set_setting(&conn, "sip_ml", &sip_ml.to_string()).map_err(|e| e.to_string())?;
 
-    // Criptografa a chave da API do OpenWeather antes de salvar
-    let encrypted_key = db::encrypt_key(&weather_api_key);
-    db::set_setting(&conn, "weather_enabled", if weather_enabled { "true" } else { "false" }).map_err(|e| e.to_string())?;
-    db::set_setting(&conn, "weather_city", &weather_city).map_err(|e| e.to_string())?;
-    db::set_setting(&conn, "weather_api_key", &encrypted_key).map_err(|e| e.to_string())?;
 
     // Configura o sistema operacional para iniciar com o Windows ou não
     use tauri_plugin_autostart::ManagerExt;
@@ -733,40 +717,6 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
         None
     };
 
-    let get_setting = |key: &str| -> String {
-        conn.query_row(
-            "SELECT value FROM settings WHERE key = ?1",
-            [key],
-            |row| row.get::<_, String>(0)
-        ).unwrap_or_default()
-    };
-
-    let weather = if pro_mode && settings.weather_enabled {
-        let temp_str = get_setting("weather_current_temp");
-        let cond = get_setting("weather_current_condition");
-        let desc = get_setting("weather_current_description");
-        let icon = get_setting("weather_current_icon");
-        let updated = get_setting("weather_last_updated");
-        
-        if !temp_str.is_empty() {
-            if let Ok(temp) = temp_str.parse::<f64>() {
-                Some(WeatherInfo {
-                    temp,
-                    condition: cond,
-                    description: desc,
-                    icon,
-                    last_updated: updated,
-                })
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    } else {
-        None
-    };
-
     let (goal_expediente_ml, goal_fora_expediente_ml) = if settings.app_mode == "pro" {
         let horas = get_work_hours(&settings.work_start_hour, &settings.work_end_hour);
         let goal_exp = ((settings.daily_goal_ml as f64 * (horas / 16.0)) as i64).max(0);
@@ -789,7 +739,6 @@ fn get_today_stats(state: State<AppState>) -> Result<TodayStats, String> {
         next_reminder_at,
         modifiers,
         daily_mission,
-        weather,
         goal_expediente_ml,
         goal_fora_expediente_ml,
     })

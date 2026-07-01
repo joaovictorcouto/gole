@@ -14,7 +14,6 @@ interface AppStore {
   monthStats: DayStats[];
   achievements: Achievement[];
   reminderNotif: ReminderNotif | null;
-  loading: boolean;
   drinkTick: number;
 
   loadSettings: () => Promise<void>;
@@ -48,7 +47,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   monthStats: [],
   achievements: [],
   reminderNotif: null,
-  loading: false,
   drinkTick: 0,
 
   loadSettings: async () => {
@@ -126,9 +124,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
       work_end_hour: merged.work_end_hour || "18:00",
       sip_ml: merged.sip_ml || 20,
       app_mode: merged.app_mode || "pro",
-      weather_enabled: merged.weather_enabled !== undefined ? merged.weather_enabled : true,
-      weather_city: merged.weather_city || "Sinop",
-      weather_api_key: merged.weather_api_key || "",
     });
     await get().loadSettings();
     await get().loadTodayStats();

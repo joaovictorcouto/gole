@@ -23,9 +23,6 @@ export interface Settings {
   next_override_at: string;
   next_override_ml: number;
   app_mode: string;
-  weather_enabled: boolean;
-  weather_city: string;
-  weather_api_key: string;
 }
 
 export interface ScheduleEntry {
@@ -78,17 +75,8 @@ export interface TodayStats {
   next_reminder_at?: string;
   modifiers?: DailyModifier[];
   daily_mission?: DailyMission | null;
-  weather?: WeatherInfo | null;
   goal_expediente_ml?: number;
   goal_fora_expediente_ml?: number;
-}
-
-export interface WeatherInfo {
-  temp: number;
-  condition: string;
-  description: string;
-  icon: string;
-  last_updated: string;
 }
 
 export interface DayStats {
@@ -133,9 +121,6 @@ export const api = {
     work_end_hour: string;
     sip_ml: number;
     app_mode: string;
-    weather_enabled: boolean;
-    weather_city: string;
-    weather_api_key: string;
   }) => invoke<number>("save_settings", {
     weightKg: params.weight_kg,
     ageYears: params.age_years,
@@ -154,9 +139,6 @@ export const api = {
     workEndHour: params.work_end_hour,
     sipMl: params.sip_ml,
     appMode: params.app_mode,
-    weatherEnabled: params.weather_enabled,
-    weatherCity: params.weather_city,
-    weatherApiKey: params.weather_api_key,
   }),
 
   completeOnboarding: (params: {

@@ -274,15 +274,11 @@ export function Dashboard() {
     const unlistenStats = listen("stats_changed", () => {
       loadSuccessRate();
     });
-    const unlistenWeather = listen("weather_updated", () => {
-      loadTodayStats();
-    });
 
     return () => {
       unlistenRefresh.then((fn) => fn());
       unlistenSchedule.then((fn) => fn());
       unlistenStats.then((fn) => fn());
-      unlistenWeather.then((fn) => fn());
     };
   }, []);
 
