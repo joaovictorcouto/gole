@@ -42,6 +42,14 @@
   --color-text-dark: #2C3440;
   --color-surface-glass: rgba(255, 255, 255, 0.7);
   --color-border-subtle: rgba(44, 52, 64, 0.08);
+  
+  --color-success: #2e7d32;
+  --color-on-success: #ffffff;
+  --color-success-container: #c8e6c9;
+  --color-warning: #827717;
+  --color-warning-container: #fff9c4;
+  --color-info: #0d47a1;
+  --color-info-container: #bbdefb;
 
   --font-family-sans: 'Geist', sans-serif;
 
@@ -115,6 +123,15 @@ body {
   --color-text-dark: #e2e6ea;
   --color-surface-glass: rgba(15, 20, 25, 0.85);
   --color-border-subtle: rgba(226, 230, 234, 0.06);
+
+  --color-success: #81c784;
+  --color-on-success: #1b5e20;
+  --color-success-container: rgba(27, 94, 32, 0.25);
+  --color-warning: #fbc02d;
+  --color-warning-container: rgba(245, 127, 23, 0.25);
+  --color-info: #90caf9;
+  --color-info-container: rgba(13, 71, 161, 0.4);
+
   background-color: #0f1419;
   color: #e2e6ea;
 }

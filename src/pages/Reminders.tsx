@@ -5,10 +5,10 @@ import { useAppStore } from "../store/useAppStore";
 import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 
 function StatusBadge({ status, isOverride }: { status: ScheduleEntry["status"]; isOverride: boolean }) {
-  if (status === "confirmed") return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#dcedc8", color: "#33691e" }}>Bebido</span>;
-  if (status === "missed") return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#ffe0b2", color: "#bf360c" }}>Perdido</span>;
-  if (status === "next") return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: isOverride ? "#fff9c4" : "#bbdefb", color: isOverride ? "#827717" : "#0d47a1" }}>{isOverride ? "Editado" : "Próximo"}</span>;
-  return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#eceef1", color: "#71787c" }}>Futuro</span>;
+  if (status === "confirmed") return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-success-container, #dcedc8)", color: "var(--color-success, #33691e)" }}>Bebido</span>;
+  if (status === "missed") return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--color-error-container, #ffe0b2)", color: "var(--color-error, #bf360c)" }}>Perdido</span>;
+  if (status === "next") return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: isOverride ? "var(--color-warning-container, #fff9c4)" : "var(--color-info-container, #bbdefb)", color: isOverride ? "var(--color-warning, #827717)" : "var(--color-info, #0d47a1)" }}>{isOverride ? "Editado" : "Próximo"}</span>;
+  return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-outline">Futuro</span>;
 }
 
 function EntryRow({ entry, onEdit, isBasicMode }: { entry: ScheduleEntry; onEdit?: () => void; isBasicMode: boolean }) {
@@ -16,18 +16,18 @@ function EntryRow({ entry, onEdit, isBasicMode }: { entry: ScheduleEntry; onEdit
     <div
       className="flex items-center justify-between p-3 rounded-xl border transition-colors"
       style={{
-        borderColor: entry.status === "next" ? "#257ca3" : "rgba(44,52,64,0.08)",
-        backgroundColor: entry.status === "next" ? "rgba(191,232,255,0.25)" : "white",
+        borderColor: entry.status === "next" ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))",
+        backgroundColor: entry.status === "next" ? "var(--color-primary-container, rgba(191,232,255,0.25))" : "var(--color-surface-container-lowest, white)",
       }}
     >
       <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-[22px]" style={{ color: "#257ca3" }}>
+        <span className="material-symbols-outlined text-[22px]" style={{ color: "var(--color-primary, #257ca3)" }}>
           {entry.status === "confirmed" ? "check_circle" : entry.status === "missed" ? "cancel" : "schedule"}
         </span>
         <div>
-          <div className="text-sm font-bold" style={{ color: "#191c1e" }}>{entry.time}</div>
+          <div className="text-sm font-bold" style={{ color: "var(--color-on-surface, #191c1e)" }}>{entry.time}</div>
           {!isBasicMode && (
-            <div className="text-[11px]" style={{ color: "#5B6572" }}>
+            <div className="text-[11px]" style={{ color: "var(--color-text-main, #5B6572)" }}>
               {entry.sips} {entry.sips === 1 ? "gole" : "goles"} · {entry.amount_ml}ml
             </div>
           )}
@@ -38,7 +38,7 @@ function EntryRow({ entry, onEdit, isBasicMode }: { entry: ScheduleEntry; onEdit
         {onEdit && (
           <button
             onClick={onEdit}
-            className="text-[#257ca3] hover:bg-[#257ca3]/10 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+            className="text-primary hover:bg-primary-container/20 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
             title="Editar próximo lembrete"
           >
             <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -89,30 +89,30 @@ function EditNextModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-6 w-[420px] max-w-[90vw] shadow-2xl"
+        className="bg-surface-container rounded-2xl p-6 w-[420px] max-w-[90vw] shadow-2xl border border-border-subtle"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 mb-4">
-          <span className="material-symbols-outlined text-[28px]" style={{ color: "#257ca3" }}>edit_calendar</span>
-          <h2 className="text-xl font-bold" style={{ color: "#191c1e" }}>Editar próximo lembrete</h2>
+          <span className="material-symbols-outlined text-[28px]" style={{ color: "var(--color-primary, #257ca3)" }}>edit_calendar</span>
+          <h2 className="text-xl font-bold" style={{ color: "var(--color-on-surface, #191c1e)" }}>Editar próximo lembrete</h2>
         </div>
 
         <label className="block mb-4">
-          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5B6572" }}>Horário</span>
+          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-main, #5B6572)" }}>Horário</span>
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="w-full mt-1 px-3 py-2 border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#257ca3]/30"
-            style={{ borderColor: "#e0e3e6" }}
+            className="w-full mt-1 px-3 py-2 border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30 text-text-dark bg-surface"
+            style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
           />
         </label>
 
         {!isBasicMode && (
           <label className="block mb-4">
             <div className="flex justify-between items-baseline mb-1">
-              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5B6572" }}>Quantidade</span>
-              <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{ml}ml · {sips} {sips === 1 ? "gole" : "goles"}</span>
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-text-main, #5B6572)" }}>Quantidade</span>
+              <span className="text-sm font-bold" style={{ color: "var(--color-primary, #257ca3)" }}>{ml}ml · {sips} {sips === 1 ? "gole" : "goles"}</span>
             </div>
             <input
               type="range"
@@ -129,16 +129,16 @@ function EditNextModal({
         <div className="flex gap-2 mt-6">
           <button
             onClick={onReset}
-            className="px-4 py-2 rounded-xl text-sm font-medium cursor-pointer"
-            style={{ backgroundColor: "rgba(236,238,241,0.7)", color: "#5B6572" }}
+            className="px-4 py-2 rounded-xl text-sm font-medium cursor-pointer hover:bg-surface-container-high transition-colors"
+            style={{ backgroundColor: "var(--color-surface-container-high, rgba(236,238,241,0.7))", color: "var(--color-text-main, #5B6572)" }}
           >
             Restaurar padrão
           </button>
           <div className="flex-1" />
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-sm font-medium cursor-pointer"
-            style={{ backgroundColor: "rgba(236,238,241,0.7)", color: "#5B6572" }}
+            className="px-4 py-2 rounded-xl text-sm font-medium cursor-pointer hover:bg-surface-container-high transition-colors"
+            style={{ backgroundColor: "var(--color-surface-container-high, rgba(236,238,241,0.7))", color: "var(--color-text-main, #5B6572)" }}
           >
             Cancelar
           </button>
@@ -146,8 +146,8 @@ function EditNextModal({
             onClick={async () => {
               await onSave(time, ml);
             }}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-            style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)" }}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer hover:shadow-md transition-shadow"
+            style={{ background: "linear-gradient(180deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)" }}
           >
             Salvar
           </button>
@@ -185,7 +185,7 @@ export function Reminders() {
   if (!data) {
     return (
       <div className="flex h-full items-center justify-center" style={{ marginLeft: "280px" }}>
-        <p style={{ color: "#5B6572" }}>Carregando...</p>
+        <p style={{ color: "var(--color-text-main, #5B6572)" }}>Carregando...</p>
       </div>
     );
   }
@@ -215,10 +215,10 @@ export function Reminders() {
   return (
     <div className="flex flex-col h-full" style={{ marginLeft: "280px" }}>
       <header className="px-10 pt-10 pb-4 shrink-0">
-        <h1 className="text-5xl font-semibold mb-2" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}>
+        <h1 className="text-5xl font-semibold mb-2" style={{ color: "var(--color-primary, #257ca3)", letterSpacing: "-0.04em" }}>
           Lembretes
         </h1>
-        <p className="text-lg text-gray-500">
+        <p className="text-lg text-text-main">
           {isBasicMode 
             ? "Acompanhe os lembretes do dia. Ajuste o próximo horário se necessário."
             : "Acompanhe os lembretes do dia. Editar o próximo se beber em quantidade diferente."
@@ -228,32 +228,32 @@ export function Reminders() {
 
       <div className="flex-1 overflow-y-auto px-10 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-          <div className="rounded-xl p-4 bg-white border" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-            <div className="text-[11px] uppercase font-bold text-gray-400">Aceitos hoje</div>
-            <div className="text-3xl font-bold mt-1" style={{ color: "#33691e" }}><AnimatedNumber value={totalConfirmed} /></div>
+          <div className="glass-surface rounded-xl p-4 transition-all duration-300">
+            <div className="text-[11px] uppercase font-bold text-text-main">Aceitos hoje</div>
+            <div className="text-3xl font-bold mt-1" style={{ color: "var(--color-success, #33691e)" }}><AnimatedNumber value={totalConfirmed} /></div>
           </div>
-          <div className="rounded-xl p-4 bg-white border" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-            <div className="text-[11px] uppercase font-bold text-gray-400">Perdidos hoje</div>
-            <div className="text-3xl font-bold mt-1" style={{ color: "#bf360c" }}><AnimatedNumber value={totalMissed} /></div>
+          <div className="glass-surface rounded-xl p-4 transition-all duration-300">
+            <div className="text-[11px] uppercase font-bold text-text-main">Perdidos hoje</div>
+            <div className="text-3xl font-bold mt-1" style={{ color: "var(--color-error, #bf360c)" }}><AnimatedNumber value={totalMissed} /></div>
           </div>
-          <div className="rounded-xl p-4 bg-white border" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-            <div className="text-[11px] uppercase font-bold text-gray-400">Faltam hoje</div>
-            <div className="text-3xl font-bold mt-1" style={{ color: "#0d47a1" }}><AnimatedNumber value={(data.next ? 1 : 0) + data.upcoming.length} /></div>
+          <div className="glass-surface rounded-xl p-4 transition-all duration-300">
+            <div className="text-[11px] uppercase font-bold text-text-main">Faltam hoje</div>
+            <div className="text-3xl font-bold mt-1" style={{ color: "var(--color-primary, #0d47a1)" }}><AnimatedNumber value={(data.next ? 1 : 0) + data.upcoming.length} /></div>
           </div>
         </div>
 
         <section className="mb-6">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Próximo</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wide text-text-main mb-3">Próximo</h2>
           {data.next ? (
             <EntryRow entry={data.next} onEdit={() => setEditing(true)} isBasicMode={isBasicMode} />
           ) : (
-            <div className="text-sm text-gray-400 italic">Sem lembretes restantes hoje.</div>
+            <div className="text-sm text-outline italic">Sem lembretes restantes hoje.</div>
           )}
         </section>
 
         {data.upcoming.length > 0 && (
           <section className="mb-6">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Próximos</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-text-main mb-3">Próximos</h2>
             <div className="space-y-2">
               {data.upcoming.map((e, i) => <EntryRow key={i} entry={e} isBasicMode={isBasicMode} />)}
             </div>
@@ -262,7 +262,7 @@ export function Reminders() {
 
         {data.past.length > 0 && (
           <section className="mb-6">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Histórico de hoje</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-text-main mb-3">Histórico de hoje</h2>
             <div className="space-y-2">
               {data.past.map((e, i) => <EntryRow key={i} entry={e} isBasicMode={isBasicMode} />)}
             </div>

@@ -125,10 +125,10 @@ export function Achievements() {
   return (
     <div className="flex flex-col h-full" style={{ marginLeft: "280px" }}>
       <header className="px-10 pt-10 pb-6 shrink-0">
-        <h1 className="text-5xl font-semibold mb-2" style={{ color: "#257ca3", letterSpacing: "-0.04em" }}>
+        <h1 className="text-5xl font-semibold mb-2" style={{ color: "var(--color-primary, #257ca3)", letterSpacing: "-0.04em" }}>
           Conquistas
         </h1>
-        <p className="text-lg" style={{ color: "#41484c" }}>
+        <p className="text-lg" style={{ color: "var(--color-text-main, #41484c)" }}>
           {unlocked.length} de {achievements.length} conquistas desbloqueadas.
         </p>
       </header>
@@ -138,7 +138,7 @@ export function Achievements() {
       {/* Unlocked */}
       {unlocked.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "#5B6572" }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--color-text-main, #5B6572)" }}>
             Desbloqueadas
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -146,21 +146,19 @@ export function Achievements() {
               const meta = ACHIEVEMENT_META[a.id];
               if (!meta) return null;
               return (
-                <div key={a.id} className="bg-white rounded-xl p-6 border transition-all duration-300 hover:-translate-y-1 hover:border-[#006492]"
+                <div key={a.id} className="glass-surface rounded-xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary"
                   style={{
                     boxShadow: "0 8px 30px rgba(0,0,0,0.04)",
-                    borderColor: "rgba(255,255,255,0.2)",
                   }}>
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4"
-                    style={{ backgroundColor: "rgba(191,232,255,0.5)" }}>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 bg-primary-container/40">
                     {meta.icon}
                   </div>
-                  <h3 className="text-lg font-semibold mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.01em" }}>
                     {meta.title}
                   </h3>
-                  <p className="text-sm mb-3" style={{ color: "#5B6572" }}>{meta.description}</p>
+                  <p className="text-sm mb-3" style={{ color: "var(--color-text-main, #5B6572)" }}>{meta.description}</p>
                   {a.unlocked_at && (
-                    <p className="text-xs font-semibold tracking-wider" style={{ color: "#257ca3" }}>
+                    <p className="text-xs font-semibold tracking-wider" style={{ color: "var(--color-primary, #257ca3)" }}>
                       ✓ {formatDate(a.unlocked_at)}
                     </p>
                   )}
@@ -174,7 +172,7 @@ export function Achievements() {
       {/* Locked */}
       {locked.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "#5B6572" }}>
+          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--color-text-main, #5B6572)" }}>
             Em progresso
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -182,21 +180,20 @@ export function Achievements() {
               const meta = ACHIEVEMENT_META[a.id];
               if (!meta) return null;
               return (
-                <div key={a.id} className="rounded-xl p-6 border"
+                <div key={a.id} className="rounded-xl p-6 border transition-all duration-300"
                   style={{
-                    backgroundColor: "#f2f4f7",
-                    borderColor: "#e6e8eb",
-                    opacity: 0.7,
+                    backgroundColor: "var(--color-surface-container-low, #f2f4f7)",
+                    borderColor: "var(--color-border-subtle, #e6e8eb)",
+                    opacity: 0.6,
                   }}>
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 grayscale opacity-50"
-                    style={{ backgroundColor: "#e0e3e6" }}>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 grayscale opacity-50 bg-surface-container-high">
                     {meta.icon}
                   </div>
-                  <h3 className="text-lg font-semibold mb-1" style={{ color: "#71787c", letterSpacing: "-0.01em" }}>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--color-outline, #71787c)", letterSpacing: "-0.01em" }}>
                     {meta.title}
                   </h3>
-                  <p className="text-sm" style={{ color: "#71787c" }}>{meta.description}</p>
-                  <p className="text-xs font-semibold tracking-wider mt-3" style={{ color: "#c1c7cc" }}>
+                  <p className="text-sm" style={{ color: "var(--color-outline, #71787c)" }}>{meta.description}</p>
+                  <p className="text-xs font-semibold tracking-wider mt-3" style={{ color: "var(--color-outline-variant, #c1c7cc)" }}>
                     🔒 Bloqueada
                   </p>
                 </div>

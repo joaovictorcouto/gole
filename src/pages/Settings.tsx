@@ -461,47 +461,47 @@ export function Settings() {
             {/* 1. Perfil e Hidratação */}
             <Section title="Perfil e Hidratação" icon="person">
               {/* Modo do Aplicativo integrado */}
-              <div className="py-2 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-                <p className="text-xs font-semibold mb-3 text-gray-500 uppercase tracking-wider">
+              <div className="py-2 border-b" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
+                <p className="text-xs font-semibold mb-3 text-text-main uppercase tracking-wider">
                   Modo do Aplicativo
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => saveSettings({ app_mode: "basic" })}
-                    className="p-4 rounded-xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                    className="p-4 rounded-xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     style={{
-                      backgroundColor: settings.app_mode === "basic" ? "rgba(191,232,255,0.4)" : "rgba(255,255,255,0.5)",
-                      borderColor: settings.app_mode === "basic" ? "#257ca3" : "rgba(44,52,64,0.08)",
+                      backgroundColor: settings.app_mode === "basic" ? "var(--color-primary-container, rgba(191,232,255,0.4))" : "var(--color-surface-container, rgba(255,255,255,0.5))",
+                      borderColor: settings.app_mode === "basic" ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))",
                       boxShadow: settings.app_mode === "basic" ? "0 4px 12px rgba(37,124,163,0.1)" : "none",
                     }}
                   >
-                    <span className="material-symbols-outlined text-[24px]" style={{ color: settings.app_mode === "basic" ? "#257ca3" : "#5B6572" }}>
+                    <span className="material-symbols-outlined text-[24px]" style={{ color: settings.app_mode === "basic" ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)" }}>
                       notifications_active
                     </span>
-                    <span className="text-xs font-bold" style={{ color: settings.app_mode === "basic" ? "#257ca3" : "#191c1e" }}>
+                    <span className="text-xs font-bold" style={{ color: settings.app_mode === "basic" ? "var(--color-primary, #257ca3)" : "var(--color-on-surface, #191c1e)" }}>
                       Básico
                     </span>
-                    <span className="text-[9px] text-[#5B6572] leading-relaxed">
+                    <span className="text-[9px] text-text-main leading-relaxed">
                       Apenas lembretes por tempo
                     </span>
                   </button>
 
                   <button
                     onClick={() => saveSettings({ app_mode: "pro" })}
-                    className="p-4 rounded-xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                    className="p-4 rounded-xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     style={{
-                      backgroundColor: settings.app_mode === "pro" ? "rgba(191,232,255,0.4)" : "rgba(255,255,255,0.5)",
-                      borderColor: settings.app_mode === "pro" ? "#257ca3" : "rgba(44,52,64,0.08)",
+                      backgroundColor: settings.app_mode === "pro" ? "var(--color-primary-container, rgba(191,232,255,0.4))" : "var(--color-surface-container, rgba(255,255,255,0.5))",
+                      borderColor: settings.app_mode === "pro" ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))",
                       boxShadow: settings.app_mode === "pro" ? "0 4px 12px rgba(37,124,163,0.1)" : "none",
                     }}
                   >
-                    <span className="material-symbols-outlined text-[24px]" style={{ color: settings.app_mode === "pro" ? "#257ca3" : "#5B6572" }}>
+                    <span className="material-symbols-outlined text-[24px]" style={{ color: settings.app_mode === "pro" ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)" }}>
                       water_drop
                     </span>
-                    <span className="text-xs font-bold" style={{ color: settings.app_mode === "pro" ? "#257ca3" : "#191c1e" }}>
+                    <span className="text-xs font-bold" style={{ color: settings.app_mode === "pro" ? "var(--color-primary, #257ca3)" : "var(--color-on-surface, #191c1e)" }}>
                       Completo
                     </span>
-                    <span className="text-[9px] text-[#5B6572] leading-relaxed">
+                    <span className="text-[9px] text-text-main leading-relaxed">
                       Metas, estatísticas e conquistas
                     </span>
                   </button>
@@ -514,8 +514,8 @@ export function Settings() {
                   <div className="grid grid-cols-2 gap-4 py-2">
                     <div className="flex flex-col gap-1">
                       <div className="flex justify-between items-baseline">
-                        <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Peso</span>
-                        <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{draftWeight || "—"} <span className="text-[10px] text-gray-400 font-medium">kg</span></span>
+                        <span className="text-xs font-medium" style={{ color: "var(--color-text-main, #5B6572)" }}>Peso</span>
+                        <span className="text-sm font-bold" style={{ color: "var(--color-primary, #257ca3)" }}>{draftWeight || "—"} <span className="text-[10px] text-outline font-medium">kg</span></span>
                       </div>
                       <input
                         type="range"
@@ -525,17 +525,17 @@ export function Settings() {
                         onChange={(e) => setDraftWeight(e.target.value)}
                         onMouseUp={commitWeight}
                         onTouchEnd={commitWeight}
-                        className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg mt-1"
+                        className="w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg mt-1"
                       />
                       <div className="flex justify-between px-1">
-                        <span className="text-[10px] font-bold text-gray-400">40kg</span>
-                        <span className="text-[10px] font-bold text-gray-400">150kg</span>
+                        <span className="text-[10px] font-bold text-outline">40kg</span>
+                        <span className="text-[10px] font-bold text-outline">150kg</span>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
                       <div className="flex justify-between items-baseline">
-                        <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Idade</span>
-                        <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{draftAge || "—"} <span className="text-[10px] text-gray-400 font-medium">anos</span></span>
+                        <span className="text-xs font-medium" style={{ color: "var(--color-text-main, #5B6572)" }}>Idade</span>
+                        <span className="text-sm font-bold" style={{ color: "var(--color-primary, #257ca3)" }}>{draftAge || "—"} <span className="text-[10px] text-outline font-medium">anos</span></span>
                       </div>
                       <input
                         type="range"
@@ -545,44 +545,44 @@ export function Settings() {
                         onChange={(e) => setDraftAge(e.target.value)}
                         onMouseUp={commitAge}
                         onTouchEnd={commitAge}
-                        className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg mt-1"
+                        className="w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg mt-1"
                       />
                       <div className="flex justify-between px-1">
-                        <span className="text-[10px] font-bold text-gray-400">12</span>
-                        <span className="text-[10px] font-bold text-gray-400">100</span>
+                        <span className="text-[10px] font-bold text-outline">12</span>
+                        <span className="text-[10px] font-bold text-outline">100</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Meta diária calculada</span>
-                    <span className="text-sm font-semibold flex items-center gap-2" style={{ color: "#257ca3" }}>
+                  <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
+                    <span className="text-xs font-medium" style={{ color: "var(--color-text-main, #5B6572)" }}>Meta diária calculada</span>
+                    <span className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--color-primary, #257ca3)" }}>
                       {localGoal ? `${(localGoal / 1000).toFixed(2).replace(".", ",")}L` : "—"}
                       {previewGoal != null && previewGoal !== localGoal && (
-                        <span className="text-xs font-medium" style={{ color: "#0f76a0" }}>
+                        <span className="text-xs font-medium" style={{ color: "var(--color-secondary, #0f76a0)" }}>
                           → {(previewGoal / 1000).toFixed(2).replace(".", ",")}L
                         </span>
                       )}
                       {profileSavedAt && (
-                        <span className="text-xs animate-fade-in" style={{ color: "#0f76a0" }}>✓</span>
+                        <span className="text-xs animate-fade-in" style={{ color: "var(--color-secondary, #0f76a0)" }}>✓</span>
                       )}
                     </span>
                   </div>
 
                   {/* Atividade — grid 2x2 compacto */}
-                  <div className="py-2 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-                    <p className="text-xs font-medium mb-2" style={{ color: "#5B6572" }}>Nível de Atividade</p>
+                  <div className="py-2 border-b" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
+                    <p className="text-xs font-medium mb-2" style={{ color: "var(--color-text-main, #5B6572)" }}>Nível de Atividade</p>
                     <div className="grid grid-cols-2 gap-2">
                       {ACTIVITY_OPTIONS.map((opt) => (
                         <button
                           key={opt.id}
                           onClick={() => saveSettings({ activity_level: opt.id })}
-                          className="text-left px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer truncate focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                          className="text-left px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer truncate focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                           style={{
-                            backgroundColor: settings.activity_level === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                            color: settings.activity_level === opt.id ? "#257ca3" : "#5B6572",
+                            backgroundColor: settings.activity_level === opt.id ? "var(--color-primary-container, rgba(191,232,255,0.4))" : "var(--color-surface-container, rgba(236,238,241,0.5))",
+                            color: settings.activity_level === opt.id ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                             fontWeight: settings.activity_level === opt.id ? "600" : "400",
-                            border: `1px solid ${settings.activity_level === opt.id ? "#257ca3" : "transparent"}`,
+                            border: `1px solid ${settings.activity_level === opt.id ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))"}`,
                           }}
                           title={opt.label}
                         >
@@ -594,18 +594,18 @@ export function Settings() {
 
                   {/* Clima */}
                   <div className="pt-1">
-                    <p className="text-xs font-medium mb-2" style={{ color: "#5B6572" }}>Fator Climático Manual</p>
+                    <p className="text-xs font-medium mb-2" style={{ color: "var(--color-text-main, #5B6572)" }}>Fator Climático Manual</p>
                     <div className="flex gap-2">
                       {CLIMATE_OPTIONS.map((opt) => (
                         <button
                           key={opt.id}
                           onClick={() => saveSettings({ climate: opt.id })}
-                          className="flex-1 px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                          className="flex-1 px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                           style={{
-                            backgroundColor: settings.climate === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                            color: settings.climate === opt.id ? "#257ca3" : "#5B6572",
+                            backgroundColor: settings.climate === opt.id ? "var(--color-primary-container, rgba(191,232,255,0.4))" : "var(--color-surface-container, rgba(236,238,241,0.5))",
+                            color: settings.climate === opt.id ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                             fontWeight: settings.climate === opt.id ? "600" : "400",
-                            border: `1px solid ${settings.climate === opt.id ? "#257ca3" : "transparent"}`,
+                            border: `1px solid ${settings.climate === opt.id ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))"}`,
                           }}
                         >
                           {opt.label}
@@ -624,16 +624,16 @@ export function Settings() {
             {/* 2. Lembretes e Rotina */}
             <Section title="Lembretes e Rotina" icon="notifications">
               <div className="py-2">
-                <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Intervalo entre lembretes</p>
+                <p className="text-sm font-medium mb-3" style={{ color: "var(--color-on-surface, #191c1e)" }}>Intervalo entre lembretes</p>
                 <div className="flex flex-wrap gap-2">
                   {INTERVAL_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => saveSettings({ reminder_interval_min: opt.value })}
-                      className="px-4 py-2 rounded-full text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                      className="px-4 py-2 rounded-full text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       style={{
-                        backgroundColor: settings.reminder_interval_min === opt.value ? "#257ca3" : "#eceef1",
-                        color: settings.reminder_interval_min === opt.value ? "#ffffff" : "#5B6572",
+                        backgroundColor: settings.reminder_interval_min === opt.value ? "var(--color-primary, #257ca3)" : "var(--color-surface-container-high, #eceef1)",
+                        color: settings.reminder_interval_min === opt.value ? "var(--color-on-primary, #ffffff)" : "var(--color-text-main, #5B6572)",
                       }}
                     >
                       {opt.label}
@@ -661,17 +661,17 @@ export function Settings() {
                     value={draftWorkStart}
                     onChange={(e) => setDraftWorkStart(e.target.value)}
                     onBlur={commitWorkStart}
-                    className="px-2 py-1 rounded-lg text-sm font-semibold border focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 bg-white text-[#191c1e]"
-                    style={{ borderColor: "#e0e3e6" }}
+                    className="px-2 py-1 rounded-lg text-sm font-semibold border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 bg-surface text-text-dark"
+                    style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
                   />
-                  <span className="text-xs text-gray-400 font-medium">às</span>
+                  <span className="text-xs text-text-main font-medium">às</span>
                   <input
                     type="time"
                     value={draftWorkEnd}
                     onChange={(e) => setDraftWorkEnd(e.target.value)}
                     onBlur={commitWorkEnd}
-                    className="px-2 py-1 rounded-lg text-sm font-semibold border focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 bg-white text-[#191c1e]"
-                    style={{ borderColor: "#e0e3e6" }}
+                    className="px-2 py-1 rounded-lg text-sm font-semibold border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 bg-surface text-text-dark"
+                    style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
                   />
                 </div>
               </SettingRow>
@@ -688,18 +688,18 @@ export function Settings() {
               </SettingRow>
 
               {/* Exportar */}
-              <div className="py-4 border-t border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+              <div className="py-4 border-t border-b" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-semibold" style={{ color: "#191c1e" }}>Histórico de consumo</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">Exporte seus dados no formato de planilha CSV.</p>
+                    <h3 className="text-sm font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>Histórico de consumo</h3>
+                    <p className="text-xs text-text-main mt-0.5">Exporte seus dados no formato de planilha CSV.</p>
                   </div>
                   <button
                     onClick={handleExportCSV}
                     disabled={exportingCsv}
-                    className="px-4 py-2 rounded-xl font-medium text-xs transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                    className="px-4 py-2 rounded-xl font-medium text-xs transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     style={{
-                      backgroundColor: exportingCsv ? "#71787c" : "#257ca3",
+                      backgroundColor: exportingCsv ? "var(--color-surface-container-high, #71787c)" : "var(--color-primary, #257ca3)",
                       color: "white",
                       border: "none",
                       boxShadow: "0 4px 12px rgba(37,124,163,0.25)",
@@ -714,11 +714,11 @@ export function Settings() {
               </div>
 
               {/* Servidor API */}
-              <div className="py-4 border-b" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Servidor de Automação Local (Porta 4000)</h3>
-                <div className="rounded-lg p-3 text-[11px] font-mono" style={{ backgroundColor: "#eceef1", color: "#3a4146" }}>
-                  <p className="font-semibold text-[#006492] mb-1">POST http://127.0.0.1:4000/api/water</p>
-                  <p className="text-gray-400">{"{ \"ml\": 250 }"}</p>
+              <div className="py-4 border-b" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
+                <h3 className="text-xs font-bold text-text-main uppercase tracking-wider mb-2">Servidor de Automação Local (Porta 4000)</h3>
+                <div className="rounded-lg p-3 text-[11px] font-mono" style={{ backgroundColor: "var(--color-surface-container, #eceef1)", color: "var(--color-on-surface, #3a4146)" }}>
+                  <p className="font-semibold text-primary mb-1">POST http://127.0.0.1:4000/api/water</p>
+                  <p className="text-outline">{"{ \"ml\": 250 }"}</p>
                 </div>
               </div>
 
@@ -736,12 +736,12 @@ export function Settings() {
                 </SettingRow>
 
                 {settings.recipiente_configurado ? (
-                  <div className="py-4 animate-fade-in flex flex-col items-center border-b pb-4 mb-4" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                  <div className="py-4 animate-fade-in flex flex-col items-center border-b pb-4 mb-4" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
                     <div className="w-full flex justify-between items-center mb-4">
-                      <span className="text-sm font-medium text-gray-500 font-semibold">Capacidade do recipiente</span>
+                      <span className="text-sm text-text-main font-semibold">Capacidade do recipiente</span>
                       <div className="flex items-baseline gap-1">
-                        <strong className="text-xl" style={{ color: "#257ca3" }}>{settings.recipiente_capacidade_ml}</strong>
-                        <span className="text-xs text-gray-400">ml</span>
+                        <strong className="text-xl" style={{ color: "var(--color-primary, #257ca3)" }}>{settings.recipiente_capacidade_ml}</strong>
+                        <span className="text-xs text-outline">ml</span>
                       </div>
                     </div>
 
@@ -763,23 +763,23 @@ export function Settings() {
                       step={50}
                       value={settings.recipiente_capacidade_ml}
                       onChange={(e) => saveSettings({ recipiente_capacidade_ml: Number(e.target.value) })}
-                      className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg"
+                      className="w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
                     />
                     <div className="flex justify-between w-full mt-2 px-1">
-                      <span className="text-xs text-gray-400">200ml</span>
-                      <span className="text-xs text-gray-400">2000ml</span>
+                      <span className="text-xs text-outline">200ml</span>
+                      <span className="text-xs text-outline">2000ml</span>
                     </div>
                   </div>
                 ) : (
                   /* Estado visual quando o recipiente está desativado */
-                  <div className="py-5 flex flex-col items-center gap-3 animate-fade-in border-b pb-4 mb-4" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+                  <div className="py-5 flex flex-col items-center gap-3 animate-fade-in border-b pb-4 mb-4" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
                     <div className="opacity-25 grayscale">
                       <BottleSvg />
                     </div>
-                    <p className="text-xs text-center font-medium" style={{ color: "#9aa0a6" }}>
+                    <p className="text-xs text-center font-medium" style={{ color: "var(--color-outline, #9aa0a6)" }}>
                       Sem recipiente configurado
                     </p>
-                    <p className="text-[11px] text-center" style={{ color: "#b0b8c1" }}>
+                    <p className="text-[11px] text-center text-outline">
                       Os registros serão feitos em ml por dose calculada automaticamente.
                     </p>
                   </div>
@@ -787,8 +787,8 @@ export function Settings() {
 
                 <div className="py-2">
                   <div className="flex justify-between items-baseline mb-2">
-                    <span className="text-xs font-medium" style={{ color: "#5B6572" }}>Volume por gole</span>
-                    <span className="text-sm font-bold" style={{ color: "#257ca3" }}>{settings.sip_ml || 20} <span className="text-[10px] text-gray-400 font-medium">ml</span></span>
+                    <span className="text-xs font-medium" style={{ color: "var(--color-text-main, #5B6572)" }}>Volume por gole</span>
+                    <span className="text-sm font-bold" style={{ color: "var(--color-primary, #257ca3)" }}>{settings.sip_ml || 20} <span className="text-[10px] text-outline font-medium">ml</span></span>
                   </div>
                   <input
                     type="range"
@@ -797,20 +797,20 @@ export function Settings() {
                     step={5}
                     value={settings.sip_ml || 20}
                     onChange={(e) => saveSettings({ sip_ml: Number(e.target.value) })}
-                    className="w-full focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 rounded-lg"
+                    className="w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
                   />
                   <div className="flex justify-between px-1 mt-1">
                     {[15, 20, 25, 30].map((v) => (
                       <span
                         key={v}
                         className="text-[10px] font-bold"
-                        style={{ color: settings.sip_ml === v ? "#257ca3" : "#9aa0a6" }}
+                        style={{ color: settings.sip_ml === v ? "var(--color-primary, #257ca3)" : "var(--color-outline-variant, #9aa0a6)" }}
                       >
                         {v}ml
                       </span>
                     ))}
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-2 italic">
+                  <p className="text-[11px] text-outline mt-2 italic">
                     Usado para calcular a quantidade aproximada de goles a dar por lembrete.
                   </p>
                 </div>
@@ -820,19 +820,19 @@ export function Settings() {
             {/* Aparência e Layout */}
             <Section title="Aparência e Layout" icon="dashboard">
               <div className="py-2">
-                <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Estilo do Dashboard</p>
+                <p className="text-sm font-medium mb-3" style={{ color: "var(--color-on-surface, #191c1e)" }}>Estilo do Dashboard</p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => {
                       localStorage.setItem("dashboard_style", "dashboard1");
                       window.location.reload();
                     }}
-                    className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 text-left"
+                    className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-left"
                     style={{
-                      backgroundColor: localStorage.getItem("dashboard_style") !== "dashboard2" ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                      color: localStorage.getItem("dashboard_style") !== "dashboard2" ? "#257ca3" : "#5B6572",
+                      backgroundColor: localStorage.getItem("dashboard_style") !== "dashboard2" ? "var(--color-primary-container, rgba(191,232,255,0.4))" : "var(--color-surface-container, rgba(236,238,241,0.5))",
+                      color: localStorage.getItem("dashboard_style") !== "dashboard2" ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                       fontWeight: localStorage.getItem("dashboard_style") !== "dashboard2" ? "600" : "400",
-                      border: `1px solid ${localStorage.getItem("dashboard_style") !== "dashboard2" ? "#257ca3" : "transparent"}`,
+                      border: `1px solid ${localStorage.getItem("dashboard_style") !== "dashboard2" ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))"}`,
                     }}
                   >
                     <span className="material-symbols-outlined text-[24px]">dashboard</span>
@@ -847,12 +847,12 @@ export function Settings() {
                       localStorage.setItem("dashboard_style", "dashboard2");
                       window.location.reload();
                     }}
-                    className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2 text-left"
+                    className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-left"
                     style={{
-                      backgroundColor: localStorage.getItem("dashboard_style") === "dashboard2" ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                      color: localStorage.getItem("dashboard_style") === "dashboard2" ? "#257ca3" : "#5B6572",
+                      backgroundColor: localStorage.getItem("dashboard_style") === "dashboard2" ? "var(--color-primary-container, rgba(191,232,255,0.4))" : "var(--color-surface-container, rgba(236,238,241,0.5))",
+                      color: localStorage.getItem("dashboard_style") === "dashboard2" ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                       fontWeight: localStorage.getItem("dashboard_style") === "dashboard2" ? "600" : "400",
-                      border: `1px solid ${localStorage.getItem("dashboard_style") === "dashboard2" ? "#257ca3" : "transparent"}`,
+                      border: `1px solid ${localStorage.getItem("dashboard_style") === "dashboard2" ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))"}`,
                     }}
                   >
                     <span className="material-symbols-outlined text-[24px]">view_quilt</span>
@@ -865,7 +865,7 @@ export function Settings() {
               </div>
 
               {/* Tema */}
-              <div className="py-2 border-t mt-4 pt-4" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
+              <div className="py-2 border-t mt-4 pt-4" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
                 <p className="text-sm font-medium mb-3" style={{ color: "var(--color-on-background, #191c1e)" }}>Tema</p>
                 <div className="grid grid-cols-3 gap-3">
                   {([
@@ -880,7 +880,7 @@ export function Settings() {
                         onClick={() => setTheme(opt.id)}
                         className="flex flex-col items-center gap-2 px-3 py-4 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none"
                         style={{
-                          backgroundColor: isActive ? "rgba(56,189,248,0.15)" : "var(--color-surface-container, rgba(236,238,241,0.5))",
+                          backgroundColor: isActive ? "var(--color-primary-container, rgba(56,189,248,0.15))" : "var(--color-surface-container, rgba(236,238,241,0.5))",
                           color: isActive ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                           fontWeight: isActive ? 600 : 400,
                           border: `1.5px solid ${isActive ? "var(--color-primary, #257ca3)" : "transparent"}`,
@@ -901,8 +901,8 @@ export function Settings() {
             {/* 4. Som e Alertas */}
             <Section title="Som e Alertas" icon="volume_up">
               {/* Som */}
-              <div className="py-2 border-b pb-4 mb-4" style={{ borderColor: "rgba(44,52,64,0.08)" }}>
-                <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Alerta sonoro</p>
+              <div className="py-2 border-b pb-4 mb-4" style={{ borderColor: "var(--color-border-subtle, rgba(44,52,64,0.08))" }}>
+                <p className="text-sm font-medium mb-3" style={{ color: "var(--color-on-surface, #191c1e)" }}>Alerta sonoro</p>
                 <div className="grid grid-cols-3 gap-2">
                   {SOUND_OPTIONS.map((opt) => (
                     <button
@@ -911,12 +911,12 @@ export function Settings() {
                         saveSettings({ sound_preset: opt.id });
                         if (opt.id !== "none") playSound(opt.id as SoundPreset, settings.sound_volume);
                       }}
-                      className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                      className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-sm transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       style={{
-                        backgroundColor: settings.sound_preset === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                        color: settings.sound_preset === opt.id ? "#257ca3" : "#5B6572",
+                        backgroundColor: settings.sound_preset === opt.id ? "var(--color-primary-container, rgba(191,232,255,0.4))" : "var(--color-surface-container, rgba(236,238,241,0.5))",
+                        color: settings.sound_preset === opt.id ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                         fontWeight: settings.sound_preset === opt.id ? "600" : "400",
-                        border: `1px solid ${settings.sound_preset === opt.id ? "#257ca3" : "transparent"}`,
+                        border: `1px solid ${settings.sound_preset === opt.id ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))"}`,
                       }}
                     >
                       <span className="text-base">{opt.id === "none" ? "🔇" : "🔊"}</span>
@@ -928,8 +928,8 @@ export function Settings() {
                 {settings.sound_preset !== "none" && (
                   <div className="mt-4">
                     <div className="flex justify-between items-center mb-2">
-                      <p className="text-xs text-gray-500 font-semibold" style={{ color: "#191c1e" }}>Volume do som</p>
-                      <span className="text-sm font-semibold" style={{ color: "#257ca3" }}>{settings.sound_volume}%</span>
+                      <p className="text-xs text-text-main font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>Volume do som</p>
+                      <span className="text-sm font-semibold" style={{ color: "var(--color-primary, #257ca3)" }}>{settings.sound_volume}%</span>
                     </div>
                     <input
                       type="range"
@@ -950,18 +950,18 @@ export function Settings() {
 
               {/* Personalidade */}
               <div className="py-2">
-                <p className="text-sm font-medium mb-3" style={{ color: "#191c1e" }}>Tom das notificações</p>
+                <p className="text-sm font-medium mb-3" style={{ color: "var(--color-on-surface, #191c1e)" }}>Tom das notificações</p>
                 <div className="grid grid-cols-3 gap-2">
                   {PERSONALITY_OPTIONS.map((opt) => (
                     <button
                       key={opt.id}
                       onClick={() => saveSettings({ notification_personality: opt.id })}
-                      className="text-center px-2 py-2.5 rounded-xl text-xs transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                      className="text-center px-2 py-2.5 rounded-xl text-xs transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       style={{
-                        backgroundColor: settings.notification_personality === opt.id ? "rgba(191,232,255,0.4)" : "rgba(236,238,241,0.5)",
-                        color: settings.notification_personality === opt.id ? "#257ca3" : "#5B6572",
+                        backgroundColor: settings.notification_personality === opt.id ? "var(--color-primary-container, rgba(191,232,255,0.4))" : "var(--color-surface-container, rgba(236,238,241,0.5))",
+                        color: settings.notification_personality === opt.id ? "var(--color-primary, #257ca3)" : "var(--color-text-main, #5B6572)",
                         fontWeight: settings.notification_personality === opt.id ? "600" : "400",
-                        border: `1px solid ${settings.notification_personality === opt.id ? "#257ca3" : "transparent"}`,
+                        border: `1px solid ${settings.notification_personality === opt.id ? "var(--color-primary, #257ca3)" : "var(--color-border-subtle, rgba(44,52,64,0.08))"}`,
                       }}
                     >
                       {opt.label}
@@ -978,11 +978,11 @@ export function Settings() {
                     <button
                       onClick={handleTestNotification}
                       disabled={testingNotif}
-                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer disabled:opacity-50 hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer disabled:opacity-50 hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       style={{
-                        backgroundColor: "rgba(191,232,255,0.4)",
-                        color: "#257ca3",
-                        border: "1px solid #257ca3",
+                        backgroundColor: "var(--color-primary-container, rgba(191,232,255,0.4))",
+                        color: "var(--color-primary, #257ca3)",
+                        border: "1px solid var(--color-primary, #257ca3)",
                       }}
                     >
                       <span className="material-symbols-outlined text-[18px]">notifications_active</span>
@@ -996,11 +996,11 @@ export function Settings() {
                         await saveSettings({ onboarding_complete: false });
                         navigate("/onboarding");
                       }}
-                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
+                      className="px-5 py-2 rounded-xl font-medium text-sm transition-all cursor-pointer hover:-translate-y-0.5 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       style={{
-                        backgroundColor: "rgba(191,232,255,0.4)",
-                        color: "#257ca3",
-                        border: "1px solid #257ca3",
+                        backgroundColor: "var(--color-primary-container, rgba(191,232,255,0.4))",
+                        color: "var(--color-primary, #257ca3)",
+                        border: "1px solid var(--color-primary, #257ca3)",
                       }}
                     >
                       <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
@@ -1016,46 +1016,46 @@ export function Settings() {
         </div>
       ) : (
         /* Frases Management Tab */
-        <div className="flex flex-col w-full bg-white rounded-xl border border-gray-150 overflow-hidden"
+        <div className="flex flex-col w-full glass-surface rounded-xl overflow-hidden"
              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.03)", maxHeight: "calc(100vh - 220px)" }}>
           <div className="p-6 pb-0 shrink-0">
-            <h2 className="text-2xl font-medium mb-1" style={{ color: "#191c1e", letterSpacing: "-0.01em" }}>
+            <h2 className="text-2xl font-medium mb-1" style={{ color: "var(--color-on-surface, #191c1e)", letterSpacing: "-0.01em" }}>
               Frases dos Lembretes
             </h2>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-text-main mb-4">
               Configure suas frases, favoritos ou crie frases personalizadas para aparecerem nas notificações de beber água.
             </p>
 
             {/* New Custom Phrase Form */}
-            <div className="flex gap-2 mb-4 p-3 rounded-xl" style={{ backgroundColor: "#f7f9fc" }}>
+            <div className="flex gap-2 mb-4 p-3 rounded-xl" style={{ backgroundColor: "var(--color-surface-container-low, #f7f9fc)" }}>
               <input
                 type="text"
                 placeholder="Escreva uma frase personalizada (ex.: 'Hora da água! 💧')"
                 value={newPhraseText}
                 onChange={(e) => setNewPhraseText(e.target.value)}
-                className="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1"
-                style={{ backgroundColor: "white", borderColor: "#e0e3e6" }}
+                className="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 text-text-dark bg-surface"
+                style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
                 onKeyDown={(e) => e.key === "Enter" && handleAddPhrase()}
               />
               <button
                 onClick={handleAddPhrase}
-                className="px-6 py-2 rounded-xl text-white font-medium text-xs transition-all hover:-translate-y-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-2"
-                style={{ background: "linear-gradient(180deg, #257ca3 0%, #0f76a0 100%)", boxShadow: "0 4px 10px rgba(59,99,119,0.15)" }}
+                className="px-6 py-2 rounded-xl text-white font-medium text-xs transition-all hover:-translate-y-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                style={{ background: "linear-gradient(180deg, var(--color-primary, #257ca3) 0%, var(--color-secondary, #0f76a0) 100%)", boxShadow: "0 4px 10px rgba(59,99,119,0.15)" }}
               >
                 Adicionar
               </button>
             </div>
 
             {/* Sub-tabs for filtering */}
-            <div className="flex flex-wrap border-b border-gray-100 gap-2">
+            <div className="flex flex-wrap border-b border-border-subtle gap-2">
               {filterTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setPhraseFilter(tab.id)}
-                  className={`px-3 py-1.5 rounded-t-lg font-semibold text-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 ${
+                  className={`px-3 py-1.5 rounded-t-lg font-semibold text-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
                     phraseFilter === tab.id
-                      ? "bg-[#257ca3]/10 text-[#257ca3] border-b-2 border-[#257ca3]"
-                      : "text-gray-400 hover:text-gray-600"
+                      ? "bg-primary/10 text-primary border-b-2 border-primary"
+                      : "text-outline hover:text-text-dark"
                   }`}
                 >
                   {tab.label}
@@ -1071,8 +1071,7 @@ export function Settings() {
               return (
                 <div
                   key={phrase.id}
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-gray-50 transition-colors hover:bg-[#f7f9fc]"
-                  style={{ borderColor: "#eceef1" }}
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-border-subtle transition-colors hover:bg-surface-container-low"
                 >
                   <div className="flex-1 mr-4">
                     {isEditing ? (
@@ -1080,33 +1079,22 @@ export function Settings() {
                         type="text"
                         value={editingPhraseText}
                         onChange={(e) => setEditingPhraseText(e.target.value)}
-                        className="w-full px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#257ca3] focus:ring-offset-1 bg-white text-[#191c1e]"
-                        style={{ borderColor: "#e0e3e6" }}
+                        className="w-full px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 bg-surface text-text-dark"
+                        style={{ borderColor: "var(--color-outline-variant, #e0e3e6)" }}
                         onKeyDown={(e) => e.key === "Enter" && handleSaveEdit(phrase.id)}
                       />
                     ) : (
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium" style={{ color: "#191c1e" }}>{phrase.text}</span>
-                        <span className="text-[10px] uppercase px-2 py-0.5 rounded-full font-bold"
-                          style={{
-                            backgroundColor:
-                              phrase.category === "profissional"
-                                ? "#e3f2fd"
-                                : phrase.category === "equilibrado"
-                                ? "#e8f5e9"
-                                : phrase.category === "brincalhao"
-                                ? "#fff3e0"
-                                : "#f3e5f5",
-                            color:
-                              phrase.category === "profissional"
-                                ? "#1565c0"
-                                : phrase.category === "equilibrado"
-                                ? "#2e7d32"
-                                : phrase.category === "brincalhao"
-                                ? "#e65100"
-                                : "#6a1b9a",
-                          }}
-                        >
+                        <span className="text-sm font-medium" style={{ color: "var(--color-on-surface, #191c1e)" }}>{phrase.text}</span>
+                        <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full font-bold ${
+                          phrase.category === "profissional"
+                            ? "bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400"
+                            : phrase.category === "equilibrado"
+                            ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
+                            : phrase.category === "brincalhao"
+                            ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400"
+                            : "bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400"
+                        }`}>
                           {phrase.is_custom ? "Personalizada" : phrase.category}
                         </span>
                       </div>
