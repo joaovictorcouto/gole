@@ -10,7 +10,6 @@ import { Statistics } from "./pages/Statistics";
 import { Achievements } from "./pages/Achievements";
 import { Settings } from "./pages/Settings";
 import { Reminders } from "./pages/Reminders";
-import { api } from "./lib/api";
 import { featureFlags } from "./lib/featureFlags";
 import { playSound, SoundPreset } from "./lib/sounds";
 
@@ -121,47 +120,7 @@ export default function App() {
     ]).then(() => setReady(true));
   }, []);
 
-  useEffect(() => {
-    const isNewerVersion = (current: string, latest: string): boolean => {
-      const cParts = current.split(".").map(Number);
-      const lParts = latest.split(".").map(Number);
-      for (let i = 0; i < 3; i++) {
-        const c = cParts[i] || 0;
-        const l = lParts[i] || 0;
-        if (l > c) return true;
-        if (l < c) return false;
-      }
-      return false;
-    };
 
-    const checkForUpdates = async () => {
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        const lastCheck = localStorage.getItem("last_silent_update_check_date");
-        if (lastCheck === today) return;
-
-        localStorage.setItem("last_silent_update_check_date", today);
-
-        const res = await fetch("https://api.github.com/repos/joaovictorcouto/gole/releases/latest");
-        if (!res.ok) return;
-        const data = await res.json();
-        
-        const latestVersion = data.tag_name.replace(/^v/, "");
-        const currentVersion = __APP_VERSION__;
-
-        if (isNewerVersion(currentVersion, latestVersion)) {
-          const asset = data.assets.find((a: any) => a.name.endsWith(".msi") || a.name.endsWith(".exe"));
-          if (asset) {
-            await api.installSilentUpdate(asset.browser_download_url);
-          }
-        }
-      } catch (err) {
-        console.error("Erro ao verificar atualização silenciosa:", err);
-      }
-    };
-
-    checkForUpdates();
-  }, []);
 
   useEffect(() => {
     const unlisten = listen<{ id: number; phrase: string; suggested_ml: number }>("reminder", () => {

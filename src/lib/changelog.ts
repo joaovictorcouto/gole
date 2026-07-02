@@ -14,6 +14,19 @@ export interface ChangelogVersion {
 // Latest first. Add new versions to the top.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: "1.0.8",
+    date: "2026-07-02",
+    highlight: "Prevenção de notificações acumuladas após bloqueio de tela!",
+    entries: [
+      {
+        icon: "notifications_active",
+        title: "Notificações Inteligentes",
+        description:
+          "Ao desbloquear o computador ou retornar de inatividade, o sistema agora descarta as notificações acumuladas e exibe apenas a mais recente.",
+      },
+    ],
+  },
+  {
     version: "1.0.7",
     date: "2026-07-02",
     highlight: "Correção de sincronia do agendador de lembretes!",

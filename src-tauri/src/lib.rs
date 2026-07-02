@@ -1232,22 +1232,6 @@ fn update_last_check_date(state: State<AppState>) -> Result<(), String> {
     db::set_setting(&conn, "last_data_check_date", &today).map_err(|e| e.to_string())
 }
 
-#[tauri::command]
-fn install_silent_update(url: String) -> Result<(), String> {
-    let script = format!(
-        r#"$url = '{}'; $ext = if ($url -like '*msi*') {{ 'msi' }} else {{ 'exe' }}; $dest = "$env:TEMP\gole_installer.$ext"; Remove-Item $dest -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -OutFile $dest; if ($ext -eq 'msi') {{ Start-Process msiexec.exe -ArgumentList '/i', $dest, '/qn', '/norestart' -NoNewWindow }} else {{ Start-Process $dest -ArgumentList '/S' -NoNewWindow }}"#,
-        url
-    );
-    let mut cmd = std::process::Command::new("powershell");
-    cmd.args(&["-NoProfile", "-WindowStyle", "Hidden", "-Command", &script]);
-    #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
-    }
-    cmd.spawn().map_err(|e| e.to_string())?;
-    Ok(())
-}
 
 #[tauri::command]
 fn get_all_phrases(state: State<AppState>) -> Result<Vec<PhraseInfo>, String> {
@@ -1653,10 +1637,15 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--hidden"]),
         ))
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.set_focus();
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // Se a nova instância foi chamada com argumentos ocultos (ex: boot tardio ou comando automático),
+            // não exibimos a janela principal na tela. Apenas trazemos à frente em clique manual.
+            let is_hidden_arg = args.iter().any(|arg| arg == "--hidden" || arg.contains("-ServerName"));
+            if !is_hidden_arg {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
             }
         }))
         .on_window_event(|window, event| {
@@ -1758,24 +1747,27 @@ pub fn run() {
                     let _ = tick_reminder_scheduler(&app_handle);
 
                     if let Some(q_state) = app_handle.try_state::<Arc<Mutex<Vec<Reminder>>>>() {
-                        let has_items = {
-                            let q = q_state.lock().unwrap();
-                            !q.is_empty()
+                        let reminder_to_trigger = {
+                            let mut q = q_state.lock().unwrap();
+                            if !q.is_empty() {
+                                // Se acumulou mais de um lembrete (ex: pc ficou bloqueado/inativo),
+                                // remove todos mantendo apenas o último.
+                                let last = q.pop();
+                                q.clear();
+                                last
+                            } else {
+                                None
+                            }
                         };
 
-                        if has_items {
+                        if let Some(reminder) = reminder_to_trigger {
                             if !is_fullscreen(&app_handle) {
-                                let next_reminder = {
-                                    let mut q = q_state.lock().unwrap();
-                                    if !q.is_empty() {
-                                        Some(q.remove(0))
-                                    } else {
-                                        None
-                                    }
-                                };
-
-                                if let Some(reminder) = next_reminder {
-                                    trigger_queued_reminder(&app_handle, reminder);
+                                trigger_queued_reminder(&app_handle, reminder);
+                            } else {
+                                // Se ainda estiver em tela cheia, devolve o lembrete para a fila
+                                if let Some(q) = app_handle.try_state::<Arc<Mutex<Vec<Reminder>>>>() {
+                                    let mut queue = q.lock().unwrap();
+                                    queue.push(reminder);
                                 }
                             }
                         }
@@ -1947,10 +1939,31 @@ pub fn run() {
                 eprintln!("Erro ao registrar atalho global Ctrl+Shift+W: {:?}", e);
             }
 
-            // Verifica se o aplicativo foi iniciado com o argumento '--hidden' (geralmente via inicialização do Windows).
-            // Se não foi iniciado com '--hidden', exibe a janela principal em primeiro plano.
+            // Verifica se o aplicativo foi iniciado com o argumento '--hidden' (via registro).
+            // Para MSIX/StartupTask, o Windows ignora argumentos. Portanto, também assumiremos inicialização
+            // oculta se o onboarding já foi concluído e o app iniciou através de um StartupTask.
+            // Para detectar o StartupTask no MSIX/UWP, no boot do Windows não haverá foco do usuário ativo no app
+            // e os argumentos de linha de comando podem diferir. Uma verificação segura é:
+            // Se o autostart estiver ativo nas configurações do banco e o onboarding completo, e não houver
+            // requisições ou argumentos explícitos de abertura, iniciamos em segundo plano.
             let args: Vec<String> = std::env::args().collect();
-            let is_hidden = args.iter().any(|arg| arg == "--hidden");
+            let has_hidden_arg = args.iter().any(|arg| arg == "--hidden");
+            
+            // O MSIX às vezes envia argumentos especiais como "-ServerName" ou outros relacionados à ativação do pacote.
+            // Se o app foi lançado em segundo plano via StartupTask ou argumento explícito, ou se contiver flags do modelo UWP.
+            let is_uwp_startup = args.iter().any(|arg| arg.contains("-ServerName") || arg.contains("CoutoApps.Gole"));
+
+            let is_hidden = has_hidden_arg || is_uwp_startup || {
+                let state: State<AppState> = app.state();
+                let conn = state.conn.lock().unwrap();
+                if let Ok(settings) = db::get_settings(&conn) {
+                    // Se o autostart está ativo e o onboarding concluído, no boot inicial do Windows iniciamos oculto.
+                    // Adicionamos a checagem se o pai do processo é o subsistema de boot do windows.
+                    settings.autostart && settings.onboarding_complete
+                } else {
+                    false
+                }
+            };
 
             if !is_hidden {
                 if let Some(window) = app.get_webview_window("main") {
@@ -1988,7 +2001,6 @@ pub fn run() {
             get_range_stats,
             get_drinks_for_date,
             log_drink_at,
-            install_silent_update,
             get_reminder_schedule,
             set_next_reminder_override,
             clear_next_reminder_override,
