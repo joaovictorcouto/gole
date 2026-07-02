@@ -14,6 +14,19 @@ export interface ChangelogVersion {
 // Latest first. Add new versions to the top.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: "1.0.7",
+    date: "2026-07-02",
+    highlight: "Correção de sincronia do agendador de lembretes!",
+    entries: [
+      {
+        icon: "sync",
+        title: "Sincronização de Lembretes",
+        description:
+          "Corrigido bug onde o horário dos lembretes futuros na aba de lembretes ficava deslizando 30 minutos a frente a cada atualização do aplicativo.",
+      },
+    ],
+  },
+  {
     version: "1.0.6",
     date: "2026-07-01",
     highlight: "Melhorias de Modo Escuro no Onboarding e ajustes de contraste no Dashboard!",

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { listen } from "@tauri-apps/api/event";
+import { listen, emit } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { api } from "../lib/api";
+import { getEffectiveTheme } from "../lib/theme";
 
 interface ReminderData {
   id: number;
@@ -17,14 +18,68 @@ interface ReminderData {
   snooze_count?: number;
 }
 
+function useDark() {
+  const [dark, setDark] = useState(() => getEffectiveTheme() === "dark");
+
+  useEffect(() => {
+    const unlisten = listen<{ dark: boolean }>("theme-applied", (event) => {
+      setDark(event.payload.dark);
+    });
+
+    emit("request-theme", {}).catch(() => {});
+
+    return () => { unlisten.then((fn) => fn()); };
+  }, []);
+
+  return dark;
+}
+
 export function ReminderWindow() {
   const [data, setData] = useState<ReminderData | null>(null);
   const [closing, setClosing] = useState(false);
+  const dark = useDark();
+
+  const c = dark
+    ? {
+        card: "linear-gradient(180deg, rgba(28,34,40,0.98) 0%, rgba(15,20,25,0.98) 100%)",
+        cardBorder: "rgba(56,189,248,0.18)",
+        cardBorderLeft: "#38bdf8",
+        cardShadow: "0 16px 40px rgba(0,0,0,0.55)",
+        text: "#e2e6ea",
+        textMuted: "#9aa5b1",
+        highlightBg: "linear-gradient(135deg, rgba(56,189,248,0.18) 0%, rgba(37,124,163,0.12) 100%)",
+        highlightBorder: "rgba(56,189,248,0.28)",
+        labelColor: "#38bdf8",
+        amountColor: "#bae6fd",
+        mlColor: "#38bdf8",
+        remainColor: "#64748b",
+        snoozeBg: "rgba(30,38,48,0.9)",
+        snoozeBorder: "rgba(56,189,248,0.2)",
+        snoozeColor: "#9aa5b1",
+      }
+    : {
+        card: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(247,251,253,0.97) 100%)",
+        cardBorder: "rgba(37,124,163,0.18)",
+        cardBorderLeft: "#257ca3",
+        cardShadow: "0 16px 40px rgba(15,76,110,0.28)",
+        text: "#191c1e",
+        textMuted: "#5B6572",
+        highlightBg: "linear-gradient(135deg, rgba(138,212,255,0.25) 0%, rgba(37,124,163,0.16) 100%)",
+        highlightBorder: "rgba(37,124,163,0.28)",
+        labelColor: "#0f76a0",
+        amountColor: "#0f4c6e",
+        mlColor: "#0f76a0",
+        remainColor: "#71787c",
+        snoozeBg: "rgba(255,255,255,0.7)",
+        snoozeBorder: "rgba(193,199,204,0.8)",
+        snoozeColor: "#5B6572",
+      };
 
   useEffect(() => {
     const unlisten = listen<ReminderData>("reminder", (event) => {
       setData(event.payload);
       setClosing(false);
+      emit("request-theme", {}).catch(() => {});
     });
     return () => { unlisten.then((fn) => fn()); };
   }, []);
@@ -83,7 +138,6 @@ export function ReminderWindow() {
         .card-anim { animation: cardIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
       `}</style>
 
-      {/* Test-mode controls floating ABOVE the card */}
       {data.is_test && (
         <>
           <span
@@ -135,7 +189,6 @@ export function ReminderWindow() {
         </>
       )}
 
-      {/* Decorative droplet attached to the top-left corner */}
       <svg
         width="30" height="40" viewBox="0 0 42 56" fill="none"
         style={{
@@ -165,24 +218,23 @@ export function ReminderWindow() {
         style={{
           width: "100%",
           height: "100%",
-          background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(247,251,253,0.97) 100%)",
+          background: c.card,
           backdropFilter: "blur(30px)",
           WebkitBackdropFilter: "blur(30px)",
-          border: "1px solid rgba(37,124,163,0.18)",
-          borderLeft: "4px solid #257ca3",
+          border: `1px solid ${c.cardBorder}`,
+          borderLeft: `4px solid ${c.cardBorderLeft}`,
           borderRadius: 16,
-          boxShadow: "0 16px 40px rgba(15,76,110,0.28)",
+          boxShadow: c.cardShadow,
           padding: "12px 14px 14px 14px",
           display: "flex",
           flexDirection: "column",
           gap: 8,
-          color: "#191c1e",
+          color: c.text,
           boxSizing: "border-box",
           position: "relative",
           marginTop: 0,
         }}
       >
-        {/* Phrase */}
         {data.app_mode === "basic" ? (
           <div
             style={{
@@ -199,7 +251,7 @@ export function ReminderWindow() {
               style={{
                 fontSize: 14,
                 fontWeight: 600,
-                color: "#191c1e",
+                color: c.text,
                 lineHeight: 1.4,
                 display: "-webkit-box",
                 WebkitLineClamp: 3,
@@ -216,7 +268,7 @@ export function ReminderWindow() {
             style={{
               fontSize: 13,
               fontWeight: 600,
-              color: "#191c1e",
+              color: c.text,
               lineHeight: 1.4,
               display: "-webkit-box",
               WebkitLineClamp: 2,
@@ -231,7 +283,6 @@ export function ReminderWindow() {
           </div>
         )}
 
-        {/* Highlighted amount */}
         {data.app_mode !== "basic" && (
           <div
             style={{
@@ -240,33 +291,32 @@ export function ReminderWindow() {
               justifyContent: "space-between",
               padding: "8px 12px",
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(138,212,255,0.25) 0%, rgba(37,124,163,0.16) 100%)",
-              border: "1px solid rgba(37,124,163,0.28)",
+              background: c.highlightBg,
+              border: `1px solid ${c.highlightBorder}`,
             }}
           >
             <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, color: "#0f76a0", letterSpacing: 0.6, textTransform: "uppercase" }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: c.labelColor, letterSpacing: 0.6, textTransform: "uppercase" }}>
                 Beba agora
               </span>
               <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginTop: 3 }}>
-                <span style={{ fontSize: 24, fontWeight: 800, color: "#0f4c6e", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: c.amountColor, letterSpacing: "-0.02em", lineHeight: 1 }}>
                   {sips}
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f76a0" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: c.mlColor }}>
                   {sips === 1 ? "gole" : "goles"}
                 </span>
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.1 }}>
-              <span style={{ fontSize: 18, fontWeight: 800, color: "#0f4c6e" }}>{data.suggested_ml}ml</span>
-              <span style={{ fontSize: 9, color: "#71787c", marginTop: 3 }}>
+              <span style={{ fontSize: 18, fontWeight: 800, color: c.amountColor }}>{data.suggested_ml}ml</span>
+              <span style={{ fontSize: 9, color: c.remainColor, marginTop: 3 }}>
                 {(data.consumed_ml / 1000).toFixed(2).replace(".", ",")}L de {((data.consumed_ml + data.remaining_ml) / 1000).toFixed(2).replace(".", ",")}L
               </span>
             </div>
           </div>
         )}
 
-        {/* Buttons */}
         <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>
           <button
             onClick={handleConfirm}
@@ -292,12 +342,12 @@ export function ReminderWindow() {
                 flex: 1,
                 padding: "8px 12px",
                 borderRadius: 10,
-                border: "1px solid rgba(193,199,204,0.8)",
-                color: "#5B6572",
+                border: `1px solid ${c.snoozeBorder}`,
+                color: c.snoozeColor,
                 fontSize: 12,
                 fontWeight: 500,
                 cursor: "pointer",
-                background: "rgba(255,255,255,0.7)",
+                background: c.snoozeBg,
               }}
             >
               +5min

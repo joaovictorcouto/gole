@@ -9,7 +9,7 @@
   <Identity
     Name="CoutoApps.Gole"
     Publisher="CN=4A6B1E51-6F58-4705-9CE5-BA9C66ADDD83"
-    Version="1.0.6.0" 
+    Version="1.0.7.0" 
     ProcessorArchitecture="x64" />
 
   <Properties>

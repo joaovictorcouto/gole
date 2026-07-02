@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { listen } from "@tauri-apps/api/event";
+import { listen, emit } from "@tauri-apps/api/event";
 import { useAppStore } from "./store/useAppStore";
 import { SideNav } from "./components/ui/SideNav";
 import { UpdateProfileToast } from "./components/ui/UpdateProfileToast";
@@ -50,11 +50,18 @@ function NavigationListener() {
       await loadSettings();
     });
 
+    // Responde pedidos de tema da janela de lembrete
+    const unlistenRequestTheme = listen("request-theme", () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      emit("theme-applied", { dark: isDark }).catch(() => {});
+    });
+
     return () => {
       unlistenNavigate.then((fn) => fn());
       unlistenQuickDrink.then((fn) => fn());
       unlistenResetOnboarding.then((fn) => fn());
       unlistenRemindersPaused.then((fn) => fn());
+      unlistenRequestTheme.then((fn) => fn());
     };
   }, [navigate]);
 

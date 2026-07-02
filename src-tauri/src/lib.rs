@@ -1113,21 +1113,14 @@ fn get_reminder_schedule(state: State<AppState>) -> Result<ScheduleData, String>
     let now = Local::now();
     let end_time = chrono::NaiveTime::parse_from_str(&settings.work_end_hour, "%H:%M")
         .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap());
-    let start_time = chrono::NaiveTime::parse_from_str(&settings.work_start_hour, "%H:%M")
-        .unwrap_or_else(|_| chrono::NaiveTime::from_hms_opt(8, 0, 0).unwrap());
 
-    let last_fire = rows.last().and_then(|r| chrono::NaiveDateTime::parse_from_str(&r.sent_at, "%Y-%m-%dT%H:%M:%S").ok());
-    let now_naive = now.naive_local();
-    let mut base_next = match last_fire {
-        Some(t) => t + chrono::Duration::minutes(settings.reminder_interval_min),
-        None => {
-            let today_start = now.date_naive().and_time(start_time);
-            if now_naive < today_start { today_start } else { now_naive + chrono::Duration::minutes(settings.reminder_interval_min) }
-        }
-    };
-    while base_next <= now_naive {
-        base_next = base_next + chrono::Duration::minutes(settings.reminder_interval_min);
-    }
+    // Usa a mesma conexão para computar o slot correto usando a grade
+    let conn_for_slot = state.conn.lock().unwrap();
+    let base_next = compute_next_slot(&conn_for_slot).unwrap_or_else(|| {
+        // Fallback caso não haja slots restantes hoje
+        now.date_naive().and_time(end_time)
+    });
+    drop(conn_for_slot);
 
     let mut has_override = false;
     let next_at = if !settings.next_override_at.is_empty() {

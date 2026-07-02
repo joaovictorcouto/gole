@@ -1,4 +1,5 @@
 import { useAppStore } from '../store/useAppStore';
+import { emit } from '@tauri-apps/api/event';
 
 function getSystemPreference(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -11,23 +12,22 @@ export function getEffectiveTheme(): 'light' | 'dark' {
 
 export function applyTheme() {
   const effective = getEffectiveTheme();
-  if (effective === 'dark') {
+  const isDark = effective === 'dark';
+  if (isDark) {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
   }
+  emit('theme-applied', { dark: isDark }).catch(() => {});
 }
 
 export function initThemeListener() {
-  // Aplica tema inicial
   applyTheme();
 
-  // Observa mudanças na store
   useAppStore.subscribe((state, prev) => {
     if (state.theme !== prev.theme) applyTheme();
   });
 
-  // Observa mudanças no sistema (para modo 'system')
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
   mq.addEventListener('change', () => {
     if (useAppStore.getState().theme === 'system') applyTheme();
