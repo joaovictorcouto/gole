@@ -227,8 +227,7 @@ export const api = {
 
   deleteDrink: (id: number): Promise<TodayStats> => invoke("delete_drink", { id }),
 
-  installSilentUpdate: (url: string): Promise<void> =>
-    invoke("install_silent_update", { url }),
+
 
   getReminderSchedule: () => invoke<ScheduleData>("get_reminder_schedule"),
 

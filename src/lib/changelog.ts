@@ -14,34 +14,47 @@ export interface ChangelogVersion {
 // Latest first. Add new versions to the top.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: "1.0.10",
+    date: "2026-07-03",
+    highlight: "Instalação offline otimizada e correções visuais!",
+    entries: [
+      {
+        icon: "package_2",
+        title: "Melhorias de Instalação",
+        description:
+          "Otimizamos o pacote de instalação para garantir um funcionamento ainda mais rápido e independente em computadores Windows.",
+      },
+    ],
+  },
+  {
     version: "1.0.9",
     date: "2026-07-03",
-    highlight: "Inicialização em segundo plano no Windows e modo 100% offline!",
+    highlight: "Inicialização em segundo plano e funcionamento offline!",
     entries: [
       {
         icon: "cloud_off",
-        title: "App 100% Offline",
+        title: "Funcionamento 100% Local",
         description:
-          "Removidas todas as checagens e conexões automáticas de rede. O aplicativo agora funciona de forma totalmente independente e local.",
+          "O aplicativo agora funciona de forma totalmente independente e offline, sem realizar conexões externas de rede.",
       },
       {
         icon: "visibility_off",
-        title: "Boot Silencioso (MSIX)",
+        title: "Inicialização Silenciosa",
         description:
-          "Corrigido o comportamento do boot do Windows. O app agora inicia recolhido na bandeja do sistema sem abrir a janela na tela.",
+          "Ao ligar o computador, o aplicativo agora inicia recolhido de forma silenciosa na barra de tarefas (segundo plano), sem abrir a tela principal.",
       },
     ],
   },
   {
     version: "1.0.8",
     date: "2026-07-02",
-    highlight: "Prevenção de notificações acumuladas após bloqueio de tela!",
+    highlight: "Notificações inteligentes ao retornar ao computador!",
     entries: [
       {
         icon: "notifications_active",
-        title: "Notificações Inteligentes",
+        title: "Lembretes Otimizados",
         description:
-          "Ao desbloquear o computador ou retornar de inatividade, o sistema agora descarta as notificações acumuladas e exibe apenas a mais recente.",
+          "Ao desbloquear o computador ou retornar de uma pausa, o aplicativo agora descarta lembretes acumulados antigos e exibe apenas a notificação mais recente.",
       },
     ],
   },
