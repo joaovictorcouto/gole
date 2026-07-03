@@ -14,6 +14,25 @@ export interface ChangelogVersion {
 // Latest first. Add new versions to the top.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: "1.0.9",
+    date: "2026-07-03",
+    highlight: "Inicialização em segundo plano no Windows e modo 100% offline!",
+    entries: [
+      {
+        icon: "cloud_off",
+        title: "App 100% Offline",
+        description:
+          "Removidas todas as checagens e conexões automáticas de rede. O aplicativo agora funciona de forma totalmente independente e local.",
+      },
+      {
+        icon: "visibility_off",
+        title: "Boot Silencioso (MSIX)",
+        description:
+          "Corrigido o comportamento do boot do Windows. O app agora inicia recolhido na bandeja do sistema sem abrir a janela na tela.",
+      },
+    ],
+  },
+  {
     version: "1.0.8",
     date: "2026-07-02",
     highlight: "Prevenção de notificações acumuladas após bloqueio de tela!",
