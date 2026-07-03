@@ -7,6 +7,7 @@ import { ChangelogModal } from "./ChangelogModal";
 import { UndoChip } from "./UndoChip";
 import { api } from "../../lib/api";
 import { useDevGateAvailable, useIsDev, unlockDev, lockDev } from "../../lib/useIsDev";
+import { getEffectiveTheme } from "../../lib/theme";
 import appIcon from "../../assets/icon.png";
 
 const navItems = [
@@ -20,7 +21,7 @@ const navItems = [
 export function SideNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logDrink, todayStats, settings, loadSettings, theme, setTheme } = useAppStore();
+  const { logDrink, todayStats, settings, loadSettings, setTheme } = useAppStore();
   const [supportOpen, setSupportOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [undo, setUndo] = useState<{ amount: number; key: number } | null>(null);
@@ -38,7 +39,8 @@ export function SideNav() {
   }, []);
 
   const toggleThemeQuick = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
+    const active = getEffectiveTheme();
+    const nextTheme = active === "dark" ? "light" : "dark";
     setTheme(nextTheme);
   };
 
@@ -199,8 +201,8 @@ export function SideNav() {
             className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-surface-container-high/50 transition-colors cursor-pointer text-text-main hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             title="Alternar Tema (Claro / Escuro)"
           >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: theme === "dark" ? "'FILL' 1" : "'FILL' 0" }}>
-              {theme === "dark" ? "light_mode" : "dark_mode"}
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: getEffectiveTheme() === "dark" ? "'FILL' 1" : "'FILL' 0" }}>
+              {getEffectiveTheme() === "dark" ? "light_mode" : "dark_mode"}
             </span>
           </button>
 

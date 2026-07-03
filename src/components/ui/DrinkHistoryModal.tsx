@@ -120,7 +120,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
       open={open}
       onClose={onClose}
       icon="history"
-      title={isToday ? "Registros de hoje" : `Registros — ${formatHumanDate(targetDate)}`}
+      title={isToday ? "HISTÓRICO DE HOJE" : `Registros — ${formatHumanDate(targetDate)}`}
       description={
         isBasicMode 
           ? `${drinks.length} ${drinks.length === 1 ? "registro" : "registros"}`
@@ -253,7 +253,7 @@ export function DrinkHistoryModal({ open, onClose, date }: Props) {
                 ) : (
                   <>
                     <span className="text-sm font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>
-                      {isBasicMode ? "Copo de água" : `${d.amount_ml}ml`}
+                      {isBasicMode ? "Água Registrada" : `${d.amount_ml}ml`}
                     </span>
                     <span className="text-xs text-text-main font-medium bg-surface-container-high px-2 py-0.5 rounded-md ml-1">
                       {formatTime(d.logged_at)}

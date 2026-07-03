@@ -491,7 +491,7 @@ export function Dashboard() {
                     <div className="flex items-center gap-1.5 mb-2 shrink-0 justify-between">
                       <div className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>local_drink</span>
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-text-main">Água Bebida ({timesDrunk})</span>
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-text-main">HISTÓRICO DE HOJE ({timesDrunk})</span>
                       </div>
                       {todayDrinks.length > 0 && (
                         <button
@@ -515,7 +515,9 @@ export function Dashboard() {
                                className="flex items-center justify-between p-1.5 rounded-xl bg-surface-container-lowest border border-border-subtle hover:bg-surface-container-high transition-all duration-200">
                             <div className="flex items-center gap-2 pl-1">
                               <span className="material-symbols-outlined text-primary text-[14px]">water_drop</span>
-                              <span className="text-xs font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>{drink.amount_ml}ml</span>
+                              <span className="text-xs font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>
+                                {settings?.app_mode === "basic" ? "Água Registrada" : `${drink.amount_ml}ml`}
+                              </span>
                               <span className="text-[10px] text-outline">{formatTime(drink.logged_at)}</span>
                             </div>
                             <button
@@ -621,7 +623,7 @@ export function Dashboard() {
                   <div className="flex items-center gap-1.5 mb-3 shrink-0 justify-between">
                     <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>local_drink</span>
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-text-main">Histórico de Hoje ({timesDrunk})</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-text-main">HISTÓRICO DE HOJE ({timesDrunk})</span>
                     </div>
                     {todayDrinks.length > 0 && (
                       <button
@@ -645,7 +647,9 @@ export function Dashboard() {
                              className="flex items-center justify-between p-2 rounded-xl bg-surface-container-lowest border border-border-subtle hover:bg-surface-container-high transition-all duration-200">
                           <div className="flex items-center gap-2 pl-1">
                             <span className="material-symbols-outlined text-primary text-[14px]">water_drop</span>
-                            <span className="text-xs font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>{drink.amount_ml}ml</span>
+                            <span className="text-xs font-semibold" style={{ color: "var(--color-on-surface, #191c1e)" }}>
+                              {settings?.app_mode === "basic" ? "Água Registrada" : `${drink.amount_ml}ml`}
+                            </span>
                             <span className="text-[10px] text-outline">{formatTime(drink.logged_at)}</span>
                           </div>
                           <button

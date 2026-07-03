@@ -14,6 +14,19 @@ export interface ChangelogVersion {
 // Latest first. Add new versions to the top.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: "1.0.12",
+    date: "2026-07-03",
+    highlight: "Padronização visual e correções do Modo Básico!",
+    entries: [
+      {
+        icon: "dashboard",
+        title: "Interface Consistente",
+        description:
+          "Padronizamos o título do módulo de registros para 'HISTÓRICO DE HOJE' e removemos a menção a mililitros (ml) no Modo Básico, mantendo o histórico focado apenas na frequência de ingestão.",
+      },
+    ],
+  },
+  {
     version: "1.0.11",
     date: "2026-07-03",
     highlight: "Segurança de rede offline aprimorada!",
