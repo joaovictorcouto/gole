@@ -14,6 +14,19 @@ export interface ChangelogVersion {
 // Latest first. Add new versions to the top.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: "1.0.11",
+    date: "2026-07-03",
+    highlight: "Segurança de rede offline aprimorada!",
+    entries: [
+      {
+        icon: "security",
+        title: "Isolamento Local Estável",
+        description:
+          "Migração das comunicações internas de rede para canal local criptografado em memória, evitando erros de conectividade no Windows Store.",
+      },
+    ],
+  },
+  {
     version: "1.0.10",
     date: "2026-07-03",
     highlight: "Instalação offline otimizada e correções visuais!",
